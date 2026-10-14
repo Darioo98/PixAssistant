@@ -10,6 +10,11 @@ import { log } from '../log'
  * L'helper parte solo alla prima richiesta e si riavvia se cade.
  */
 
+export interface NativeEvent {
+  event: string
+  [key: string]: unknown
+}
+
 interface Pending {
   resolve: (value: unknown) => void
   reject: (err: Error) => void
@@ -21,6 +26,7 @@ export class PixNative {
   private pending = new Map<number, Pending>()
   private nextId = 1
   private warnedMissing = false
+  private eventListeners = new Set<(event: NativeEvent) => void>()
 
   constructor(private readonly exePath: string) {}
 
@@ -48,6 +54,12 @@ export class PixNative {
     })
   }
 
+  /** Eventi spontanei dell'helper (es. cambi degli appunti). */
+  onEvent(cb: (event: NativeEvent) => void): () => void {
+    this.eventListeners.add(cb)
+    return () => this.eventListeners.delete(cb)
+  }
+
   dispose(): void {
     this.proc?.kill()
     this.proc = null
@@ -72,10 +84,14 @@ export class PixNative {
   }
 
   private onLine(line: string): void {
-    let msg: { id?: number; ok?: boolean; result?: unknown; error?: string }
+    let msg: { id?: number; ok?: boolean; result?: unknown; error?: string; event?: string }
     try {
       msg = JSON.parse(line)
     } catch {
+      return
+    }
+    if (typeof msg.event === 'string') {
+      for (const cb of this.eventListeners) cb(msg as NativeEvent)
       return
     }
     if (typeof msg.id !== 'number') return

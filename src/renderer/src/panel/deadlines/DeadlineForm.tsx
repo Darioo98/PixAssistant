@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { isValidISODate, parseISODate, type ISODate } from '@shared/dates'
 import { RECURRENCE_UNITS, isRecurring, type DeadlineItem, type RecurrenceUnit } from '@shared/deadlines'
 import { formatDate, formatTimestamp } from '../../format'
-import { DeleteButton } from './DeadlineRow'
+import { DeleteButton } from '../RowMenu'
 
 interface Props {
   item?: DeadlineItem

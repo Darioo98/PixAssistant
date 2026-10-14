@@ -144,6 +144,55 @@ export function SettingsTab({ state }: { state: UiState }) {
         </Row>
       </Section>
 
+      <Section title={t('settings.vault')}>
+        <Row label={t('settings.sessionHours')}>
+          <input
+            type="number"
+            className="num"
+            min={1}
+            max={72}
+            defaultValue={s.vaultSessionHours}
+            key={s.vaultSessionHours}
+            onBlur={(e) => {
+              const v = Math.min(72, Math.max(1, Math.round(Number(e.target.value)) || 8))
+              if (v !== s.vaultSessionHours) void save({ vaultSessionHours: v })
+            }}
+          />
+        </Row>
+        <Row label={t('settings.generatorDefaults')}>
+          <input
+            type="number"
+            className="num"
+            min={8}
+            max={128}
+            defaultValue={s.genLength}
+            key={s.genLength}
+            onBlur={(e) => {
+              const v = Math.min(128, Math.max(8, Math.round(Number(e.target.value)) || 20))
+              if (v !== s.genLength) void save({ genLength: v })
+            }}
+          />
+        </Row>
+        {state.vault.helloAvailable && state.vault.setup === 'ready' && (
+          <div className="row">
+            <span>
+              {t('settings.hello')}: {state.vault.helloEnrolled ? t('settings.helloOn') : t('settings.helloOff')}
+            </span>
+            {state.vault.helloEnrolled ? (
+              <button className="btn subtle" onClick={() => void window.dock.vault.apply({ op: 'removeHello' })}>
+                {t('settings.helloRemove')}
+              </button>
+            ) : (
+              state.vault.unlocked && (
+                <button className="btn" onClick={() => void window.dock.vault.apply({ op: 'enrollHello' })}>
+                  {t('settings.helloEnable')}
+                </button>
+              )
+            )}
+          </div>
+        )}
+      </Section>
+
       <Section title={t('settings.dnd')}>
         <Toggle label={t('settings.dndEnabled')} checked={s.dndEnabled} onChange={(v) => void save({ dndEnabled: v })} />
         {s.dndEnabled && (

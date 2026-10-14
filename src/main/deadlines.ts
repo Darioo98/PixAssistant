@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { CollectionStore, type DeviceInfo } from './storage/collection'
+import { CollectionStore, type Codec, type DeviceInfo } from './storage/collection'
 import {
   deadlineSchema,
   fromInput,
@@ -21,13 +21,15 @@ export class DeadlineService {
     dataDir: string,
     device: DeviceInfo,
     onError: (err: unknown, file?: string) => void,
-    private readonly onDone: () => void
+    private readonly onDone: () => void,
+    codec?: Codec
   ) {
     this.store = new CollectionStore<Deadline>({
       dir: join(dataDir, 'deadlines'),
       name: 'deadlines',
       device,
       schema: deadlineSchema,
+      codec,
       onError
     })
   }

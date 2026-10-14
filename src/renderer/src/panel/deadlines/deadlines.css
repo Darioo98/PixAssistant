@@ -431,3 +431,7 @@
   font-size: 11px;
   color: var(--text-muted);
 }
+
+.home-link {
+  cursor: pointer;
+}

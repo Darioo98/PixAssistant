@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { addDays, diffDays, type ISODate } from '@shared/dates'
 import { deadlineStatus, isRecurring, type DeadlineItem } from '@shared/deadlines'
 import { dueLabel, formatDate, repeatLabel } from '../../format'
+import { DeleteButton, RowMenu } from '../RowMenu'
 
 interface Props {
   item: DeadlineItem
@@ -52,7 +52,7 @@ export function DeadlineRow({ item, today, defaultLead, onEdit, compact = false 
         </button>
       )}
       {!compact && (
-        <RowMenu>
+        <RowMenu label={t('deadlines.actions.more')}>
           {status !== 'done' &&
             SNOOZE.map(([key, days]) => (
               <button key={key} onClick={() => void apply({ op: 'snooze', id: item.id, until: addDays(today, days) })}>
@@ -67,49 +67,5 @@ export function DeadlineRow({ item, today, defaultLead, onEdit, compact = false 
         </RowMenu>
       )}
     </li>
-  )
-}
-
-/** Menu "…" con le azioni secondarie. */
-function RowMenu({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!open) return
-    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [open])
-  return (
-    <div className="row-menu" ref={ref}>
-      <button className="icon-btn" aria-label={t('deadlines.actions.more')} aria-expanded={open} onClick={() => setOpen(!open)}>
-        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-          <circle cx="5" cy="10" r="1.5" fill="currentColor" />
-          <circle cx="10" cy="10" r="1.5" fill="currentColor" />
-          <circle cx="15" cy="10" r="1.5" fill="currentColor" />
-        </svg>
-      </button>
-      {open && (
-        <div className="menu" role="menu" onClick={(e) => (e.target as HTMLElement).dataset.keep === undefined && setOpen(false)}>
-          {children}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/** Eliminazione in due passi: niente si perde con un clic sbagliato. */
-export function DeleteButton({ onConfirm, className = 'danger' }: { onConfirm: () => void; className?: string }) {
-  const { t } = useTranslation()
-  const [armed, setArmed] = useState(false)
-  return armed ? (
-    <button className={className} onClick={onConfirm}>
-      {t('deadlines.form.confirmDelete')}
-    </button>
-  ) : (
-    <button className={className} data-keep onClick={() => setArmed(true)}>
-      {t('deadlines.actions.delete')}
-    </button>
   )
 }

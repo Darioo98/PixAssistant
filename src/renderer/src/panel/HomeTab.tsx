@@ -1,15 +1,25 @@
 import { useTranslation } from 'react-i18next'
 import { compareByUrgency, deadlineStatus } from '@shared/deadlines'
-import { useDeadlines, useToday } from '../hooks'
+import type { UiState } from '@shared/ipc'
+import { countdown } from '@shared/vault'
+import { useDeadlines, useToday, useVaultEntries } from '../hooks'
+import { VaultRowLocked } from './vault/VaultList'
+import './vault/vault.css'
 import { DeadlineRow } from './deadlines/DeadlineRow'
 import './deadlines/deadlines.css'
 
 /** Riepilogo: scadute e in scadenza nei prossimi 7 giorni (password, to-do e promemoria arriveranno qui). */
-export function HomeTab({ defaultLead }: { defaultLead: number }) {
+export function HomeTab({ state }: { state: UiState }) {
   const { t } = useTranslation()
+  const defaultLead = state.settings.defaultLeadDays
   const items = useDeadlines()
+  const passwords = useVaultEntries()
   const today = useToday()
   if (!items) return null
+  const toChange = (passwords ?? []).filter((p) => {
+    const c = countdown(p, today, defaultLead)
+    return c.daysLeft !== null && c.daysLeft <= defaultLead
+  })
 
   const sorted = [...items].sort(compareByUrgency(today, defaultLead))
   const overdue = sorted.filter((i) => deadlineStatus(i, today, defaultLead) === 'overdue')
@@ -26,6 +36,18 @@ export function HomeTab({ defaultLead }: { defaultLead: number }) {
           <ul className="dl-list">
             {overdue.map((item) => (
               <DeadlineRow key={item.id} item={item} today={today} defaultLead={defaultLead} onEdit={open} compact />
+            ))}
+          </ul>
+        </section>
+      )}
+      {toChange.length > 0 && (
+        <section className="home-card">
+          <h2 className="home-title">
+            {t('home.passwordsTitle')} <span className="count">{toChange.length}</span>
+          </h2>
+          <ul className="vault-list">
+            {toChange.map((p) => (
+              <VaultRowLocked key={p.id} entry={p} today={today} lead={defaultLead} onClick={() => window.dock.openPanel('vault')} />
             ))}
           </ul>
         </section>

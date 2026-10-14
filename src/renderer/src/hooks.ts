@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toISODate, type ISODate } from '@shared/dates'
 import type { DeadlineItem } from '@shared/deadlines'
+import type { VaultEntryView } from '@shared/vault'
 
 /** Data di oggi, aggiornata da sola a mezzanotte. */
 export function useToday(): ISODate {
@@ -21,6 +22,21 @@ export function useDeadlines(): DeadlineItem[] | null {
     let alive = true
     const off = window.dock.deadlines.onChange((next) => alive && setItems(next))
     void window.dock.deadlines.list().then((next) => alive && setItems(next))
+    return () => {
+      alive = false
+      off()
+    }
+  }, [])
+  return items
+}
+
+/** Voci della cassaforte (senza password), allineate al processo main. */
+export function useVaultEntries(): VaultEntryView[] | null {
+  const [items, setItems] = useState<VaultEntryView[] | null>(null)
+  useEffect(() => {
+    let alive = true
+    const off = window.dock.vault.onChange((next) => alive && setItems(next))
+    void window.dock.vault.list().then((next) => alive && setItems(next))
     return () => {
       alive = false
       off()

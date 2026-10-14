@@ -14,13 +14,16 @@ import { MascotService } from './mascot'
 import { DeadlineService } from './deadlines'
 import { AlertEngine } from './alerts'
 import { deadlineAlerts } from './deadlineAlerts'
+import { VaultController } from './vaultController'
+import { syncCodec } from './crypto/codec'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
-import { IPC, PREVIEWS, TABS, type DataDirInfo, type MascotPreview, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
+import { IPC, PREVIEWS, TABS, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type Settings } from '@shared/settings'
 import { resolveLang, resources, type Lang } from '@shared/i18n'
 import { inTimeRange, type BubbleOutcome } from '@shared/mascot'
 import { deadlineOpSchema } from '@shared/deadlines'
+import { vaultOpSchema } from '@shared/vault'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Dock')
@@ -48,7 +51,28 @@ async function main(): Promise<void> {
   const dataDir = await prepareDataDir(settings.get().dataDir)
   const onDataError = (err: unknown, file?: string) => log.warn(`Lettura dati non riuscita: ${file}`, err)
   await settings.attachSynced(dataDir.path, device, onDataError)
-  const deadlines = new DeadlineService(dataDir.path, device, onDataError, () => mascot.celebrate())
+  // Chiavi e cassaforte prima degli altri dati: servono a decifrarli.
+  const vaultCtl = new VaultController({
+    native,
+    dataDir: dataDir.path,
+    localDir,
+    device,
+    settings: () => settings.get(),
+    onError: onDataError,
+    onSyncKeyReady: async () => {
+      // Chiavi appena configurate o PC appena collegato: rilegge e riscrive cifrato.
+      await deadlines.load()
+      await deadlines.flush()
+      await vaultCtl.vault.load()
+    },
+    onChange: () => {
+      pushVault()
+      pushState()
+      alerts.schedule()
+    }
+  })
+  await vaultCtl.init()
+  const deadlines = new DeadlineService(dataDir.path, device, onDataError, () => mascot.celebrate(), syncCodec(vaultCtl.keys, 'deadlines'))
   await deadlines.load()
 
   let lang: Lang = resolveLang(settings.get().language, app.getPreferredSystemLanguages())
@@ -58,6 +82,9 @@ async function main(): Promise<void> {
   let panelOpen = false
   let tab: TabId = 'home'
   let fullscreenBusy = false
+  let intent: UiIntent | null = null
+  /** true mentre è aperta una finestra di sistema (es. Windows Hello). */
+  let holdOpen = false
 
   const overlay = new OverlayWindow({
     ...OverlayWindow.rendererPaths(__dirname),
@@ -71,8 +98,13 @@ async function main(): Promise<void> {
     settings: settings.get(),
     dataDir,
     autostartAvailable: app.isPackaged,
-    mascot: mascot.state()
+    mascot: mascot.state(),
+    vault: vaultCtl.status(),
+    intent
   })
+  const pushVault = () => {
+    if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.vaultChanged, vaultCtl.vault.list())
+  }
   const pushState = () => {
     if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.state, uiState())
   }
@@ -113,7 +145,7 @@ async function main(): Promise<void> {
 
   overlay.win.on('blur', () => {
     log.info('Finestra senza focus')
-    if (panelOpen && settings.get().closeOnBlur) closePanel()
+    if (panelOpen && settings.get().closeOnBlur && !holdOpen) closePanel()
   })
 
   // ---- Avvisi: notifiche di Windows + fumetti di Pix ----
@@ -134,6 +166,13 @@ async function main(): Promise<void> {
         defaultLead: () => settings.get().defaultLeadDays,
         t: () => i18next.t,
         open: () => openPanel('deadlines')
+      }),
+      vaultCtl.alertSource({
+        t: () => i18next.t,
+        generate: (id) => {
+          intent = { kind: 'vault-generate', id }
+          openPanel('vault')
+        }
       })
     ],
     isQuiet: () => {
@@ -169,6 +208,9 @@ async function main(): Promise<void> {
   const alertTimer = setInterval(() => alerts.schedule(0), 15 * 60_000)
   powerMonitor.on('resume', () => alerts.schedule(3000))
   powerMonitor.on('unlock-screen', () => alerts.schedule(3000))
+  // La cassaforte si chiude subito se blocchi Windows o il PC va in sospensione.
+  powerMonitor.on('lock-screen', () => void vaultCtl.lock('Windows bloccato'))
+  powerMonitor.on('suspend', () => void vaultCtl.lock('sospensione'))
 
   // ---- Servizi di sistema ----
   const shortcut = new GlobalShortcut(togglePanel)
@@ -273,6 +315,29 @@ async function main(): Promise<void> {
     return parsed.success ? deadlines.apply(parsed.data) : false
   })
 
+  ipcMain.handle(IPC.vaultList, (e) => (fromOverlay(e) ? vaultCtl.vault.list() : []))
+  ipcMain.handle(IPC.vaultApply, async (e, op: unknown) => {
+    if (!fromOverlay(e)) return { ok: false, error: 'forbidden' }
+    const parsed = vaultOpSchema.safeParse(op)
+    if (!parsed.success) return { ok: false, error: 'invalid' }
+    // Windows Hello mostra la sua finestra: il pannello non deve chiudersi per la perdita del focus.
+    const needsSystemPrompt = parsed.data.op === 'unlockHello' || parsed.data.op === 'enrollHello'
+    if (needsSystemPrompt) holdOpen = true
+    try {
+      return await vaultCtl.apply(parsed.data)
+    } finally {
+      if (needsSystemPrompt) {
+        holdOpen = false
+        overlay.focusForPanel()
+      }
+    }
+  })
+  ipcMain.on(IPC.clearIntent, (e) => {
+    if (!fromOverlay(e) || !intent) return
+    intent = null
+    pushState()
+  })
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
@@ -283,6 +348,7 @@ async function main(): Promise<void> {
     alerts.dispose()
     clearInterval(alertTimer)
     void deadlines.flush()
+    void vaultCtl.flush().finally(() => vaultCtl.dispose())
     fullscreen.dispose()
     native.dispose()
     tray.destroy()

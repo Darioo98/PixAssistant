@@ -1,0 +1,266 @@
+.vault {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vault-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.vault-card h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.vault-card p {
+  margin: 0;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.vault-card .vault-icon {
+  align-self: center;
+}
+
+.vault-card .field input,
+.recovery-form input,
+.search {
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  font: inherit;
+  color: inherit;
+}
+
+.mono,
+.recovery-key,
+.gen-preview {
+  font-family: 'Cascadia Mono', Consolas, ui-monospace, monospace;
+}
+
+.recovery-key {
+  display: block;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--rail-bg);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  word-break: break-all;
+  user-select: all;
+}
+
+.recovery-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-size: 12px;
+}
+
+.banner span {
+  flex: 1;
+  min-width: 160px;
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
+}
+
+.vault-session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -4px;
+}
+
+.vault-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vault-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 8px;
+}
+
+.vault-row:hover {
+  background: var(--hover);
+}
+
+.vault-row.locked {
+  gap: 10px;
+  padding-left: 8px;
+  opacity: 0.85;
+}
+
+.vault-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 0 4px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vault-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.vault-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vault-actions {
+  display: flex;
+  align-items: center;
+}
+
+/* ---------- Countdown ---------- */
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.countdown-track {
+  flex: none;
+  width: 70px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--rail-bg);
+  overflow: hidden;
+}
+
+.countdown-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--lv);
+}
+
+.countdown-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lv-ok {
+  --lv: #22b07d;
+}
+.lv-warn {
+  --lv: #f59e0b;
+}
+.lv-due {
+  --lv: #e5484d;
+}
+.lv-never {
+  --lv: var(--text-muted);
+}
+
+.lv-due .countdown-label {
+  color: var(--lv);
+}
+
+/* ---------- Robustezza e generatore ---------- */
+.strength {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.strength span {
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rail-bg);
+}
+
+.strength.s0 span.on,
+.strength.s1 span.on {
+  background: #e5484d;
+}
+.strength.s2 span.on {
+  background: #f59e0b;
+}
+.strength.s3 span.on,
+.strength.s4 span.on {
+  background: #22b07d;
+}
+
+.strength em {
+  margin-left: 6px;
+  font-size: 11px;
+  font-style: normal;
+  color: var(--text-muted);
+}
+
+.generator {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.gen-preview {
+  display: block;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--rail-bg);
+  font-size: 14px;
+  word-break: break-all;
+  user-select: all;
+}
+
+.generator input[type='range'] {
+  width: 150px;
+  accent-color: var(--accent);
+}
+
+.inline .grow {
+  flex: 1;
+  min-width: 0;
+}

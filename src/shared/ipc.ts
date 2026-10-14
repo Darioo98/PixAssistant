@@ -2,6 +2,7 @@ import type { Settings, SettingsPatch } from './settings'
 import type { Lang } from './i18n'
 import type { BubbleOutcome, MascotState } from './mascot'
 import type { DeadlineItem, DeadlineOp } from './deadlines'
+import type { VaultEntryView, VaultOp, VaultOpResult, VaultStatus } from './vault'
 
 export const TABS = [
   'home',
@@ -32,7 +33,12 @@ export interface UiState {
   /** In sviluppo l'avvio automatico non viene registrato. */
   autostartAvailable: boolean
   mascot: MascotState
+  vault: VaultStatus
+  /** Azione richiesta da un avviso (es. "Genera" una nuova password), da eseguire all'apertura. */
+  intent: UiIntent | null
 }
+
+export type UiIntent = { kind: 'vault-generate'; id: string }
 
 export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet'] as const
 export type MascotPreview = (typeof PREVIEWS)[number]
@@ -50,6 +56,12 @@ export interface DockApi {
   openDataDir(): void
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
   previewMascot(preview: MascotPreview): void
+  clearIntent(): void
+  vault: {
+    list(): Promise<VaultEntryView[]>
+    onChange(cb: (items: VaultEntryView[]) => void): () => void
+    apply(op: VaultOp): Promise<VaultOpResult>
+  }
   deadlines: {
     list(): Promise<DeadlineItem[]>
     onChange(cb: (items: DeadlineItem[]) => void): () => void
@@ -69,5 +81,9 @@ export const IPC = {
   previewMascot: 'mascot:preview',
   deadlinesList: 'deadlines:list',
   deadlinesChanged: 'deadlines:changed',
-  deadlinesApply: 'deadlines:apply'
+  deadlinesApply: 'deadlines:apply',
+  clearIntent: 'ui:clear-intent',
+  vaultList: 'vault:list',
+  vaultChanged: 'vault:changed',
+  vaultApply: 'vault:apply'
 } as const

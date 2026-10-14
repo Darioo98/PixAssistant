@@ -38,7 +38,8 @@
     "overdueTitle": "Overdue",
     "weekTitle": "Next 7 days",
     "nothing": "All quiet: nothing due in the next 7 days.",
-    "seeAll": "See all"
+    "seeAll": "See all",
+    "passwordsTitle": "Passwords to change"
   },
   "settings": {
     "general": "General",
@@ -143,7 +144,15 @@
     "deadlines": "Deadlines",
     "defaultLeadDays": "Default reminder (days)",
     "hue": "Hue",
-    "colorDone": "Done"
+    "colorDone": "Done",
+    "vault": "Vault",
+    "sessionHours": "Stay open for (hours)",
+    "hello": "Windows Hello on this PC",
+    "helloOn": "On",
+    "helloOff": "Off",
+    "helloRemove": "Turn off",
+    "helloEnable": "Turn on",
+    "generatorDefaults": "Generator: default length"
   },
   "mascot": {
     "preview": {
@@ -256,5 +265,142 @@
     "summaryCategory": "Alerts",
     "summary_one": "You have {{count}} alert to look at.",
     "summary_other": "You have {{count}} alerts to look at."
+  },
+  "vault": {
+    "category": "Passwords",
+    "setup": {
+      "title": "Set up the vault",
+      "intro": "Passwords are encrypted (AES-256) before being saved to OneDrive. You open them with Windows Hello; on a new PC or in an emergency you will need a recovery key.",
+      "start": "Set up",
+      "creating": "Creating keys…",
+      "recoveryTitle": "Your recovery key",
+      "recoveryText": "Keep it somewhere safe, away from this PC (printed or in another password manager). This is the only time it is shown: without it and without Windows Hello the passwords cannot be recovered.",
+      "copy": "Copy",
+      "copied": "Copied: it will be cleared from the clipboard in 30 seconds.",
+      "confirmLabel": "To confirm, type the last group of the key",
+      "confirmCheck": "I have stored it somewhere safe",
+      "continue": "Continue",
+      "helloTitle": "Turn on Windows Hello",
+      "helloText": "Open the vault with your face, fingerprint or PIN. It applies to this PC only.",
+      "helloEnable": "Turn on Windows Hello",
+      "helloSkip": "Later",
+      "helloUnavailable": "Windows Hello is not available on this PC: you will use the recovery key.",
+      "done": "Done"
+    },
+    "link": {
+      "title": "Link this PC",
+      "text": "A vault created on another PC already exists in OneDrive. Enter the recovery key to link this PC; then you can turn on Windows Hello here too. Until then, deadlines and reminders from other PCs cannot be read.",
+      "submit": "Link"
+    },
+    "unlock": {
+      "title": "Vault locked",
+      "hello": "Unlock with Windows Hello",
+      "useRecovery": "Use the recovery key",
+      "submit": "Unlock",
+      "waitingHello": "Confirm with Windows Hello…",
+      "recoveryLabel": "Recovery key"
+    },
+    "errors": {
+      "wrong-key": "Wrong recovery key.",
+      "hello-canceled": "Windows Hello canceled.",
+      "hello-notFound": "The Windows Hello registration is no longer valid: use the recovery key and turn it on again.",
+      "hello-locked": "Windows Hello is locked. Try again later.",
+      "hello-mismatch": "Windows Hello does not match: use the recovery key and turn it on again.",
+      "hello-error": "Windows Hello did not work.",
+      "already-configured": "The vault is already set up.",
+      "locked": "The vault is locked.",
+      "generic": "The operation failed."
+    },
+    "session": "Open until {{time}}",
+    "lock": "Lock",
+    "search": "Search",
+    "new": "New entry",
+    "empty": "No passwords saved.",
+    "noResults": "No results.",
+    "helloBanner": "Turn on Windows Hello on this PC to open the vault without the recovery key.",
+    "helloEnable": "Turn on",
+    "countdown": {
+      "never": "No scheduled change",
+      "today": "Change today",
+      "dueSince_one": "Change overdue by {{count}} day",
+      "dueSince_other": "Change overdue by {{count}} days",
+      "left_one": "Change in {{count}} day",
+      "left_other": "Change in {{count}} days"
+    },
+    "actions": {
+      "copyUser": "Copy username",
+      "copyPassword": "Copy password",
+      "copied": "Copied",
+      "newPassword": "New password",
+      "reset": "Reset countdown",
+      "edit": "Edit",
+      "openUrl": "Open site",
+      "more": "More actions"
+    },
+    "newPasswordDone": "New password generated and copied. Remember to update it on the site too.",
+    "form": {
+      "newTitle": "New entry",
+      "editTitle": "Edit entry",
+      "name": "Name",
+      "namePlaceholder": "E.g. Gmail",
+      "username": "Username or email",
+      "password": "Password",
+      "show": "Show",
+      "hide": "Hide",
+      "generate": "Generate",
+      "url": "Site (URL)",
+      "interval": "Password change",
+      "custom": "Custom",
+      "days": "days",
+      "notes": "Notes",
+      "intervalOptions": {
+        "0": "Never",
+        "30": "Every 30 days",
+        "60": "Every 60 days",
+        "90": "Every 90 days",
+        "180": "Every 180 days",
+        "365": "Every year"
+      },
+      "history_one": "History: {{count}} previous password saved",
+      "history_other": "History: {{count}} previous passwords saved",
+      "lastChanged": "Last changed: {{date}}",
+      "manualChangeHint": "If you change the password the countdown restarts from today.",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "strength": {
+      "0": "Very weak",
+      "1": "Weak",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Excellent"
+    },
+    "generator": {
+      "title": "Generator",
+      "length": "Length",
+      "symbols": "Symbols",
+      "avoidAmbiguous": "Avoid ambiguous characters (l, 1, O, 0…)",
+      "regenerate": "Regenerate",
+      "use": "Use this",
+      "generateAndCopy": "Generate and copy",
+      "newFor": "New password for \"{{name}}\"",
+      "newHint": "The current password goes into the history and the countdown restarts from today."
+    },
+    "alert": {
+      "due": "The password for \"{{name}}\" needs changing. Shall I generate a new one?",
+      "soon_one": "The password for \"{{name}}\" needs changing tomorrow. Shall I generate a new one?",
+      "soon_other": "The password for \"{{name}}\" needs changing in {{count}} days. Shall I generate a new one?",
+      "generate": "Generate",
+      "later": "Later"
+    },
+    "clipboardWarning": "Protected copy not available: the password might appear in the Windows clipboard history."
+  },
+  "common": {
+    "delete": "Delete",
+    "confirmDelete": "Confirm delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "copied": "Copied"
   }
 }

@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC, type DockApi, type UiState } from '@shared/ipc'
 import type { DeadlineItem } from '@shared/deadlines'
+import type { VaultEntryView } from '@shared/vault'
 
 /** API minima esposta al renderer: nessun accesso diretto a Node o a ipcRenderer. */
 const api: DockApi = {
@@ -17,6 +18,16 @@ const api: DockApi = {
   openDataDir: () => ipcRenderer.send(IPC.openDataDir),
   bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
   previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview),
+  clearIntent: () => ipcRenderer.send(IPC.clearIntent),
+  vault: {
+    list: () => ipcRenderer.invoke(IPC.vaultList),
+    onChange: (cb) => {
+      const listener = (_e: IpcRendererEvent, items: VaultEntryView[]) => cb(items)
+      ipcRenderer.on(IPC.vaultChanged, listener)
+      return () => ipcRenderer.removeListener(IPC.vaultChanged, listener)
+    },
+    apply: (op) => ipcRenderer.invoke(IPC.vaultApply, op)
+  },
   deadlines: {
     list: () => ipcRenderer.invoke(IPC.deadlinesList),
     onChange: (cb) => {

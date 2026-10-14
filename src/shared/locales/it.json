@@ -38,7 +38,8 @@
     "overdueTitle": "Scadute",
     "weekTitle": "Prossimi 7 giorni",
     "nothing": "Tutto tranquillo: niente in scadenza nei prossimi 7 giorni.",
-    "seeAll": "Vedi tutte"
+    "seeAll": "Vedi tutte",
+    "passwordsTitle": "Password da cambiare"
   },
   "settings": {
     "general": "Generale",
@@ -143,7 +144,15 @@
     "deadlines": "Scadenze",
     "defaultLeadDays": "Preavviso predefinito (giorni)",
     "hue": "Tinta",
-    "colorDone": "Fatto"
+    "colorDone": "Fatto",
+    "vault": "Cassaforte",
+    "sessionHours": "Resta aperta per (ore)",
+    "hello": "Windows Hello su questo PC",
+    "helloOn": "Attivo",
+    "helloOff": "Non attivo",
+    "helloRemove": "Disattiva",
+    "helloEnable": "Attiva",
+    "generatorDefaults": "Generatore: lunghezza predefinita"
   },
   "mascot": {
     "preview": {
@@ -256,5 +265,142 @@
     "summaryCategory": "Avvisi",
     "summary_one": "Hai {{count}} avviso da guardare.",
     "summary_other": "Hai {{count}} avvisi da guardare."
+  },
+  "vault": {
+    "category": "Password",
+    "setup": {
+      "title": "Configura la cassaforte",
+      "intro": "Le password vengono cifrate (AES-256) prima di essere salvate su OneDrive. Le apri con Windows Hello; su un PC nuovo o in emergenza servirà una chiave di recupero.",
+      "start": "Configura",
+      "creating": "Creo le chiavi…",
+      "recoveryTitle": "La tua chiave di recupero",
+      "recoveryText": "Conservala in un posto sicuro, fuori da questo PC (stampata o in un altro password manager). Te la mostro solo adesso: senza questa chiave e senza Windows Hello le password non si possono recuperare.",
+      "copy": "Copia",
+      "copied": "Copiata: si cancella dagli appunti tra 30 secondi.",
+      "confirmLabel": "Per conferma, scrivi l'ultimo gruppo della chiave",
+      "confirmCheck": "L'ho conservata in un posto sicuro",
+      "continue": "Continua",
+      "helloTitle": "Attiva Windows Hello",
+      "helloText": "Così apri la cassaforte con volto, impronta o PIN. Vale solo per questo PC.",
+      "helloEnable": "Attiva Windows Hello",
+      "helloSkip": "Più tardi",
+      "helloUnavailable": "Windows Hello non è disponibile su questo PC: userai la chiave di recupero.",
+      "done": "Fatto"
+    },
+    "link": {
+      "title": "Collega questo PC",
+      "text": "Su OneDrive c'è già una cassaforte creata su un altro PC. Inserisci la chiave di recupero per collegare questo PC; poi potrai attivare Windows Hello anche qui. Finché non lo colleghi, scadenze e promemoria degli altri PC non sono leggibili.",
+      "submit": "Collega"
+    },
+    "unlock": {
+      "title": "Cassaforte chiusa",
+      "hello": "Sblocca con Windows Hello",
+      "useRecovery": "Usa la chiave di recupero",
+      "submit": "Sblocca",
+      "waitingHello": "Conferma con Windows Hello…",
+      "recoveryLabel": "Chiave di recupero"
+    },
+    "errors": {
+      "wrong-key": "Chiave di recupero non corretta.",
+      "hello-canceled": "Windows Hello annullato.",
+      "hello-notFound": "La registrazione di Windows Hello non è più valida: usa la chiave di recupero e riattivalo.",
+      "hello-locked": "Windows Hello è bloccato. Riprova più tardi.",
+      "hello-mismatch": "Windows Hello non corrisponde: usa la chiave di recupero e riattivalo.",
+      "hello-error": "Windows Hello non ha funzionato.",
+      "already-configured": "La cassaforte è già configurata.",
+      "locked": "La cassaforte è chiusa.",
+      "generic": "Operazione non riuscita."
+    },
+    "session": "Aperta fino alle {{time}}",
+    "lock": "Blocca",
+    "search": "Cerca",
+    "new": "Nuova voce",
+    "empty": "Nessuna password salvata.",
+    "noResults": "Nessun risultato.",
+    "helloBanner": "Attiva Windows Hello su questo PC per aprire la cassaforte senza chiave di recupero.",
+    "helloEnable": "Attiva",
+    "countdown": {
+      "never": "Nessun cambio programmato",
+      "today": "Da cambiare oggi",
+      "dueSince_one": "Da cambiare da {{count}} giorno",
+      "dueSince_other": "Da cambiare da {{count}} giorni",
+      "left_one": "Cambio tra {{count}} giorno",
+      "left_other": "Cambio tra {{count}} giorni"
+    },
+    "actions": {
+      "copyUser": "Copia utente",
+      "copyPassword": "Copia password",
+      "copied": "Copiato",
+      "newPassword": "Nuova password",
+      "reset": "Reset countdown",
+      "edit": "Modifica",
+      "openUrl": "Apri sito",
+      "more": "Altre azioni"
+    },
+    "newPasswordDone": "Nuova password generata e copiata. Ricordati di aggiornarla anche sul sito.",
+    "form": {
+      "newTitle": "Nuova voce",
+      "editTitle": "Modifica voce",
+      "name": "Nome",
+      "namePlaceholder": "Es. Gmail",
+      "username": "Utente o email",
+      "password": "Password",
+      "show": "Mostra",
+      "hide": "Nascondi",
+      "generate": "Genera",
+      "url": "Sito (URL)",
+      "interval": "Cambio password",
+      "custom": "Personalizzato",
+      "days": "giorni",
+      "notes": "Note",
+      "intervalOptions": {
+        "0": "Mai",
+        "30": "Ogni 30 giorni",
+        "60": "Ogni 60 giorni",
+        "90": "Ogni 90 giorni",
+        "180": "Ogni 180 giorni",
+        "365": "Ogni anno"
+      },
+      "history_one": "Storico: {{count}} password precedente salvata",
+      "history_other": "Storico: {{count}} password precedenti salvate",
+      "lastChanged": "Ultimo cambio: {{date}}",
+      "manualChangeHint": "Se modifichi la password il countdown riparte da oggi.",
+      "save": "Salva",
+      "cancel": "Annulla"
+    },
+    "strength": {
+      "0": "Molto debole",
+      "1": "Debole",
+      "2": "Discreta",
+      "3": "Buona",
+      "4": "Ottima"
+    },
+    "generator": {
+      "title": "Generatore",
+      "length": "Lunghezza",
+      "symbols": "Simboli",
+      "avoidAmbiguous": "Escludi caratteri ambigui (l, 1, O, 0…)",
+      "regenerate": "Rigenera",
+      "use": "Usa questa",
+      "generateAndCopy": "Genera e copia",
+      "newFor": "Nuova password per «{{name}}»",
+      "newHint": "La password attuale va nello storico e il countdown riparte da oggi."
+    },
+    "alert": {
+      "due": "La password di «{{name}}» va cambiata. Ne genero una nuova?",
+      "soon_one": "La password di «{{name}}» va cambiata domani. Ne genero una nuova?",
+      "soon_other": "La password di «{{name}}» va cambiata tra {{count}} giorni. Ne genero una nuova?",
+      "generate": "Genera",
+      "later": "Più tardi"
+    },
+    "clipboardWarning": "Copia protetta non disponibile: la password potrebbe comparire nella cronologia appunti di Windows."
+  },
+  "common": {
+    "delete": "Elimina",
+    "confirmDelete": "Conferma eliminazione",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "search": "Cerca",
+    "copied": "Copiato"
   }
 }
