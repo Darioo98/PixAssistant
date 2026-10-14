@@ -1,7 +1,9 @@
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { HEX_COLOR, PIX_EYES, PIX_FINISHES, PIX_PALETTE, PIX_SHAPES, type Mood } from '@shared/mascot'
+import { PIX_EYES, PIX_FINISHES, PIX_PALETTE, PIX_SHAPES, type Mood } from '@shared/mascot'
 import { DEFAULT_SETTINGS, type Settings, type SettingsPatch } from '@shared/settings'
 import { PixFigure } from '../pix/PixFigure'
+import { ColorPicker } from './ColorPicker'
 
 const PREVIEW_MOODS: Mood[] = ['alert', 'happy', 'sleep']
 
@@ -10,6 +12,8 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
   const { t } = useTranslation()
   const look = { shape: s.pixShape, color: s.pixColor, eyes: s.pixEyes, finish: s.pixFinish, shine: s.pixShine }
   const isPalette = (PIX_PALETTE as readonly string[]).includes(s.pixColor.toUpperCase())
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const closePicker = useCallback(() => setPickerOpen(false), [])
 
   return (
     <div className="appearance">
@@ -55,15 +59,18 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
               onClick={() => void save({ pixColor: c })}
             />
           ))}
-          <label className={`swatch custom ${!isPalette ? 'selected' : ''}`} title={t('settings.customColor')}>
-            <input
-              type="color"
-              value={s.pixColor}
-              aria-label={t('settings.customColor')}
-              onChange={(e) => HEX_COLOR.test(e.target.value) && void save({ pixColor: e.target.value.toUpperCase() })}
-            />
-          </label>
+          <button
+            className={`swatch custom ${!isPalette ? 'selected' : ''}`}
+            title={t('settings.customColor')}
+            aria-label={t('settings.customColor')}
+            aria-expanded={pickerOpen}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => setPickerOpen((o) => !o)}
+          />
         </div>
+        {pickerOpen && (
+          <ColorPicker value={s.pixColor} onChange={(hex) => void save({ pixColor: hex })} onClose={closePicker} />
+        )}
       </div>
 
       <div className="field">

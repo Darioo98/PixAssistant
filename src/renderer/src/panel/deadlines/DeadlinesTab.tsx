@@ -80,7 +80,7 @@ export function DeadlinesTab({ defaultLead }: { defaultLead: number }) {
         <div className="segmented" role="tablist">
           {(['list', 'calendar'] as const).map((v) => (
             <button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
-              {t(`deadlines.${v}`)}
+              {t(`deadlines.views.${v}`)}
             </button>
           ))}
         </div>

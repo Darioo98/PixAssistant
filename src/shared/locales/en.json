@@ -141,7 +141,9 @@
     "appearanceHint": "The color applies to Pix in its normal state and to the bar. Alert, happy and sleeping keep their own colors, so you can tell at a glance what is going on.",
     "resetAppearance": "Restore the original look",
     "deadlines": "Deadlines",
-    "defaultLeadDays": "Default reminder (days)"
+    "defaultLeadDays": "Default reminder (days)",
+    "hue": "Hue",
+    "colorDone": "Done"
   },
   "mascot": {
     "preview": {
@@ -158,7 +160,6 @@
   "deadlines": {
     "category": "Deadlines",
     "new": "New deadline",
-    "list": "List",
     "calendar": {
       "today": "Today",
       "prev": "Previous month",
@@ -242,6 +243,10 @@
       "today": "\"{{title}}\" is due today.",
       "soon_one": "\"{{title}}\" is due tomorrow.",
       "soon_other": "\"{{title}}\" is due in {{count}} days."
+    },
+    "views": {
+      "list": "List",
+      "calendar": "Calendar"
     }
   },
   "alerts": {

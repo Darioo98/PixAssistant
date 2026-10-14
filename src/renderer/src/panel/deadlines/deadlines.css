@@ -44,6 +44,11 @@
   background: var(--rail-bg);
 }
 
+.segmented button,
+.toolbar .btn {
+  white-space: nowrap;
+}
+
 .segmented button {
   padding: 4px 12px;
   border: 0;

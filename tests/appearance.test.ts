@@ -41,3 +41,13 @@ describe('forme di Pix', () => {
     expect(bodyAt(m, 0.8, true)).toMatch(/^M/)
   })
 })
+
+describe('selettore di colore', () => {
+  it('converte HEX <-> HSV senza perdite', async () => {
+    const { hexToHsv, hsvToHex } = await import('@shared/color')
+    for (const hex of ['#6366F1', '#000000', '#FFFFFF', '#F97362', '#22B07D', '#0EA5E9']) {
+      expect(hsvToHex(hexToHsv(hex))).toBe(hex)
+    }
+    expect(hsvToHex({ h: 0, s: 1, v: 1 })).toBe('#FF0000')
+  })
+})

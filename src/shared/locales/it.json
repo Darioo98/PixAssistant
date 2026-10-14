@@ -141,7 +141,9 @@
     "appearanceHint": "Il colore vale per Pix nello stato normale e per la barra. Avviso, felice e dorme mantengono i loro colori, così capisci subito cosa succede.",
     "resetAppearance": "Ripristina l'aspetto originale",
     "deadlines": "Scadenze",
-    "defaultLeadDays": "Preavviso predefinito (giorni)"
+    "defaultLeadDays": "Preavviso predefinito (giorni)",
+    "hue": "Tinta",
+    "colorDone": "Fatto"
   },
   "mascot": {
     "preview": {
@@ -158,7 +160,6 @@
   "deadlines": {
     "category": "Scadenze",
     "new": "Nuova scadenza",
-    "list": "Lista",
     "calendar": {
       "today": "Oggi",
       "prev": "Mese precedente",
@@ -242,6 +243,10 @@
       "today": "«{{title}}» scade oggi.",
       "soon_one": "«{{title}}» scade domani.",
       "soon_other": "«{{title}}» scade tra {{count}} giorni."
+    },
+    "views": {
+      "list": "Lista",
+      "calendar": "Calendario"
     }
   },
   "alerts": {
