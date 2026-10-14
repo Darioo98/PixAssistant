@@ -13,6 +13,8 @@ import {
 import { useData, useNow } from '../../hooks'
 import { DeleteButton, RowMenu } from '../RowMenu'
 import '../notes/productivity.css'
+import { useShiftRemaining } from '../extras/Shift'
+import { formatRemaining } from '@shared/shift'
 
 export function TimersTab() {
   const { t } = useTranslation()
@@ -136,7 +138,17 @@ export function TimerPill() {
   const running = (timers ?? []).filter((x) => x.state === 'running')
   const now = useNow(running.length > 0)
   const waiting = (timers ?? []).some((x) => x.state === 'waiting')
-  if (running.length === 0 && !waiting) return null
+  const shiftLeft = useShiftRemaining()
+  if (running.length === 0 && !waiting) {
+    // Nessun timer: se sei in sede mostra quanto manca alla fine del turno.
+    if (shiftLeft === null) return null
+    const time = formatRemaining(shiftLeft, { h: t('shift.h'), min: t('shift.min') })
+    return (
+      <button className="timer-pill" data-hit aria-label={t('shift.pill', { time })} onClick={() => window.dock.openPanel('home')}>
+        🏢 {time}
+      </button>
+    )
+  }
   const next = running.reduce<TimerView | null>((a, b) => (!a || (b.endsAt ?? 0) < (a.endsAt ?? 0) ? b : a), null)
   const time = next ? formatDuration(remainingOf(next, now)) : '⏸'
   return (

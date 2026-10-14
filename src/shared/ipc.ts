@@ -6,6 +6,7 @@ import type { VaultEntryView, VaultOp, VaultOpResult, VaultStatus } from './vaul
 import type { ChatOp, ChatOpResult, ChatState, ChatStreamEvent, ConversationItem } from './chat'
 import type { ClipOp, ClipState, LinkOp, LinkView, WeatherState } from './extras'
 import type { MaintenanceOp, MaintenanceResult, MaintenanceState } from './maintenance'
+import type { ShiftOp, ShiftState } from './shift'
 import type { NoteItem, NoteOp, ReminderItem, ReminderOp, TimerOp, TimerView, TodoItem, TodoOp } from './productivity'
 
 export const TABS = [
@@ -77,6 +78,11 @@ export interface DockApi {
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
   previewMascot(preview: MascotPreview): void
   clearIntent(): void
+  shift: {
+    state(): Promise<ShiftState>
+    onChange(cb: (state: ShiftState) => void): () => void
+    apply(op: ShiftOp): Promise<boolean>
+  }
   maintenance: {
     state(): Promise<MaintenanceState>
     onChange(cb: (state: MaintenanceState) => void): () => void
@@ -153,5 +159,8 @@ export const IPC = {
   weather: 'weather:get',
   maintState: 'maint:state',
   maintChanged: 'maint:changed',
-  maintApply: 'maint:apply'
+  maintApply: 'maint:apply',
+  shiftState: 'shift:state',
+  shiftChanged: 'shift:changed',
+  shiftApply: 'shift:apply'
 } as const

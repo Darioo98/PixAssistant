@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { quickAsk } from './chat/useChat'
 import { WeatherWidget } from './extras/Weather'
+import { ShiftCard } from './extras/Shift'
 import { useData } from '../hooks'
 import { TodoRow } from './notes/NotesTab'
 import { isTodoForToday, parseLocal } from '@shared/productivity'
@@ -40,6 +41,7 @@ export function HomeTab({ state }: { state: UiState }) {
   return (
     <div className="home">
       <WeatherWidget city={state.settings.weatherCity} />
+      <ShiftCard defaultBreak={state.settings.shiftBreakMinutes} />
       <QuickAsk />
       <QuickNote />
       <section className="home-card">

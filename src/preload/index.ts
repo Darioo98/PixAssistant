@@ -5,6 +5,7 @@ import type { VaultEntryView } from '@shared/vault'
 import type { ChatState, ChatStreamEvent, ConversationItem } from '@shared/chat'
 import type { ClipState, LinkView } from '@shared/extras'
 import type { MaintenanceState } from '@shared/maintenance'
+import type { ShiftState } from '@shared/shift'
 
 /** Iscrizione a un evento dal processo main; restituisce la funzione per disiscriversi. */
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -29,6 +30,11 @@ const api: DockApi = {
   bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
   previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview),
   clearIntent: () => ipcRenderer.send(IPC.clearIntent),
+  shift: {
+    state: () => ipcRenderer.invoke(IPC.shiftState),
+    onChange: (cb) => subscribe(IPC.shiftChanged, (s: ShiftState) => cb(s)),
+    apply: (op) => ipcRenderer.invoke(IPC.shiftApply, op)
+  },
   maintenance: {
     state: () => ipcRenderer.invoke(IPC.maintState),
     onChange: (cb) => subscribe(IPC.maintChanged, (s: MaintenanceState) => cb(s)),

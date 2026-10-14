@@ -1,23 +1,38 @@
 appId: com.dariocavallo.dock
 productName: Dock
+copyright: Copyright © 2026 Dario Cavallo
 directories:
   output: dist
   buildResources: build
 files:
   - out/**
   - package.json
+  # L'eseguibile di Claude Code incluso nell'SDK (oltre 250 MB) non si distribuisce:
+  # Dock usa il Claude Code installato sul PC.
+  - '!node_modules/@anthropic-ai/claude-agent-sdk-*/**'
+asarUnpack:
+  # L'SDK viene importato come modulo ESM: fuori dall'archivio asar per sicurezza.
+  - node_modules/@anthropic-ai/claude-agent-sdk/**
 extraResources:
   - from: resources/native
     to: native
+    filter:
+      - PixNative.exe
   - from: resources/icons
     to: icons
 win:
-  target: nsis
+  target:
+    - target: nsis
+      arch: [x64]
   icon: build/icon.ico
 nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: false
+  createStartMenuShortcut: true
+  shortcutName: Dock
   runAfterFinish: true
-  language: 1040
+  deleteAppDataOnUninstall: false
+  installerLanguages: [it_IT, en_US]
+  language: '1040'

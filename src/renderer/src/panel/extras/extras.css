@@ -181,3 +181,54 @@
   align-items: center;
   text-transform: capitalize;
 }
+
+/* ---------- Turno in sede ---------- */
+.shift-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 4px 4px;
+}
+
+.shift-form .inline {
+  justify-content: space-between;
+}
+
+.shift-form input {
+  padding: 4px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  font: inherit;
+  color: inherit;
+}
+
+.shift-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px 6px;
+}
+
+.shift-main strong {
+  font-size: 15px;
+}
+
+.shift-left {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.shift-over {
+  color: #22b07d;
+  font-weight: 600;
+}
+
+.shift-card .timer-track {
+  margin: 0 4px 6px;
+}
+
+.shift-card .form-actions {
+  padding: 0 4px;
+}

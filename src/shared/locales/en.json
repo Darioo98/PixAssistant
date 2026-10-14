@@ -172,7 +172,11 @@
     "clipboardPaused": "Paused",
     "clipboardMax": "Entries to keep",
     "clipboardImages": "Keep images too",
-    "clipboardExcluded": "Excluded apps (comma separated)"
+    "clipboardExcluded": "Excluded apps (comma separated)",
+    "shift": "Office workday",
+    "shiftWork": "Workday length (hours:minutes)",
+    "shiftBreak": "Break (minutes)",
+    "shiftRemind": "Remind me before the end (minutes)"
   },
   "mascot": {
     "preview": {
@@ -669,5 +673,26 @@
       "not-configured": "Set up the vault first.",
       "generic": "The operation failed."
     }
+  },
+  "shift": {
+    "category": "Workday",
+    "title": "Office workday",
+    "arrivedAt": "I arrived at",
+    "start": "Start workday",
+    "endsAt": "Workday ends at {{time}}",
+    "left": "{{time}} left",
+    "over": "Workday ended {{time}} ago",
+    "breakToday": "Break today (min)",
+    "edit": "Edit",
+    "clear": "Cancel workday",
+    "save": "Save",
+    "arrival": "Arrived {{time}}",
+    "workBreak": "{{work}} of work + {{brk}} min break",
+    "remind_one": "{{count}} minute left until the end of your workday ({{time}}).",
+    "remind_other": "{{count}} minutes left until the end of your workday ({{time}}).",
+    "ended": "Workday over at {{time}}! Have a good trip home.",
+    "h": "h",
+    "min": "min",
+    "pill": "Workday: {{time}} left"
   }
 }

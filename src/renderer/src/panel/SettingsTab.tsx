@@ -6,6 +6,7 @@ import { comboToAccelerator, formatAccelerator } from '@shared/accelerator'
 import { AppearanceSection } from './AppearanceSection'
 import { MaintenanceSection } from './MaintenanceSection'
 import { DEFAULT_MODELS } from '@shared/chat'
+import { formatHHMM, minutesOf } from '@shared/shift'
 
 export function SettingsTab({ state }: { state: UiState }) {
   const { t } = useTranslation()
@@ -211,6 +212,47 @@ export function SettingsTab({ state }: { state: UiState }) {
           </select>
         </Row>
         <p className="hint">{t('settings.aiFuture')}</p>
+      </Section>
+
+      <Section title={t('settings.shift')}>
+        <Row label={t('settings.shiftWork')}>
+          <input
+            type="time"
+            value={formatHHMM(s.shiftWorkMinutes)}
+            onChange={(e) => {
+              const v = e.target.value ? minutesOf(e.target.value) : 0
+              if (v >= 15 && v !== s.shiftWorkMinutes) void save({ shiftWorkMinutes: v })
+            }}
+          />
+        </Row>
+        <Row label={t('settings.shiftBreak')}>
+          <input
+            type="number"
+            className="num"
+            min={0}
+            max={240}
+            defaultValue={s.shiftBreakMinutes}
+            key={s.shiftBreakMinutes}
+            onBlur={(e) => {
+              const v = Math.min(240, Math.max(0, Math.round(Number(e.target.value)) || 0))
+              if (v !== s.shiftBreakMinutes) void save({ shiftBreakMinutes: v })
+            }}
+          />
+        </Row>
+        <Row label={t('settings.shiftRemind')}>
+          <input
+            type="number"
+            className="num"
+            min={0}
+            max={120}
+            defaultValue={s.shiftRemindBefore}
+            key={s.shiftRemindBefore}
+            onBlur={(e) => {
+              const v = Math.min(120, Math.max(0, Math.round(Number(e.target.value)) || 0))
+              if (v !== s.shiftRemindBefore) void save({ shiftRemindBefore: v })
+            }}
+          />
+        </Row>
       </Section>
 
       <Section title={t('settings.pomodoro')}>

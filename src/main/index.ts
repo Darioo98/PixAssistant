@@ -25,6 +25,7 @@ import { WeatherService } from './weather'
 import { safeStorageProtector } from './vaultController'
 import { SyncManager } from './sync'
 import { MaintenanceController } from './maintenance'
+import { ShiftService } from './shift'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataCollection, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
@@ -36,6 +37,7 @@ import { vaultOpSchema } from '@shared/vault'
 import { chatOpSchema } from '@shared/chat'
 import { clipOpSchema, linkOpSchema } from '@shared/extras'
 import { maintenanceOpSchema } from '@shared/maintenance'
+import { formatHHMM, shiftOpSchema } from '@shared/shift'
 import { noteTitle } from '@shared/productivity'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
@@ -383,6 +385,36 @@ async function main(): Promise<void> {
   sync.start()
   await maintenance.init()
 
+  // ---- Turno di lavoro in sede ----
+  const hhmmOf = (d: Date) => formatHHMM(d.getHours() * 60 + d.getMinutes())
+  const shift = new ShiftService({
+    localDir,
+    config: () => {
+      const s = settings.get()
+      return { workMinutes: s.shiftWorkMinutes, breakMinutes: s.shiftBreakMinutes, remindBefore: s.shiftRemindBefore }
+    },
+    remind: (minutes, end) => {
+      const text = i18next.t('shift.remind', { count: minutes, time: hhmmOf(end) })
+      toast(i18next.t('shift.category'), text, () => openPanel('home'))
+      mascot.notify({ category: i18next.t('shift.category'), text, alert: false, actions: [{ id: 'ok', label: i18next.t('reminders.ok'), primary: true }] })
+    },
+    ended: (end) => {
+      const text = i18next.t('shift.ended', { time: hhmmOf(end) })
+      toast(i18next.t('shift.category'), text, () => openPanel('home'))
+      mascot.notify({ category: i18next.t('shift.category'), text, alert: false, actions: [{ id: 'ok', label: i18next.t('reminders.ok'), primary: true }] })
+      mascot.celebrate()
+    }
+  })
+  await shift.init()
+  shift.onChange(() => sendToRenderer(IPC.shiftChanged, shift.state()))
+  powerMonitor.on('unlock-screen', () => void shift.markActivity())
+  powerMonitor.on('resume', () => void shift.markActivity())
+  settings.onChange((next, prev) => {
+    if (next.shiftWorkMinutes !== prev.shiftWorkMinutes || next.shiftBreakMinutes !== prev.shiftBreakMinutes || next.shiftRemindBefore !== prev.shiftRemindBefore) {
+      shift.reschedule()
+    }
+  })
+
   // ---- Servizi di sistema ----
   const shortcut = new GlobalShortcut(togglePanel)
   if (!shortcut.apply(settings.get().shortcut)) {
@@ -557,6 +589,13 @@ async function main(): Promise<void> {
     return parsed.success ? maintenance.apply(parsed.data) : { ok: false, error: 'invalid' }
   })
 
+  ipcMain.handle(IPC.shiftState, (e) => (fromOverlay(e) ? shift.state() : null))
+  ipcMain.handle(IPC.shiftApply, async (e, op: unknown) => {
+    if (!fromOverlay(e)) return false
+    const parsed = shiftOpSchema.safeParse(op)
+    return parsed.success ? shift.apply(parsed.data) : false
+  })
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
@@ -567,6 +606,7 @@ async function main(): Promise<void> {
     chat.stopAll()
     productivity.dispose()
     sync.dispose()
+    shift.dispose()
     maintenance.dispose()
     void clipHistory.flush()
     void links.store.flush()

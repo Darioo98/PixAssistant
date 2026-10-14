@@ -172,7 +172,11 @@
     "clipboardPaused": "In pausa",
     "clipboardMax": "Voci da conservare",
     "clipboardImages": "Conserva anche le immagini",
-    "clipboardExcluded": "App escluse (separate da virgola)"
+    "clipboardExcluded": "App escluse (separate da virgola)",
+    "shift": "Turno in sede",
+    "shiftWork": "Durata del turno (ore:minuti)",
+    "shiftBreak": "Pausa (minuti)",
+    "shiftRemind": "Avvisami prima della fine (minuti)"
   },
   "mascot": {
     "preview": {
@@ -669,5 +673,26 @@
       "not-configured": "Configura prima la cassaforte.",
       "generic": "Operazione non riuscita."
     }
+  },
+  "shift": {
+    "category": "Turno",
+    "title": "Turno in sede",
+    "arrivedAt": "Sono arrivato alle",
+    "start": "Inizia turno",
+    "endsAt": "Fine turno alle {{time}}",
+    "left": "mancano {{time}}",
+    "over": "Turno finito da {{time}}",
+    "breakToday": "Pausa oggi (min)",
+    "edit": "Modifica",
+    "clear": "Annulla turno",
+    "save": "Salva",
+    "arrival": "Arrivo {{time}}",
+    "workBreak": "{{work}} di lavoro + {{brk}} min di pausa",
+    "remind_one": "Manca {{count}} minuto alla fine del turno ({{time}}).",
+    "remind_other": "Mancano {{count}} minuti alla fine del turno ({{time}}).",
+    "ended": "Turno finito alle {{time}}! Buon rientro.",
+    "h": "h",
+    "min": "min",
+    "pill": "Fine turno: mancano {{time}}"
   }
 }

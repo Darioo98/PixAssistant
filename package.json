@@ -14,17 +14,12 @@
     "test": "vitest run",
     "icons": "node scripts/make-icons.mjs",
     "native": "dotnet publish native/PixNative/PixNative.csproj -c Release -o resources/native",
-    "dist": "npm run native && npm run build && electron-builder --win nsis"
+    "dist": "npm run native:release && npm run build && electron-builder --win nsis",
+    "native:release": "dotnet publish native/PixNative/PixNative.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -o resources/native"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.299",
-    "flubber": "^0.4.2",
     "i18next": "^26.4.4",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "react-i18next": "^17.0.16",
-    "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -36,7 +31,13 @@
     "electron": "^44.7.1",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
+    "flubber": "^0.4.2",
     "png-to-ico": "^3.0.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-i18next": "^17.0.16",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^7.3.7",
