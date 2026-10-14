@@ -1,0 +1,23 @@
+appId: com.dariocavallo.dock
+productName: Dock
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: resources/native
+    to: native
+  - from: resources/icons
+    to: icons
+win:
+  target: nsis
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: false
+  runAfterFinish: true
+  language: 1040

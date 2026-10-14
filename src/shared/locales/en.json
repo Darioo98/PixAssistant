@@ -1,0 +1,93 @@
+{
+  "app": {
+    "name": "Dock"
+  },
+  "tray": {
+    "tooltip": "Dock",
+    "open": "Open",
+    "hideMascot": "Hide the mascot",
+    "showMascot": "Show the mascot",
+    "pauseNotifications": "Pause notifications",
+    "settings": "Settings",
+    "quit": "Quit"
+  },
+  "pix": {
+    "label": "Pix: open Dock"
+  },
+  "panel": {
+    "close": "Close"
+  },
+  "tabs": {
+    "home": "Home",
+    "deadlines": "Deadlines",
+    "vault": "Passwords",
+    "chat": "AI chat",
+    "notes": "Notes and to-dos",
+    "timers": "Timers and reminders",
+    "clipboard": "Clipboard",
+    "links": "Links and apps",
+    "settings": "Settings"
+  },
+  "placeholder": {
+    "title": "Coming soon",
+    "body": "This section arrives in milestone {{n}}."
+  },
+  "home": {
+    "greeting": "Hi! I'm Pix.",
+    "intro": "Here you'll find a summary of deadlines, passwords, to-dos and reminders."
+  },
+  "settings": {
+    "general": "General",
+    "language": "Language",
+    "theme": "Theme",
+    "languageOptions": {
+      "system": "Same as Windows",
+      "it": "Italiano",
+      "en": "English"
+    },
+    "themeOptions": {
+      "system": "Same as Windows",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "behavior": "Panel",
+    "closeOnBlur": "Close when clicking outside",
+    "closeOnMouseLeave": "Close when the mouse moves away",
+    "closeHint": "The panel always closes with Esc, and never closes while you are typing.",
+    "hideInFullscreen": "Hide during games and full-screen apps",
+    "startup": "Startup",
+    "autostart": "Start with Windows",
+    "autostartDev": "Only available in the installed version.",
+    "shortcut": "Global shortcut",
+    "shortcutRecord": "Change",
+    "shortcutRecording": "Press the key combination…",
+    "shortcutTaken": "This combination is used by another app.",
+    "shortcutInvalid": "Use at least one of Ctrl, Alt, Shift or Win plus another key.",
+    "shortcutReset": "Reset",
+    "mascot": "Mascot",
+    "animations": "Animations",
+    "animationsOptions": {
+      "off": "Off",
+      "low": "Few",
+      "normal": "Normal"
+    },
+    "data": "Data",
+    "dataDir": "Data folder",
+    "dataKind": {
+      "personal": "Personal OneDrive",
+      "business": "Work OneDrive",
+      "custom": "Folder you chose",
+      "local": "This PC only (OneDrive not found)"
+    },
+    "businessWarning": "You are using your work OneDrive. Data will be encrypted, but it stays on your company's service: connect a personal OneDrive if you can.",
+    "openDataDir": "Open folder",
+    "saveError": "Invalid setting.",
+    "keys": {
+      "Control": "Ctrl",
+      "Alt": "Alt",
+      "Shift": "Shift",
+      "Super": "Win",
+      "Space": "Space"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Helper nativo di Dock. Parla con il processo main di Electron via stdin/stdout
+    (una riga JSON per messaggio). Dalla milestone 4 il target diventa
+    net*-windows10.0.19041.0 per usare Windows Hello (WinRT).
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>PixNative</AssemblyName>
+    <RootNamespace>PixNative</RootNamespace>
+    <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

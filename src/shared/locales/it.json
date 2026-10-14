@@ -1,0 +1,93 @@
+{
+  "app": {
+    "name": "Dock"
+  },
+  "tray": {
+    "tooltip": "Dock",
+    "open": "Apri",
+    "hideMascot": "Nascondi la mascotte",
+    "showMascot": "Mostra la mascotte",
+    "pauseNotifications": "Pausa notifiche",
+    "settings": "Impostazioni",
+    "quit": "Esci"
+  },
+  "pix": {
+    "label": "Pix: apri Dock"
+  },
+  "panel": {
+    "close": "Chiudi"
+  },
+  "tabs": {
+    "home": "Home",
+    "deadlines": "Scadenze",
+    "vault": "Password",
+    "chat": "Chat AI",
+    "notes": "Note e to-do",
+    "timers": "Timer e promemoria",
+    "clipboard": "Appunti",
+    "links": "Link e app",
+    "settings": "Impostazioni"
+  },
+  "placeholder": {
+    "title": "In arrivo",
+    "body": "Questa sezione arriva nella milestone {{n}}."
+  },
+  "home": {
+    "greeting": "Ciao! Sono Pix.",
+    "intro": "Qui troverai il riepilogo di scadenze, password, to-do e promemoria."
+  },
+  "settings": {
+    "general": "Generale",
+    "language": "Lingua",
+    "theme": "Tema",
+    "languageOptions": {
+      "system": "Come Windows",
+      "it": "Italiano",
+      "en": "English"
+    },
+    "themeOptions": {
+      "system": "Come Windows",
+      "light": "Chiaro",
+      "dark": "Scuro"
+    },
+    "behavior": "Pannello",
+    "closeOnBlur": "Chiudi cliccando fuori",
+    "closeOnMouseLeave": "Chiudi allontanando il mouse",
+    "closeHint": "Il pannello si chiude sempre con Esc, e non si chiude mai mentre stai scrivendo.",
+    "hideInFullscreen": "Nascondi con giochi e app a schermo intero",
+    "startup": "Avvio",
+    "autostart": "Avvia con Windows",
+    "autostartDev": "Disponibile solo nella versione installata.",
+    "shortcut": "Scorciatoia globale",
+    "shortcutRecord": "Cambia",
+    "shortcutRecording": "Premi la combinazione…",
+    "shortcutTaken": "Combinazione già usata da un'altra app.",
+    "shortcutInvalid": "Usa almeno un tasto tra Ctrl, Alt, Maiusc o Win più un altro tasto.",
+    "shortcutReset": "Ripristina",
+    "mascot": "Mascotte",
+    "animations": "Animazioni",
+    "animationsOptions": {
+      "off": "Spente",
+      "low": "Poche",
+      "normal": "Normali"
+    },
+    "data": "Dati",
+    "dataDir": "Cartella dati",
+    "dataKind": {
+      "personal": "OneDrive personale",
+      "business": "OneDrive aziendale",
+      "custom": "Cartella scelta da te",
+      "local": "Solo su questo PC (OneDrive non trovato)"
+    },
+    "businessWarning": "Stai usando il OneDrive aziendale. I dati saranno cifrati, ma restano sul servizio della tua azienda: se possibile collega un OneDrive personale.",
+    "openDataDir": "Apri cartella",
+    "saveError": "Impostazione non valida.",
+    "keys": {
+      "Control": "Ctrl",
+      "Alt": "Alt",
+      "Shift": "Maiusc",
+      "Super": "Win",
+      "Space": "Spazio"
+    }
+  }
+}
