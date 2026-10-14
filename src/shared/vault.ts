@@ -131,11 +131,16 @@ export function passwordStrength(pw: string): 0 | 1 | 2 | 3 | 4 {
 
 // ---- Vista per il renderer (mai password in chiaro) ----
 
-/** Raccolta di password (es. un progetto). Cifrata con la sync key come i metadati. */
+/**
+ * Cartella di password (categoria, sottocategoria…). Cifrata con la sync key
+ * come i metadati. `parentId` null = primo livello.
+ */
 export const vaultGroupSchema = z.object({
   name: z.string().trim().min(1).max(100),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  order: z.number()
+  order: z.number(),
+  /** Cartella che la contiene; assente nelle raccolte create prima delle sottocartelle. */
+  parentId: z.string().max(200).nullable().optional()
 })
 export type VaultGroup = z.infer<typeof vaultGroupSchema>
 
@@ -151,9 +156,98 @@ export interface VaultData {
   groups: VaultGroupView[]
 }
 
-/** Raccolta effettiva di una voce: quelle eliminate (anche da un altro PC) valgono come "senza raccolta". */
+/** Cartella effettiva di una voce: quelle eliminate (anche da un altro PC) valgono come "primo livello". */
 export function effectiveGroup(groupId: string | null | undefined, groups: readonly { id: string }[]): string | null {
   return groupId && groups.some((g) => g.id === groupId) ? groupId : null
+}
+
+// ---- Albero delle cartelle ----
+
+type GroupLike = { id: string; parentId?: string | null; order: number; name: string }
+
+/**
+ * Genitore effettivo di ogni cartella. Un genitore inesistente (eliminato su
+ * un altro PC) porta la cartella al primo livello. Un ciclo (due PC che
+ * spostano cartelle una dentro l'altra) si rompe sulla cartella più vecchia,
+ * che torna al primo livello: l'albero resta sempre valido.
+ */
+export function effectiveParents(groups: readonly GroupLike[]): Map<string, string | null> {
+  const byId = new Map(groups.map((g) => [g.id, g]))
+  const parents = new Map<string, string | null>(
+    groups.map((g) => [g.id, g.parentId && g.parentId !== g.id && byId.has(g.parentId) ? g.parentId : null])
+  )
+  const older = (a: string, b: string) => byId.get(a)!.order - byId.get(b)!.order || a.localeCompare(b)
+  for (const g of groups) {
+    const path: string[] = []
+    const index = new Map<string, number>()
+    let cur: string | null = g.id
+    while (cur && !index.has(cur)) {
+      index.set(cur, path.length)
+      path.push(cur)
+      cur = parents.get(cur) ?? null
+    }
+    if (cur) {
+      const cycle = path.slice(index.get(cur)!).sort(older)
+      parents.set(cycle[0]!, null)
+    }
+  }
+  return parents
+}
+
+export interface GroupNode<G extends GroupLike = GroupLike> {
+  group: G
+  depth: number
+  children: GroupNode<G>[]
+}
+
+/** Albero ordinato (per ordine e nome) a partire dai genitori effettivi. */
+export function buildGroupTree<G extends GroupLike>(groups: readonly G[]): GroupNode<G>[] {
+  const parents = effectiveParents(groups)
+  const sort = (list: G[]) => list.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+  const build = (parent: string | null, depth: number): GroupNode<G>[] =>
+    sort(groups.filter((g) => (parents.get(g.id) ?? null) === parent)).map((g) => ({ group: g, depth, children: build(g.id, depth + 1) }))
+  return build(null, 0)
+}
+
+/** Albero "appiattito" in ordine di visita, con la profondità (per menu e selettori). */
+export function flattenTree<G extends GroupLike>(nodes: GroupNode<G>[]): Array<{ group: G; depth: number }> {
+  return nodes.flatMap((n) => [{ group: n.group, depth: n.depth }, ...flattenTree(n.children)])
+}
+
+/** La cartella e tutte quelle che contiene (a qualsiasi livello). */
+export function descendantsOf(id: string, groups: readonly GroupLike[]): Set<string> {
+  const parents = effectiveParents(groups)
+  const out = new Set([id])
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const [child, parent] of parents) {
+      if (parent && out.has(parent) && !out.has(child)) {
+        out.add(child)
+        grew = true
+      }
+    }
+  }
+  return out
+}
+
+/** Percorso dalla radice alla cartella (nomi), es. ["Clienti", "Alfa"]. */
+export function groupPath(id: string | null, groups: readonly GroupLike[]): string[] {
+  if (!id) return []
+  const parents = effectiveParents(groups)
+  const byId = new Map(groups.map((g) => [g.id, g]))
+  const path: string[] = []
+  let cur: string | null = byId.has(id) ? id : null
+  while (cur) {
+    path.unshift(byId.get(cur)!.name)
+    cur = parents.get(cur) ?? null
+  }
+  return path
+}
+
+/** Spostare `id` dentro `parent` è possibile solo se `parent` non sta già dentro `id`. */
+export function canMoveGroup(id: string, parent: string | null, groups: readonly GroupLike[]): boolean {
+  return parent === null || !descendantsOf(id, groups).has(parent)
 }
 
 export interface VaultEntryView {
@@ -222,7 +316,15 @@ export const vaultOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('openUrl'), id }),
   z.object({ op: z.literal('snooze'), id, until: isoDate }),
   z.object({ op: z.literal('move'), id, groupId: id.nullable() }),
-  z.object({ op: z.literal('groupSave'), id: id.optional(), name: vaultGroupSchema.shape.name, color: vaultGroupSchema.shape.color }),
+  z.object({
+    op: z.literal('groupSave'),
+    id: id.optional(),
+    name: vaultGroupSchema.shape.name,
+    color: vaultGroupSchema.shape.color,
+    /** Solo per le nuove cartelle: dove crearla (null = primo livello). */
+    parentId: id.nullable().optional()
+  }),
+  z.object({ op: z.literal('groupMove'), id, parentId: id.nullable() }),
   z.object({ op: z.literal('groupRemove'), id })
 ])
 export type VaultOp = z.infer<typeof vaultOpSchema>

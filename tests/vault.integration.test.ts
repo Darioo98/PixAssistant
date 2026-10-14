@@ -166,3 +166,30 @@ describe('raccolte della cassaforte', () => {
     expect(a.vault.list().find((e) => e.id === id)?.groupId).toBeNull()
   })
 })
+
+describe('cartelle e sottocartelle', () => {
+  it('crea sottocartelle, sposta, ed eliminando una cartella il contenuto sale di livello', async () => {
+    const a = await pc('pc1')
+    await a.keys.create()
+    await a.vault.opened()
+    const clienti = a.vault.saveGroup(undefined, 'Clienti', '#6366F1', null)
+    const alfa = a.vault.saveGroup(undefined, 'Alfa', '#22B07D', clienti)
+    const db = a.vault.saveGroup(undefined, 'Database', '#F59E0B', alfa)
+    const pw = a.vault.save({ name: 'Postgres', username: 'admin', password: 'p!Ass123', url: '', notes: '', intervalDays: 90, groupId: alfa })
+
+    expect(a.vault.moveGroup(clienti, db)).toBe(false) // ciclo
+    expect(a.vault.moveGroup(db, null)).toBe(true)
+    expect(a.vault.groupList().find((x) => x.id === db)?.parentId).toBeNull()
+    expect(a.vault.moveGroup(db, alfa)).toBe(true)
+
+    // Elimino "Alfa": "Database" e la password finiscono in "Clienti"
+    expect(a.vault.removeGroup(alfa)).toBe(true)
+    expect(a.vault.groupList().find((x) => x.id === db)?.parentId).toBe(clienti)
+    expect(a.vault.list().find((e) => e.id === pw)?.groupId).toBe(clienti)
+    expect(a.vault.reveal(pw)).toBe('p!Ass123')
+
+    // Rinominare non cambia la posizione
+    a.vault.saveGroup(db, 'DB', '#F59E0B')
+    expect(a.vault.groupList().find((x) => x.id === db)).toMatchObject({ name: 'DB', parentId: clienti })
+  })
+})

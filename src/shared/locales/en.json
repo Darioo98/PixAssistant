@@ -419,20 +419,21 @@
     },
     "clipboardWarning": "Protected copy not available: the password might appear in the Windows clipboard history.",
     "groups": {
-      "label": "Collection",
-      "all": "All",
-      "none": "No collection",
-      "new": "New collection",
-      "manage": "Collections…",
-      "title": "Collections",
-      "hint": "Group passwords by project. If you delete a collection its passwords are kept, without a collection.",
-      "namePlaceholder": "E.g. Project Alpha",
-      "add": "Add",
+      "label": "Folder",
+      "root": "Top level (no folder)",
+      "folder": "Folder",
+      "new": "New folder",
+      "newInside": "New subfolder in \"{{name}}\"",
+      "newSub": "New subfolder",
+      "newEntryHere": "New password here",
+      "namePlaceholder": "Folder name",
+      "add": "Create",
       "rename": "Rename",
       "color": "Color",
-      "count_one": "{{count}} password",
-      "count_other": "{{count}} passwords",
-      "moveTo": "Move to"
+      "moveTo": "Move to",
+      "more": "Folder actions",
+      "dropRoot": "Drop here to move to the top level",
+      "dragHint": "Drag passwords and folders to reorganize them. Deleting a folder moves its contents up one level."
     }
   },
   "common": {

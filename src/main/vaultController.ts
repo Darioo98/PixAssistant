@@ -160,7 +160,9 @@ export class VaultController {
       case 'move':
         return ok(this.vault.move(op.id, op.groupId))
       case 'groupSave':
-        return { ok: true, value: this.vault.saveGroup(op.id, op.name, op.color) }
+        return { ok: true, value: this.vault.saveGroup(op.id, op.name, op.color, op.parentId) }
+      case 'groupMove':
+        return this.vault.moveGroup(op.id, op.parentId) ? { ok: true } : { ok: false, error: 'invalid-move' }
       case 'groupRemove':
         return ok(this.vault.removeGroup(op.id))
     }

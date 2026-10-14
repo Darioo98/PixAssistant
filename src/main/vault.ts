@@ -7,7 +7,9 @@ import type { KeyService } from './keys'
 import type { SecureClipboard } from './secureClipboard'
 import { toISODate, type ISODate } from '@shared/dates'
 import {
+  canMoveGroup,
   effectiveGroup,
+  effectiveParents,
   generatePassword,
   vaultGroupSchema,
   vaultMetaSchema,
@@ -209,17 +211,31 @@ export class VaultService {
     return this.updateMeta(id, (m) => ({ ...m, groupId }))
   }
 
-  /** Crea o rinomina/ricolora una raccolta. */
-  saveGroup(id: string | undefined, name: string, color: string): string {
+  /** Crea una cartella (dentro `parentId`) o ne cambia nome e colore. */
+  saveGroup(id: string | undefined, name: string, color: string, parentId?: string | null): string {
     const prev = id ? this.groups.get(id) : undefined
     const order = prev?.order ?? Math.max(0, ...this.groups.list().map((g) => g.order)) + 1
-    return this.groups.put({ name, color, order, id }).id
+    const parent = prev ? (prev.parentId ?? null) : parentId && this.groups.get(parentId) ? parentId : null
+    return this.groups.put({ name, color, order, parentId: parent, id }).id
   }
 
-  /** Elimina una raccolta: le sue password restano, senza raccolta. */
+  /** Sposta una cartella dentro un'altra (null = primo livello), evitando i cicli. */
+  moveGroup(id: string, parentId: string | null): boolean {
+    const g = this.groups.get(id)
+    if (!g || (parentId && !this.groups.get(parentId))) return false
+    if (!canMoveGroup(id, parentId, this.groups.list())) return false
+    this.groups.put({ name: g.name, color: g.color, order: g.order, parentId, id })
+    return true
+  }
+
+  /** Elimina una cartella: sottocartelle e password salgono di un livello, niente si perde. */
   removeGroup(id: string): boolean {
     if (!this.groups.get(id)) return false
-    for (const m of this.meta.list()) if (m.groupId === id) this.updateMeta(m.id, (x) => ({ ...x, groupId: null }))
+    const up = effectiveParents(this.groups.list()).get(id) ?? null
+    for (const child of this.groups.list()) {
+      if (child.parentId === id) this.groups.put({ name: child.name, color: child.color, order: child.order, parentId: up, id: child.id })
+    }
+    for (const m of this.meta.list()) if (m.groupId === id) this.updateMeta(m.id, (x) => ({ ...x, groupId: up }))
     return this.groups.remove(id)
   }
 

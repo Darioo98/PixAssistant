@@ -1,28 +1,18 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { UiState } from '@shared/ipc'
-import type { VaultEntryView, VaultGroupView } from '@shared/vault'
+import { groupPath, type VaultEntryView } from '@shared/vault'
 import { useToday, useVaultData } from '../../hooks'
 import { HelloBanner, LinkPc, RecoveryKeyStep, SetupIntro, UnlockPanel } from './VaultAccess'
 import { VaultRow, VaultRowLocked } from './VaultList'
 import { NewPasswordDialog, VaultForm } from './VaultForm'
-import { GroupChips, GroupDot, GroupManager, loadCollapsed, loadFilter, saveCollapsed, saveFilter, type GroupFilter } from './VaultGroups'
+import { FolderTree } from './VaultGroups'
 import './vault.css'
 
-type View = { kind: 'list' } | { kind: 'edit'; entry?: VaultEntryView } | { kind: 'newPassword'; entry: VaultEntryView } | { kind: 'groups' }
-
-interface Section {
-  key: string
-  group: VaultGroupView | null
-  entries: VaultEntryView[]
-}
-
-/** Divide le voci per raccolta (nell'ordine delle raccolte, "senza raccolta" in fondo). */
-function sectionsOf(entries: VaultEntryView[], groups: VaultGroupView[]): Section[] {
-  const sections: Section[] = groups.map((g) => ({ key: g.id, group: g, entries: entries.filter((e) => e.groupId === g.id) }))
-  sections.push({ key: 'none', group: null, entries: entries.filter((e) => e.groupId === null) })
-  return sections.filter((s) => s.entries.length > 0)
-}
+type View =
+  | { kind: 'list' }
+  | { kind: 'edit'; entry?: VaultEntryView; groupId?: string | null }
+  | { kind: 'newPassword'; entry: VaultEntryView }
 
 export function VaultTab({ state }: { state: UiState }) {
   const { t, i18n } = useTranslation()
@@ -32,24 +22,11 @@ export function VaultTab({ state }: { state: UiState }) {
   const lead = state.settings.defaultLeadDays
   const [query, setQuery] = useState('')
   const [view, setView] = useState<View>({ kind: 'list' })
-  const [filter, setFilterState] = useState<GroupFilter>(loadFilter)
-  const [collapsed, setCollapsedState] = useState<string[]>(loadCollapsed)
+  /** Nuova cartella al primo livello in corso di creazione. */
+  const [newRoot, setNewRoot] = useState(false)
 
   const entries = data?.entries ?? null
   const groups = data?.groups ?? []
-
-  const setFilter = (f: GroupFilter) => {
-    setFilterState(f)
-    saveFilter(f)
-  }
-  const toggleSection = (key: string) => {
-    const next = collapsed.includes(key) ? collapsed.filter((k) => k !== key) : [...collapsed, key]
-    setCollapsedState(next)
-    saveCollapsed(next)
-  }
-
-  // Una raccolta eliminata (anche da un altro PC) non resta selezionata.
-  const activeFilter: GroupFilter = filter === 'all' || filter === 'none' || groups.some((g) => g.id === filter) ? filter : 'all'
 
   // "Genera" da un avviso di Pix: appena la cassaforte è aperta si apre il generatore sulla voce.
   useEffect(() => {
@@ -65,68 +42,59 @@ export function VaultTab({ state }: { state: UiState }) {
     if (!status.unlocked) setView({ kind: 'list' })
   }, [status.unlocked])
 
-  const filtered = useMemo(() => {
-    if (!entries) return []
+  // La ricerca guarda in tutte le cartelle e mostra il percorso di ogni voce.
+  const results = useMemo(() => {
     const q = query.trim().toLowerCase()
-    // La ricerca guarda in tutte le raccolte.
-    if (q) return entries.filter((e) => [e.name, e.username ?? '', e.url ?? ''].some((f) => f.toLowerCase().includes(q)))
-    if (activeFilter === 'all') return entries
-    if (activeFilter === 'none') return entries.filter((e) => e.groupId === null)
-    return entries.filter((e) => e.groupId === activeFilter)
-  }, [entries, query, activeFilter])
+    if (!entries || !q) return null
+    return entries.filter((e) => [e.name, e.username ?? '', e.url ?? '', ...groupPath(e.groupId, groups)].some((f) => f.toLowerCase().includes(q)))
+  }, [entries, groups, query])
 
   if (status.recoveryPending) return <RecoveryKeyStep />
   if (status.setup === 'unconfigured') return <SetupIntro />
   if (status.setup === 'needsRecovery') return <LinkPc />
   if (!entries) return null
 
-  /** Elenco: diviso in sezioni per raccolta quando si guardano "Tutte" senza cercare. */
-  const renderList = (render: (e: VaultEntryView) => ReactNode) => {
-    const grouped = activeFilter === 'all' && !query.trim() && groups.length > 0
-    if (!grouped) return <ul className="vault-list">{filtered.map(render)}</ul>
-    return sectionsOf(filtered, groups).map((s) => {
-      const closed = collapsed.includes(s.key)
-      return (
-        <section key={s.key} className="vault-section">
-          <button className="section-head" aria-expanded={!closed} onClick={() => toggleSection(s.key)}>
-            <span aria-hidden="true">{closed ? '▸' : '▾'}</span>
-            <GroupDot color={s.group?.color} />
-            <span>{s.group?.name ?? t('vault.groups.none')}</span>
-            <em>{s.entries.length}</em>
-          </button>
-          {!closed && <ul className="vault-list">{s.entries.map(render)}</ul>}
-        </section>
-      )
-    })
-  }
+  const pathOf = (e: VaultEntryView) => groupPath(e.groupId, groups).join(' › ')
 
   if (!status.unlocked) {
     return (
       <div className="vault">
         <UnlockPanel status={status} />
         {entries.length > 0 && (
-          <>
-            {groups.length > 0 && <GroupChips groups={groups} entries={entries} filter={activeFilter} onFilter={setFilter} />}
-            {renderList((e) => (
-              <VaultRowLocked key={e.id} entry={e} today={today} lead={lead} />
-            ))}
-          </>
+          <FolderTree
+            entries={entries}
+            groups={groups}
+            editable={false}
+            renderEntry={(e, depth) => <VaultRowLocked key={e.id} entry={e} today={today} lead={lead} depth={depth} />}
+          />
         )}
       </div>
     )
   }
 
   const close = () => setView({ kind: 'list' })
-  if (view.kind === 'groups') return <GroupManager groups={groups} entries={entries} onClose={close} />
   if (view.kind === 'edit') {
-    const defaultGroup = activeFilter !== 'all' && activeFilter !== 'none' ? activeFilter : null
-    return <VaultForm entry={view.entry} settings={state.settings} groups={groups} defaultGroup={defaultGroup} onClose={close} />
+    return <VaultForm entry={view.entry} settings={state.settings} groups={groups} defaultGroup={view.groupId ?? null} onClose={close} />
   }
   if (view.kind === 'newPassword') return <NewPasswordDialog entry={view.entry} settings={state.settings} onClose={close} />
 
   const until = status.unlockedUntil
     ? new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(status.unlockedUntil)
     : ''
+
+  const row = (e: VaultEntryView, depth: number, path?: string) => (
+    <VaultRow
+      key={e.id}
+      entry={e}
+      groups={groups}
+      depth={depth}
+      path={path}
+      today={today}
+      lead={lead}
+      onEdit={(entry) => setView({ kind: 'edit', entry })}
+      onNewPassword={(entry) => setView({ kind: 'newPassword', entry })}
+    />
+  )
 
   return (
     <div className="vault">
@@ -141,31 +109,40 @@ export function VaultTab({ state }: { state: UiState }) {
           aria-label={t('vault.search')}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <button className="btn" title={t('vault.groups.new')} onClick={() => setNewRoot(true)}>
+          + {t('vault.groups.folder')}
+        </button>
         <button className="btn primary" onClick={() => setView({ kind: 'edit' })}>
           + {t('vault.new')}
         </button>
       </div>
-      <GroupChips groups={groups} entries={entries} filter={activeFilter} onFilter={setFilter} onManage={() => setView({ kind: 'groups' })} />
       <div className="vault-session">
         <span className="hint">{t('vault.session', { time: until })}</span>
         <button className="btn subtle" onClick={() => void window.dock.vault.apply({ op: 'lock' })}>
           {t('vault.lock')}
         </button>
       </div>
-      {filtered.length === 0 ? (
-        <p className="empty">{entries.length === 0 ? t('vault.empty') : t('vault.noResults')}</p>
+      {results ? (
+        results.length === 0 ? (
+          <p className="empty">{t('vault.noResults')}</p>
+        ) : (
+          <ul className="vault-list">{results.map((e) => row(e, 0, pathOf(e)))}</ul>
+        )
+      ) : entries.length === 0 && groups.length === 0 && !newRoot ? (
+        <p className="empty">{t('vault.empty')}</p>
       ) : (
-        renderList((e) => (
-          <VaultRow
-            key={e.id}
-            entry={e}
+        <>
+          <FolderTree
+            entries={entries}
             groups={groups}
-            today={today}
-            lead={lead}
-            onEdit={(entry) => setView({ kind: 'edit', entry })}
-            onNewPassword={(entry) => setView({ kind: 'newPassword', entry })}
+            editable
+            creatingIn={newRoot ? null : undefined}
+            onCreated={() => setNewRoot(false)}
+            onNewEntry={(groupId) => setView({ kind: 'edit', groupId })}
+            renderEntry={(e, depth) => row(e, depth)}
           />
-        ))
+          {groups.length > 0 && <p className="hint">{t('vault.groups.dragHint')}</p>}
+        </>
       )}
     </div>
   )
