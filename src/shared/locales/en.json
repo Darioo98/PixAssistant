@@ -41,7 +41,9 @@
     "seeAll": "See all",
     "passwordsTitle": "Passwords to change",
     "quickAsk": "Ask Claude…",
-    "quickAskSend": "Ask"
+    "quickAskSend": "Ask",
+    "todayTitle": "Today",
+    "nothingToday": "Nothing planned for today."
   },
   "settings": {
     "general": "General",
@@ -161,7 +163,12 @@
       "claude-subscription": "Claude plan (Claude Code)"
     },
     "aiModel": "Default model",
-    "aiFuture": "Other providers (Anthropic API, OpenAI, Google Gemini, Ollama) can be added in the future."
+    "aiFuture": "Other providers (Anthropic API, OpenAI, Google Gemini, Ollama) can be added in the future.",
+    "pomodoro": "Pomodoro",
+    "pomoWork": "Focus (minutes)",
+    "pomoShort": "Short break (minutes)",
+    "pomoLong": "Long break (minutes)",
+    "pomoLongEvery": "Long break every (cycles)"
   },
   "mascot": {
     "preview": {
@@ -469,5 +476,102 @@
       "errorTitle": "Cannot reach Claude",
       "account": "Connected: {{plan}}"
     }
+  },
+  "notes": {
+    "tabNotes": "Notes",
+    "tabTodos": "To-dos",
+    "new": "New note",
+    "search": "Search notes",
+    "untitled": "Untitled",
+    "empty": "No notes yet. Create one with \"New note\".",
+    "noResults": "No notes found.",
+    "titlePlaceholder": "Title",
+    "bodyPlaceholder": "Write here… (simple Markdown: **bold**, - lists, # headings)",
+    "back": "Notes",
+    "pin": "Pin to top",
+    "unpin": "Unpin",
+    "preview": "Preview",
+    "edit": "Edit",
+    "saved": "Saved",
+    "quickNote": "Quick note…",
+    "quickNoteSave": "Save"
+  },
+  "todos": {
+    "category": "To-dos",
+    "add": "Add",
+    "placeholder": "New task…",
+    "due": "Date",
+    "today": "Today",
+    "priority": "Priority",
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "groups": {
+      "today": "Today",
+      "upcoming": "Upcoming",
+      "nodate": "No date",
+      "done": "Done"
+    },
+    "clearDone": "Delete completed",
+    "empty": "Nothing to do. Nice!",
+    "more": "More actions",
+    "alert": {
+      "today": "To-do for today: \"{{text}}\".",
+      "overdue": "Overdue to-do: \"{{text}}\"."
+    }
+  },
+  "timers": {
+    "category": "Timer",
+    "tabTimers": "Timers",
+    "tabReminders": "Reminders",
+    "pomodoro": "Pomodoro",
+    "timer": "Timer",
+    "startPomodoro": "Start Pomodoro",
+    "custom": "Custom timer",
+    "label": "Label",
+    "labelPlaceholder": "E.g. Pasta",
+    "minutes": "Minutes",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "stop": "Stop",
+    "phase": {
+      "work": "Focus",
+      "short": "Short break",
+      "long": "Long break"
+    },
+    "cycles_one": "{{count}} cycle completed",
+    "cycles_other": "{{count}} cycles completed",
+    "waiting": "Waiting",
+    "startPhase": "Start {{phase}}",
+    "none": "No active timers.",
+    "finished": "Timer \"{{label}}\" finished!",
+    "pomodoroBreak": "Great work! Now: {{phase}}.",
+    "pomodoroWork": "Break over: back to work?",
+    "pillLabel": "Timer: {{time}}"
+  },
+  "reminders": {
+    "category": "Reminders",
+    "add": "Add reminder",
+    "text": "What to remember",
+    "textPlaceholder": "E.g. Call the accountant",
+    "date": "Day",
+    "time": "Time",
+    "repeat": "Repeat",
+    "repeats": {
+      "none": "Once",
+      "day": "Every day",
+      "weekdays": "Weekdays",
+      "week": "Every week",
+      "month": "Every month"
+    },
+    "empty": "No reminders.",
+    "snooze10": "In 10 minutes",
+    "ok": "OK",
+    "done": "Shown",
+    "snoozedUntil": "Snoozed until {{time}}"
   }
 }

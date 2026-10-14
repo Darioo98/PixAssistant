@@ -1,0 +1,229 @@
+.productivity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.productivity > .segmented {
+  align-self: flex-start;
+}
+
+.todo-add {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.todo-add input:not([type='checkbox']),
+.todo-add select,
+.note-title,
+.note-body {
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  color: inherit;
+}
+
+.todo-add .inline input:not([type='checkbox']):not(.num) {
+  flex: 1;
+  min-width: 0;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.todo-group h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.todo-list,
+.note-list,
+.timer-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px 5px 8px;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+}
+
+.todo-row:hover {
+  background: var(--hover);
+}
+
+.todo-row.p-high {
+  border-left-color: #e5484d;
+}
+
+.todo-row.p-low {
+  opacity: 0.85;
+}
+
+.todo-row input[type='checkbox'] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.todo-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.todo-text em {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--text-muted);
+}
+
+.todo-text em.late {
+  color: #e5484d;
+}
+
+.todo-row.done .todo-text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* ---------- Note ---------- */
+.note-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.note-item:hover {
+  background: var(--hover);
+}
+
+.note-item .dl-meta {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-editor .toolbar {
+  margin-bottom: 0;
+  gap: 4px;
+}
+
+.note-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.note-body {
+  min-height: 360px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.note-preview {
+  min-height: 360px;
+  padding: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+/* ---------- Timer ---------- */
+.timer-start {
+  display: flex;
+}
+
+.timer-card {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.timer-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.timer-time {
+  margin: 4px 0;
+  font-size: 30px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-card.paused .timer-time,
+.timer-card.waiting .timer-time {
+  color: var(--text-muted);
+}
+
+.timer-track {
+  height: 5px;
+  margin-bottom: 8px;
+  border-radius: 3px;
+  background: var(--rail-bg);
+  overflow: hidden;
+}
+
+.timer-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 1s linear;
+}
+
+.timer-card.short .timer-fill,
+.timer-card.long .timer-fill {
+  background: #22b07d;
+}
+
+/* Tempo rimanente accanto a Pix */
+.timer-pill {
+  position: absolute;
+  right: 6px;
+  bottom: 236px;
+  padding: 3px 9px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  cursor: pointer;
+}

@@ -6,11 +6,11 @@ import { HomeTab } from './HomeTab'
 import { DeadlinesTab } from './deadlines/DeadlinesTab'
 import { VaultTab } from './vault/VaultTab'
 import { ChatTab } from './chat/ChatTab'
+import { NotesTab } from './notes/NotesTab'
+import { TimersTab } from './timers/TimersTab'
 
 /** Milestone in cui arriva ciascuna sezione. */
 const MILESTONE: Partial<Record<TabId, number>> = {
-  notes: 6,
-  timers: 6,
   clipboard: 7,
   links: 7
 }
@@ -47,6 +47,8 @@ export function Panel({ state }: { state: UiState }) {
           {tab === 'deadlines' && <DeadlinesTab defaultLead={state.settings.defaultLeadDays} />}
           {tab === 'vault' && <VaultTab state={state} />}
           {tab === 'chat' && <ChatTab />}
+          {tab === 'notes' && <NotesTab />}
+          {tab === 'timers' && <TimersTab />}
           {tab === 'settings' && <SettingsTab state={state} />}
           {MILESTONE[tab] && (
             <div className="placeholder">

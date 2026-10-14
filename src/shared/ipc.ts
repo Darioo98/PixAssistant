@@ -4,6 +4,7 @@ import type { BubbleOutcome, MascotState } from './mascot'
 import type { DeadlineItem, DeadlineOp } from './deadlines'
 import type { VaultEntryView, VaultOp, VaultOpResult, VaultStatus } from './vault'
 import type { ChatOp, ChatOpResult, ChatState, ChatStreamEvent, ConversationItem } from './chat'
+import type { NoteItem, NoteOp, ReminderItem, ReminderOp, TimerOp, TimerView, TodoItem, TodoOp } from './productivity'
 
 export const TABS = [
   'home',
@@ -39,6 +40,22 @@ export interface UiState {
   intent: UiIntent | null
 }
 
+/** Collezioni semplici con la stessa API (elenco, aggiornamenti, operazioni). */
+export type DataCollection = 'notes' | 'todos' | 'reminders' | 'timers'
+export interface DataItems {
+  notes: NoteItem[]
+  todos: TodoItem[]
+  reminders: ReminderItem[]
+  timers: TimerView[]
+}
+export interface DataOps {
+  notes: NoteOp
+  todos: TodoOp
+  reminders: ReminderOp
+  timers: TimerOp
+}
+export type DataResult = { ok: boolean; id?: string }
+
 export type UiIntent = { kind: 'vault-generate'; id: string }
 
 export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet'] as const
@@ -58,6 +75,11 @@ export interface DockApi {
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
   previewMascot(preview: MascotPreview): void
   clearIntent(): void
+  data: {
+    list<C extends DataCollection>(collection: C): Promise<DataItems[C]>
+    onChange<C extends DataCollection>(collection: C, cb: (items: DataItems[C]) => void): () => void
+    apply<C extends DataCollection>(collection: C, op: DataOps[C]): Promise<DataResult>
+  }
   chat: {
     list(): Promise<ConversationItem[]>
     onChange(cb: (items: ConversationItem[]) => void): () => void
@@ -100,5 +122,8 @@ export const IPC = {
   chatState: 'chat:state',
   chatStateChanged: 'chat:state-changed',
   chatStream: 'chat:stream',
-  chatApply: 'chat:apply'
+  chatApply: 'chat:apply',
+  dataList: 'data:list',
+  dataChanged: 'data:changed',
+  dataApply: 'data:apply'
 } as const

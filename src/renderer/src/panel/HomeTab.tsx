@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { quickAsk } from './chat/useChat'
+import { useData } from '../hooks'
+import { TodoRow } from './notes/NotesTab'
+import { isTodoForToday, parseLocal } from '@shared/productivity'
+import './notes/productivity.css'
 import { compareByUrgency, deadlineStatus } from '@shared/deadlines'
 import type { UiState } from '@shared/ipc'
 import { countdown } from '@shared/vault'
@@ -12,12 +16,16 @@ import './deadlines/deadlines.css'
 
 /** Riepilogo: scadute e in scadenza nei prossimi 7 giorni (password, to-do e promemoria arriveranno qui). */
 export function HomeTab({ state }: { state: UiState }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const defaultLead = state.settings.defaultLeadDays
   const items = useDeadlines()
   const passwords = useVaultEntries()
+  const todos = useData('todos')
+  const reminders = useData('reminders')
   const today = useToday()
   if (!items) return null
+  const todayTodos = (todos ?? []).filter((x) => isTodoForToday(x, today))
+  const todayReminders = (reminders ?? []).filter((r) => !r.done && r.at.startsWith(today))
   const toChange = (passwords ?? []).filter((p) => {
     const c = countdown(p, today, defaultLead)
     return c.daysLeft !== null && c.daysLeft <= defaultLead
@@ -31,6 +39,28 @@ export function HomeTab({ state }: { state: UiState }) {
   return (
     <div className="home">
       <QuickAsk />
+      <QuickNote />
+      <section className="home-card">
+        <h2 className="home-title">{t('home.todayTitle')}</h2>
+        {todayTodos.length === 0 && todayReminders.length === 0 ? (
+          <p className="hint">{t('home.nothingToday')}</p>
+        ) : (
+          <ul className="todo-list">
+            {todayReminders.map((r) => (
+              <li key={r.id} className="todo-row home-link" onClick={() => window.dock.openPanel('timers')}>
+                <span aria-hidden="true">⏰</span>
+                <span className="todo-text">
+                  {r.text}
+                  <em> · {new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(parseLocal(r.at))}</em>
+                </span>
+              </li>
+            ))}
+            {todayTodos.map((x) => (
+              <TodoRow key={x.id} todo={x} today={today} lang={i18n.language} compact />
+            ))}
+          </ul>
+        )}
+      </section>
       {overdue.length > 0 && (
         <section className="home-card">
           <h2 className="home-title st-overdue">
@@ -98,6 +128,33 @@ function QuickAsk() {
       <input value={text} placeholder={t('home.quickAsk')} aria-label={t('home.quickAsk')} onChange={(e) => setText(e.target.value)} />
       <button className="btn primary" type="submit" disabled={!text.trim() || busy}>
         {t('home.quickAskSend')}
+      </button>
+    </form>
+  )
+}
+
+/** Nota veloce: crea una nota con il testo scritto. */
+function QuickNote() {
+  const { t } = useTranslation()
+  const [text, setText] = useState('')
+  const [saved, setSaved] = useState(false)
+  return (
+    <form
+      className="quick-ask"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const body = text.trim()
+        if (!body) return
+        void window.dock.data.apply('notes', { op: 'save', note: { title: '', body, pinned: false } }).then(() => {
+          setText('')
+          setSaved(true)
+          window.setTimeout(() => setSaved(false), 1500)
+        })
+      }}
+    >
+      <input value={text} placeholder={t('notes.quickNote')} aria-label={t('notes.quickNote')} onChange={(e) => setText(e.target.value)} />
+      <button className="btn" type="submit" disabled={!text.trim()}>
+        {saved ? t('notes.saved') : t('notes.quickNoteSave')}
       </button>
     </form>
   )

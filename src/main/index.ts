@@ -18,9 +18,10 @@ import { VaultController } from './vaultController'
 import { syncCodec } from './crypto/codec'
 import { ClaudeSubscriptionProvider } from './ai/claudeSubscription'
 import { ChatService } from './ai/chatService'
+import { ProductivityController } from './productivityController'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
-import { IPC, PREVIEWS, TABS, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
+import { IPC, PREVIEWS, TABS, type DataCollection, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type Settings } from '@shared/settings'
 import { resolveLang, resources, type Lang } from '@shared/i18n'
 import { inTimeRange, type BubbleOutcome } from '@shared/mascot'
@@ -68,6 +69,8 @@ async function main(): Promise<void> {
       await deadlines.flush()
       await chat.load()
       await chat.flush()
+      await productivity.load()
+      await productivity.flush()
       await vaultCtl.vault.load()
     },
     onChange: () => {
@@ -105,6 +108,28 @@ async function main(): Promise<void> {
   await chat.load()
   chat.store.onChange(() => sendToRenderer(IPC.chatChanged, chat.list()))
   let chatChecked = false
+
+  // ---- Note, to-do, promemoria e timer ----
+  const isQuiet = () => {
+    const s = settings.get()
+    return s.notificationsPaused || (s.dndEnabled && inTimeRange(new Date(), s.dndFrom, s.dndTo))
+  }
+  const productivity = new ProductivityController({
+    dataDir: dataDir.path,
+    localDir,
+    device,
+    codec: (name) => syncCodec(vaultCtl.keys, name),
+    onError: onDataError,
+    settings: () => settings.get(),
+    t: () => i18next.t,
+    isQuiet,
+    toast: (title, body, onClick) => toast(title, body, onClick),
+    bubble: (req) => mascot.notify(req),
+    celebrate: () => mascot.celebrate(),
+    openPanel: (target) => openPanel(target),
+    send: (collection, items) => sendToRenderer(IPC.dataChanged, { collection, items })
+  })
+  await productivity.load()
 
   let lang: Lang = resolveLang(settings.get().language, app.getPreferredSystemLanguages())
   await i18next.init({ resources, lng: lang, fallbackLng: 'it', interpolation: { escapeValue: false } })
@@ -198,6 +223,7 @@ async function main(): Promise<void> {
         t: () => i18next.t,
         open: () => openPanel('deadlines')
       }),
+      productivity.alertSource(),
       vaultCtl.alertSource({
         t: () => i18next.t,
         generate: (id) => {
@@ -206,10 +232,7 @@ async function main(): Promise<void> {
         }
       })
     ],
-    isQuiet: () => {
-      const s = settings.get()
-      return s.notificationsPaused || (s.dndEnabled && inTimeRange(new Date(), s.dndFrom, s.dndTo))
-    },
+    isQuiet,
     toast,
     bubble: (c) =>
       mascot.notify({
@@ -230,12 +253,14 @@ async function main(): Promise<void> {
   const pushDeadlines = () => {
     if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.deadlinesChanged, deadlines.list())
   }
+  productivity.todos.store.onChange(() => alerts.schedule())
   deadlines.onChange(() => {
     pushDeadlines()
     alerts.schedule()
   })
   // Controllo all'avvio (recupera gli avvisi persi), ogni 15 minuti e al ritorno dalla sospensione.
   alerts.schedule(5000)
+  await productivity.start()
   const alertTimer = setInterval(() => alerts.schedule(0), 15 * 60_000)
   powerMonitor.on('resume', () => alerts.schedule(3000))
   powerMonitor.on('unlock-screen', () => alerts.schedule(3000))
@@ -385,6 +410,16 @@ async function main(): Promise<void> {
     return parsed.success ? chat.apply(parsed.data) : { ok: false, error: 'invalid' }
   })
 
+  const COLLECTIONS: readonly DataCollection[] = ['notes', 'todos', 'reminders', 'timers']
+  ipcMain.handle(IPC.dataList, (e, collection: unknown) =>
+    fromOverlay(e) && COLLECTIONS.includes(collection as DataCollection) ? productivity.list(collection as DataCollection) : []
+  )
+  ipcMain.handle(IPC.dataApply, (e, collection: unknown, op: unknown) =>
+    fromOverlay(e) && COLLECTIONS.includes(collection as DataCollection)
+      ? productivity.apply(collection as DataCollection, op)
+      : { ok: false }
+  )
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
@@ -393,6 +428,8 @@ async function main(): Promise<void> {
     shortcut.dispose()
     mascot.dispose()
     chat.stopAll()
+    productivity.dispose()
+    void productivity.flush()
     void chat.flush()
     alerts.dispose()
     clearInterval(alertTimer)

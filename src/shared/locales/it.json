@@ -41,7 +41,9 @@
     "seeAll": "Vedi tutte",
     "passwordsTitle": "Password da cambiare",
     "quickAsk": "Chiedi a Claude…",
-    "quickAskSend": "Chiedi"
+    "quickAskSend": "Chiedi",
+    "todayTitle": "Oggi",
+    "nothingToday": "Niente in programma per oggi."
   },
   "settings": {
     "general": "Generale",
@@ -161,7 +163,12 @@
       "claude-subscription": "Abbonamento Claude (Claude Code)"
     },
     "aiModel": "Modello predefinito",
-    "aiFuture": "Altri fornitori (API Anthropic, OpenAI, Google Gemini, Ollama) potranno essere aggiunti in futuro."
+    "aiFuture": "Altri fornitori (API Anthropic, OpenAI, Google Gemini, Ollama) potranno essere aggiunti in futuro.",
+    "pomodoro": "Pomodoro",
+    "pomoWork": "Concentrazione (minuti)",
+    "pomoShort": "Pausa breve (minuti)",
+    "pomoLong": "Pausa lunga (minuti)",
+    "pomoLongEvery": "Pausa lunga ogni (cicli)"
   },
   "mascot": {
     "preview": {
@@ -469,5 +476,102 @@
       "errorTitle": "Non riesco a contattare Claude",
       "account": "Collegato: {{plan}}"
     }
+  },
+  "notes": {
+    "tabNotes": "Note",
+    "tabTodos": "To-do",
+    "new": "Nuova nota",
+    "search": "Cerca nelle note",
+    "untitled": "Senza titolo",
+    "empty": "Nessuna nota. Creane una con «Nuova nota».",
+    "noResults": "Nessuna nota trovata.",
+    "titlePlaceholder": "Titolo",
+    "bodyPlaceholder": "Scrivi qui… (Markdown semplice: **grassetto**, - elenchi, # titoli)",
+    "back": "Note",
+    "pin": "Fissa in alto",
+    "unpin": "Togli da in alto",
+    "preview": "Anteprima",
+    "edit": "Modifica",
+    "saved": "Salvata",
+    "quickNote": "Nota veloce…",
+    "quickNoteSave": "Salva"
+  },
+  "todos": {
+    "category": "To-do",
+    "add": "Aggiungi",
+    "placeholder": "Nuova attività…",
+    "due": "Data",
+    "today": "Oggi",
+    "priority": "Priorità",
+    "priorities": {
+      "low": "Bassa",
+      "normal": "Normale",
+      "high": "Alta"
+    },
+    "groups": {
+      "today": "Oggi",
+      "upcoming": "In arrivo",
+      "nodate": "Senza data",
+      "done": "Fatti"
+    },
+    "clearDone": "Elimina i completati",
+    "empty": "Niente da fare. Ottimo!",
+    "more": "Altre azioni",
+    "alert": {
+      "today": "To-do di oggi: «{{text}}».",
+      "overdue": "To-do in ritardo: «{{text}}»."
+    }
+  },
+  "timers": {
+    "category": "Timer",
+    "tabTimers": "Timer",
+    "tabReminders": "Promemoria",
+    "pomodoro": "Pomodoro",
+    "timer": "Timer",
+    "startPomodoro": "Avvia Pomodoro",
+    "custom": "Timer personalizzato",
+    "label": "Etichetta",
+    "labelPlaceholder": "Es. Pasta",
+    "minutes": "Minuti",
+    "start": "Avvia",
+    "pause": "Pausa",
+    "resume": "Riprendi",
+    "cancel": "Annulla",
+    "stop": "Stop",
+    "phase": {
+      "work": "Concentrazione",
+      "short": "Pausa breve",
+      "long": "Pausa lunga"
+    },
+    "cycles_one": "{{count}} ciclo completato",
+    "cycles_other": "{{count}} cicli completati",
+    "waiting": "In attesa",
+    "startPhase": "Avvia {{phase}}",
+    "none": "Nessun timer attivo.",
+    "finished": "Timer «{{label}}» finito!",
+    "pomodoroBreak": "Ottimo lavoro! Ora: {{phase}}.",
+    "pomodoroWork": "Pausa finita: si torna al lavoro?",
+    "pillLabel": "Timer: {{time}}"
+  },
+  "reminders": {
+    "category": "Promemoria",
+    "add": "Aggiungi promemoria",
+    "text": "Cosa ricordare",
+    "textPlaceholder": "Es. Chiama il commercialista",
+    "date": "Giorno",
+    "time": "Ora",
+    "repeat": "Ripeti",
+    "repeats": {
+      "none": "Una volta",
+      "day": "Ogni giorno",
+      "weekdays": "Giorni feriali",
+      "week": "Ogni settimana",
+      "month": "Ogni mese"
+    },
+    "empty": "Nessun promemoria.",
+    "snooze10": "Tra 10 minuti",
+    "ok": "OK",
+    "done": "Mostrato",
+    "snoozedUntil": "Posticipato alle {{time}}"
   }
 }

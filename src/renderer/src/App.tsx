@@ -3,6 +3,7 @@ import { useDockState } from './useDockState'
 import { isTyping, useHitTest } from './useHitTest'
 import { Mascot } from './pix/Mascot'
 import { Panel } from './panel/Panel'
+import { TimerPill } from './panel/timers/TimersTab'
 
 const LEAVE_CLOSE_MS = 800
 
@@ -53,6 +54,7 @@ export function App() {
     <div className="stage">
       {state.panelOpen && <Panel state={state} />}
       <Mascot mascot={state.mascot} panelOpen={state.panelOpen} settings={state.settings} />
+      {!state.panelOpen && <TimerPill />}
     </div>
   )
 }

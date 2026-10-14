@@ -27,6 +27,14 @@ const api: DockApi = {
   bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
   previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview),
   clearIntent: () => ipcRenderer.send(IPC.clearIntent),
+  data: {
+    list: (collection) => ipcRenderer.invoke(IPC.dataList, collection),
+    onChange: (collection, cb) =>
+      subscribe(IPC.dataChanged, (p: { collection: string; items: never }) => {
+        if (p.collection === collection) cb(p.items)
+      }),
+    apply: (collection, op) => ipcRenderer.invoke(IPC.dataApply, collection, op)
+  },
   chat: {
     list: () => ipcRenderer.invoke(IPC.chatList),
     onChange: (cb) => subscribe(IPC.chatChanged, (items: ConversationItem[]) => cb(items)),

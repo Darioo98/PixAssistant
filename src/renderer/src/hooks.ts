@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { toISODate, type ISODate } from '@shared/dates'
 import type { DeadlineItem } from '@shared/deadlines'
 import type { VaultEntryView } from '@shared/vault'
+import type { DataCollection, DataItems } from '@shared/ipc'
 
 /** Data di oggi, aggiornata da sola a mezzanotte. */
 export function useToday(): ISODate {
@@ -43,4 +44,30 @@ export function useVaultEntries(): VaultEntryView[] | null {
     }
   }, [])
   return items
+}
+
+/** Dati di una collezione semplice (note, to-do, promemoria, timer), allineati al processo main. */
+export function useData<C extends DataCollection>(collection: C): DataItems[C] | null {
+  const [items, setItems] = useState<DataItems[C] | null>(null)
+  useEffect(() => {
+    let alive = true
+    const off = window.dock.data.onChange(collection, (next) => alive && setItems(next))
+    void window.dock.data.list(collection).then((next) => alive && setItems(next))
+    return () => {
+      alive = false
+      off()
+    }
+  }, [collection])
+  return items
+}
+
+/** Ora corrente che si aggiorna ogni secondo, solo finché `active` è vero. */
+export function useNow(active: boolean): number {
+  const [now, setNow] = useState(Date.now)
+  useEffect(() => {
+    if (!active) return
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [active])
+  return now
 }

@@ -212,6 +212,32 @@ export function SettingsTab({ state }: { state: UiState }) {
         <p className="hint">{t('settings.aiFuture')}</p>
       </Section>
 
+      <Section title={t('settings.pomodoro')}>
+        {(
+          [
+            ['pomoWork', 1, 180, t('settings.pomoWork')],
+            ['pomoShort', 1, 60, t('settings.pomoShort')],
+            ['pomoLong', 1, 120, t('settings.pomoLong')],
+            ['pomoLongEvery', 2, 12, t('settings.pomoLongEvery')]
+          ] as const
+        ).map(([key, min, max, label]) => (
+          <Row key={key} label={label}>
+            <input
+              type="number"
+              className="num"
+              min={min}
+              max={max}
+              defaultValue={s[key]}
+              key={s[key]}
+              onBlur={(e) => {
+                const v = Math.min(max, Math.max(min, Math.round(Number(e.target.value)) || min))
+                if (v !== s[key]) void save({ [key]: v })
+              }}
+            />
+          </Row>
+        ))}
+      </Section>
+
       <Section title={t('settings.dnd')}>
         <Toggle label={t('settings.dndEnabled')} checked={s.dndEnabled} onChange={(v) => void save({ dndEnabled: v })} />
         {s.dndEnabled && (
