@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toISODate, type ISODate } from '@shared/dates'
 import type { DeadlineItem } from '@shared/deadlines'
-import type { VaultEntryView } from '@shared/vault'
+import type { VaultData, VaultEntryView } from '@shared/vault'
 import type { DataCollection, DataItems } from '@shared/ipc'
 
 /** Data di oggi, aggiornata da sola a mezzanotte. */
@@ -31,19 +31,23 @@ export function useDeadlines(): DeadlineItem[] | null {
   return items
 }
 
-/** Voci della cassaforte (senza password), allineate al processo main. */
-export function useVaultEntries(): VaultEntryView[] | null {
-  const [items, setItems] = useState<VaultEntryView[] | null>(null)
+/** Voci e raccolte della cassaforte (senza password), allineate al processo main. */
+export function useVaultData(): VaultData | null {
+  const [data, setData] = useState<VaultData | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.vault.onChange((next) => alive && setItems(next))
-    void window.dock.vault.list().then((next) => alive && setItems(next))
+    const off = window.dock.vault.onChange((next) => alive && setData(next))
+    void window.dock.vault.list().then((next) => alive && setData(next))
     return () => {
       alive = false
       off()
     }
   }, [])
-  return items
+  return data
+}
+
+export function useVaultEntries(): VaultEntryView[] | null {
+  return useVaultData()?.entries ?? null
 }
 
 /** Dati di una collezione semplice (note, to-do, promemoria, timer), allineati al processo main. */

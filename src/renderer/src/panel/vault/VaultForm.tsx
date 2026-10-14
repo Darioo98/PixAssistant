@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Settings } from '@shared/settings'
-import { INTERVAL_PRESETS, passwordStrength, type GeneratorOptions, type VaultEntryView } from '@shared/vault'
+import { INTERVAL_PRESETS, passwordStrength, type GeneratorOptions, type VaultEntryView, type VaultGroupView } from '@shared/vault'
 import { formatDate } from '../../format'
 import { DeleteButton } from '../RowMenu'
 import { useVaultOp } from './VaultAccess'
+import { GroupSelect } from './VaultGroups'
 
 export function generatorDefaults(s: Settings): GeneratorOptions {
   return { length: s.genLength, symbols: s.genSymbols, avoidAmbiguous: s.genAvoidAmbiguous }
@@ -127,10 +128,23 @@ export function NewPasswordDialog({ entry, settings, onClose }: { entry: VaultEn
 }
 
 /** Crea o modifica una voce della cassaforte. */
-export function VaultForm({ entry, settings, onClose }: { entry?: VaultEntryView; settings: Settings; onClose: () => void }) {
+export function VaultForm({
+  entry,
+  settings,
+  groups,
+  defaultGroup,
+  onClose
+}: {
+  entry?: VaultEntryView
+  settings: Settings
+  groups: VaultGroupView[]
+  defaultGroup: string | null
+  onClose: () => void
+}) {
   const { t, i18n } = useTranslation()
   const { run, busy, error } = useVaultOp()
   const [name, setName] = useState(entry?.name ?? '')
+  const [groupId, setGroupId] = useState<string | null>(entry ? entry.groupId : defaultGroup)
   const [username, setUsername] = useState(entry?.username ?? '')
   const [password, setPassword] = useState<string | null>(entry ? null : '') // null = invariata, non ancora letta
   const [show, setShow] = useState(false)
@@ -162,7 +176,8 @@ export function VaultForm({ entry, settings, onClose }: { entry?: VaultEntryView
         password: password === null ? undefined : password,
         url: url.trim(),
         notes,
-        intervalDays
+        intervalDays,
+        groupId
       }
     })
     if (res.ok) onClose()
@@ -181,6 +196,10 @@ export function VaultForm({ entry, settings, onClose }: { entry?: VaultEntryView
         <span className="label">{t('vault.form.name')}</span>
         <input autoFocus value={name} maxLength={200} placeholder={t('vault.form.namePlaceholder')} onChange={(e) => setName(e.target.value)} />
       </label>
+      <div className="field">
+        <span className="label">{t('vault.groups.label')}</span>
+        <GroupSelect groups={groups} value={groupId} onChange={setGroupId} />
+      </div>
       <label className="field">
         <span className="label">{t('vault.form.username')}</span>
         <input value={username} maxLength={500} autoComplete="off" spellCheck={false} onChange={(e) => setUsername(e.target.value)} />

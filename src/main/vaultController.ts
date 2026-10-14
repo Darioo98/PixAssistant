@@ -157,6 +157,12 @@ export class VaultController {
       }
       case 'openUrl':
         return ok(await this.vault.openUrl(op.id))
+      case 'move':
+        return ok(this.vault.move(op.id, op.groupId))
+      case 'groupSave':
+        return { ok: true, value: this.vault.saveGroup(op.id, op.name, op.color) }
+      case 'groupRemove':
+        return ok(this.vault.removeGroup(op.id))
     }
   }
 

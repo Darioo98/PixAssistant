@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC, type DockApi, type UiState } from '@shared/ipc'
 import type { DeadlineItem } from '@shared/deadlines'
-import type { VaultEntryView } from '@shared/vault'
+import type { VaultData } from '@shared/vault'
 import type { ChatState, ChatStreamEvent, ConversationItem } from '@shared/chat'
 import type { ClipState, LinkView } from '@shared/extras'
 import type { MaintenanceState } from '@shared/maintenance'
@@ -70,7 +70,7 @@ const api: DockApi = {
   vault: {
     list: () => ipcRenderer.invoke(IPC.vaultList),
     onChange: (cb) => {
-      const listener = (_e: IpcRendererEvent, items: VaultEntryView[]) => cb(items)
+      const listener = (_e: IpcRendererEvent, data: VaultData) => cb(data)
       ipcRenderer.on(IPC.vaultChanged, listener)
       return () => ipcRenderer.removeListener(IPC.vaultChanged, listener)
     },

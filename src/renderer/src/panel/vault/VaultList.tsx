@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ISODate } from '@shared/dates'
-import { countdown, type VaultEntryView } from '@shared/vault'
+import { countdown, type VaultEntryView, type VaultGroupView } from '@shared/vault'
 import { DeleteButton, RowMenu } from '../RowMenu'
 
 /** Barra colorata (verde, giallo, rosso) con i giorni al prossimo cambio. */
@@ -28,13 +28,14 @@ export function CountdownBar({ entry, today, lead }: { entry: VaultEntryView; to
 
 interface RowProps {
   entry: VaultEntryView
+  groups: VaultGroupView[]
   today: ISODate
   lead: number
   onEdit: (e: VaultEntryView) => void
   onNewPassword: (e: VaultEntryView) => void
 }
 
-export function VaultRow({ entry, today, lead, onEdit, onNewPassword }: RowProps) {
+export function VaultRow({ entry, groups, today, lead, onEdit, onNewPassword }: RowProps) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState<'username' | 'password' | null>(null)
   const apply = window.dock.vault.apply
@@ -80,6 +81,18 @@ export function VaultRow({ entry, today, lead, onEdit, onNewPassword }: RowProps
           <button onClick={() => void apply({ op: 'resetCountdown', id: entry.id })}>{t('vault.actions.reset')}</button>
           <button onClick={() => onEdit(entry)}>{t('vault.actions.edit')}</button>
           {entry.url && <button onClick={() => void apply({ op: 'openUrl', id: entry.id })}>{t('vault.actions.openUrl')}</button>}
+          {groups.length > 0 && <span className="menu-label">{t('vault.groups.moveTo')}</span>}
+          {groups.length > 0 &&
+            groups
+              .filter((g) => g.id !== entry.groupId)
+              .map((g) => (
+                <button key={g.id} onClick={() => void apply({ op: 'move', id: entry.id, groupId: g.id })}>
+                  <span className="group-dot" style={{ background: g.color }} aria-hidden="true" /> {g.name}
+                </button>
+              ))}
+          {groups.length > 0 && entry.groupId && (
+            <button onClick={() => void apply({ op: 'move', id: entry.id, groupId: null })}>{t('vault.groups.none')}</button>
+          )}
           <DeleteButton onConfirm={() => void apply({ op: 'remove', id: entry.id })} />
         </RowMenu>
       </div>

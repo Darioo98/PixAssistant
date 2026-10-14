@@ -15,7 +15,9 @@ export const vaultMetaSchema = z.object({
   /** Giorni tra un cambio e l'altro; 0 = mai. */
   intervalDays: z.number().int().min(0).max(3650),
   lastChanged: isoDate,
-  snoozedUntil: isoDate.nullable()
+  snoozedUntil: isoDate.nullable(),
+  /** Raccolta (progetto) a cui appartiene; null = senza raccolta. Assente nelle voci create prima delle raccolte. */
+  groupId: z.string().max(200).nullable().optional()
 })
 export type VaultMeta = z.infer<typeof vaultMetaSchema>
 
@@ -129,9 +131,35 @@ export function passwordStrength(pw: string): 0 | 1 | 2 | 3 | 4 {
 
 // ---- Vista per il renderer (mai password in chiaro) ----
 
+/** Raccolta di password (es. un progetto). Cifrata con la sync key come i metadati. */
+export const vaultGroupSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  order: z.number()
+})
+export type VaultGroup = z.infer<typeof vaultGroupSchema>
+
+export interface VaultGroupView extends VaultGroup {
+  id: string
+}
+
+/** Colori proposti per le raccolte. */
+export const GROUP_COLORS = ['#6366F1', '#0EA5E9', '#22B07D', '#F59E0B', '#F97362', '#EC4899', '#8B5CF6', '#64748B'] as const
+
+export interface VaultData {
+  entries: VaultEntryView[]
+  groups: VaultGroupView[]
+}
+
+/** Raccolta effettiva di una voce: quelle eliminate (anche da un altro PC) valgono come "senza raccolta". */
+export function effectiveGroup(groupId: string | null | undefined, groups: readonly { id: string }[]): string | null {
+  return groupId && groups.some((g) => g.id === groupId) ? groupId : null
+}
+
 export interface VaultEntryView {
   id: string
   name: string
+  groupId: string | null
   intervalDays: number
   lastChanged: ISODate
   snoozedUntil: ISODate | null
@@ -163,7 +191,8 @@ export const vaultEntryInputSchema = z.object({
   password: vaultSecretSchema.shape.password.optional(),
   url: vaultSecretSchema.shape.url,
   notes: vaultSecretSchema.shape.notes,
-  intervalDays: vaultMetaSchema.shape.intervalDays
+  intervalDays: vaultMetaSchema.shape.intervalDays,
+  groupId: z.string().max(200).nullable()
 })
 export type VaultEntryInput = z.infer<typeof vaultEntryInputSchema>
 
@@ -191,7 +220,10 @@ export const vaultOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('copyText'), text: z.string().max(1000) }),
   z.object({ op: z.literal('reveal'), id }),
   z.object({ op: z.literal('openUrl'), id }),
-  z.object({ op: z.literal('snooze'), id, until: isoDate })
+  z.object({ op: z.literal('snooze'), id, until: isoDate }),
+  z.object({ op: z.literal('move'), id, groupId: id.nullable() }),
+  z.object({ op: z.literal('groupSave'), id: id.optional(), name: vaultGroupSchema.shape.name, color: vaultGroupSchema.shape.color }),
+  z.object({ op: z.literal('groupRemove'), id })
 ])
 export type VaultOp = z.infer<typeof vaultOpSchema>
 

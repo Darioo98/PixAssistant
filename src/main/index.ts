@@ -181,7 +181,7 @@ async function main(): Promise<void> {
     intent
   })
   const pushVault = () => {
-    sendToRenderer(IPC.vaultChanged, vaultCtl.vault.list())
+    sendToRenderer(IPC.vaultChanged, vaultCtl.vault.data())
   }
   const pushState = () => {
     if (window) sendToRenderer(IPC.state, uiState())
@@ -349,6 +349,7 @@ async function main(): Promise<void> {
   sync.register({ name: 'settings', store: () => settings.syncedStore, title: (i) => str(i.id) })
   sync.register({ name: 'deadlines', store: () => deadlines.store, title: (i) => str(i.title) })
   sync.register({ name: 'vault-meta', store: () => vaultCtl.vault.meta, title: (i) => str(i.name) })
+  sync.register({ name: 'vault-groups', store: () => vaultCtl.vault.groups, title: (i) => str(i.name) })
   sync.register({
     name: 'vault',
     store: () => vaultCtl.vault.secretsStore,
@@ -519,7 +520,7 @@ async function main(): Promise<void> {
     return parsed.success ? deadlines.apply(parsed.data) : false
   })
 
-  ipcMain.handle(IPC.vaultList, (e) => (fromOverlay(e) ? vaultCtl.vault.list() : []))
+  ipcMain.handle(IPC.vaultList, (e) => (fromOverlay(e) ? vaultCtl.vault.data() : { entries: [], groups: [] }))
   ipcMain.handle(IPC.vaultApply, async (e, op: unknown) => {
     if (!fromOverlay(e)) return { ok: false, error: 'forbidden' }
     const parsed = vaultOpSchema.safeParse(op)

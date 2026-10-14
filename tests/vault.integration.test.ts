@@ -66,7 +66,7 @@ describe('cassaforte su due PC', () => {
     expect(a.keys.setup).toBe('ready')
     expect(a.keys.unlocked).toBe(true)
 
-    const id = a.vault.save({ name: 'Gmail', username: 'io@example.com', password: 'S3greta!Davvero', url: 'mail.google.com', notes: '', intervalDays: 90 })
+    const id = a.vault.save({ name: 'Gmail', username: 'io@example.com', password: 'S3greta!Davvero', url: 'mail.google.com', notes: '', intervalDays: 90, groupId: null })
     a.deadlines.save({ title: 'Bollo auto', date: '2027-01-31', recurrence: { unit: 'none', every: 1 }, leadDays: null, category: '', notes: '' })
     await a.vault.flush()
     await a.deadlines.flush()
@@ -100,7 +100,7 @@ describe('cassaforte su due PC', () => {
     const a = await pc('pc1')
     await a.keys.create()
     await a.vault.opened()
-    const id = a.vault.save({ name: 'Banca', username: 'me', password: 'vecchia-123', url: '', notes: '', intervalDays: 30 }, '2027-01-01')
+    const id = a.vault.save({ name: 'Banca', username: 'me', password: 'vecchia-123', url: '', notes: '', intervalDays: 30, groupId: null }, '2027-01-01')
     expect(await a.vault.newPassword(id, { length: 24, symbols: true, avoidAmbiguous: true }, '2027-02-15')).toBe(true)
     const nuova = a.vault.reveal(id)!
     expect(nuova).toHaveLength(24)
@@ -108,7 +108,7 @@ describe('cassaforte su due PC', () => {
     expect(a.vault.list()[0]).toMatchObject({ lastChanged: '2027-02-15', historyCount: 1 })
 
     // Modifica manuale della password: il countdown riparte
-    a.vault.save({ id, name: 'Banca', username: 'me', password: 'a-mano-456', url: '', notes: '', intervalDays: 30 }, '2027-03-01')
+    a.vault.save({ id, name: 'Banca', username: 'me', password: 'a-mano-456', url: '', notes: '', intervalDays: 30, groupId: null }, '2027-03-01')
     expect(a.vault.list()[0]).toMatchObject({ lastChanged: '2027-03-01', historyCount: 2 })
     // Cambiare solo l'intervallo non tocca l'ultimo cambio
     a.vault.setInterval(id, 60)
@@ -120,5 +120,49 @@ describe('cassaforte su due PC', () => {
     await a.keys.create()
     const b = await pc('pc2')
     await expect(b.keys.create()).rejects.toThrow('already-configured')
+  })
+})
+
+describe('raccolte della cassaforte', () => {
+  it('raggruppa per progetto; eliminare una raccolta non elimina le password', async () => {
+    const a = await pc('pc1')
+    const recovery = await a.keys.create()
+    await a.vault.opened()
+    const alfa = a.vault.saveGroup(undefined, 'Progetto Alfa', '#6366F1')
+    const beta = a.vault.saveGroup(undefined, 'Progetto Beta', '#22B07D')
+    const db = a.vault.save({ name: 'DB Alfa', username: 'admin', password: 'x1!Segreta', url: '', notes: '', intervalDays: 90, groupId: alfa })
+    const vpn = a.vault.save({ name: 'VPN', username: 'me', password: 'y2!Segreta', url: '', notes: '', intervalDays: 90, groupId: null })
+
+    expect(a.vault.data().groups.map((g) => g.name)).toEqual(['Progetto Alfa', 'Progetto Beta'])
+    expect(a.vault.list().find((e) => e.id === db)?.groupId).toBe(alfa)
+
+    expect(a.vault.move(vpn, beta)).toBe(true)
+    expect(a.vault.move(vpn, 'inesistente')).toBe(false)
+    a.vault.saveGroup(alfa, 'Alfa (cliente)', '#F97362')
+    expect(a.vault.groupList()[0]).toMatchObject({ name: 'Alfa (cliente)', color: '#F97362' })
+
+    expect(a.vault.removeGroup(alfa)).toBe(true)
+    expect(a.vault.list().map((e) => [e.name, e.groupId])).toEqual([
+      ['DB Alfa', null],
+      ['VPN', beta]
+    ])
+    expect(a.vault.reveal(db)).toBe('x1!Segreta')
+
+    // Su OneDrive i nomi delle raccolte sono cifrati; un secondo PC li vede dopo il collegamento.
+    await a.vault.flush()
+    expect(await allFiles(a.dataDir)).not.toContain('Progetto Beta')
+    const b = await pc('pc2')
+    await b.keys.unlockWithRecovery(recovery)
+    await b.vault.opened()
+    expect(b.vault.data().groups.map((g) => g.name)).toEqual(['Progetto Beta'])
+    expect(b.vault.list().find((e) => e.name === 'VPN')?.groupId).toBe(beta)
+  })
+
+  it('le voci create prima delle raccolte risultano senza raccolta', async () => {
+    const a = await pc('pc1')
+    await a.keys.create()
+    await a.vault.opened()
+    const id = a.vault.meta.put({ name: 'Vecchia', intervalDays: 0, lastChanged: '2026-01-01', snoozedUntil: null }).id
+    expect(a.vault.list().find((e) => e.id === id)?.groupId).toBeNull()
   })
 })

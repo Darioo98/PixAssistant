@@ -417,7 +417,23 @@
       "generate": "Genera",
       "later": "Più tardi"
     },
-    "clipboardWarning": "Copia protetta non disponibile: la password potrebbe comparire nella cronologia appunti di Windows."
+    "clipboardWarning": "Copia protetta non disponibile: la password potrebbe comparire nella cronologia appunti di Windows.",
+    "groups": {
+      "label": "Raccolta",
+      "all": "Tutte",
+      "none": "Senza raccolta",
+      "new": "Nuova raccolta",
+      "manage": "Raccolte…",
+      "title": "Raccolte",
+      "hint": "Raggruppa le password per progetto. Se elimini una raccolta le sue password restano, senza raccolta.",
+      "namePlaceholder": "Es. Progetto Alfa",
+      "add": "Aggiungi",
+      "rename": "Rinomina",
+      "color": "Colore",
+      "count_one": "{{count}} password",
+      "count_other": "{{count}} password",
+      "moveTo": "Sposta in"
+    }
   },
   "common": {
     "delete": "Elimina",

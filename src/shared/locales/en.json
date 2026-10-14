@@ -417,7 +417,23 @@
       "generate": "Generate",
       "later": "Later"
     },
-    "clipboardWarning": "Protected copy not available: the password might appear in the Windows clipboard history."
+    "clipboardWarning": "Protected copy not available: the password might appear in the Windows clipboard history.",
+    "groups": {
+      "label": "Collection",
+      "all": "All",
+      "none": "No collection",
+      "new": "New collection",
+      "manage": "Collections…",
+      "title": "Collections",
+      "hint": "Group passwords by project. If you delete a collection its passwords are kept, without a collection.",
+      "namePlaceholder": "E.g. Project Alpha",
+      "add": "Add",
+      "rename": "Rename",
+      "color": "Color",
+      "count_one": "{{count}} password",
+      "count_other": "{{count}} passwords",
+      "moveTo": "Move to"
+    }
   },
   "common": {
     "delete": "Delete",

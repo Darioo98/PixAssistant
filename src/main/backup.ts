@@ -13,7 +13,7 @@ import { toISODate } from '@shared/dates'
  * chiave di recupero. Quindi il backup è leggibile solo con quella chiave.
  */
 
-export const BACKUP_COLLECTIONS = ['settings', 'deadlines', 'vault-meta', 'vault', 'chats', 'notes', 'todos', 'reminders', 'links'] as const
+export const BACKUP_COLLECTIONS = ['settings', 'deadlines', 'vault-meta', 'vault-groups', 'vault', 'chats', 'notes', 'todos', 'reminders', 'links'] as const
 /** Collezioni non cifrate (nessun dato sensibile). */
 const PLAIN = new Set(['settings'])
 const KEEP_DAILY = 7

@@ -2,7 +2,7 @@ import type { Settings, SettingsPatch } from './settings'
 import type { Lang } from './i18n'
 import type { BubbleOutcome, MascotState } from './mascot'
 import type { DeadlineItem, DeadlineOp } from './deadlines'
-import type { VaultEntryView, VaultOp, VaultOpResult, VaultStatus } from './vault'
+import type { VaultData, VaultOp, VaultOpResult, VaultStatus } from './vault'
 import type { ChatOp, ChatOpResult, ChatState, ChatStreamEvent, ConversationItem } from './chat'
 import type { ClipOp, ClipState, LinkOp, LinkView, WeatherState } from './extras'
 import type { MaintenanceOp, MaintenanceResult, MaintenanceState } from './maintenance'
@@ -113,8 +113,8 @@ export interface DockApi {
     apply(op: ChatOp): Promise<ChatOpResult>
   }
   vault: {
-    list(): Promise<VaultEntryView[]>
-    onChange(cb: (items: VaultEntryView[]) => void): () => void
+    list(): Promise<VaultData>
+    onChange(cb: (data: VaultData) => void): () => void
     apply(op: VaultOp): Promise<VaultOpResult>
   }
   deadlines: {

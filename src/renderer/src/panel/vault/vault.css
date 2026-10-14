@@ -264,3 +264,111 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ---------- Raccolte ---------- */
+.group-dot {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.group-chips {
+  margin-bottom: 0;
+}
+
+.group-chips .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.group-chips .chip em {
+  font-style: normal;
+  color: var(--text-muted);
+}
+
+.group-chips .subtle-chip {
+  border-style: dashed;
+  color: var(--text-muted);
+}
+
+.vault-section {
+  margin-top: 4px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.section-head:hover {
+  background: var(--hover);
+}
+
+.section-head em {
+  margin-left: auto;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.group-manager .toolbar h2 {
+  margin: 0;
+}
+
+.group-new,
+.group-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.group-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-weight: 600;
+  cursor: text;
+}
+
+.swatches.small .swatch {
+  width: 20px;
+  height: 20px;
+}
+
+.menu-label {
+  padding: 6px 10px 2px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.menu button .group-dot {
+  margin-right: 4px;
+}

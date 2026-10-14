@@ -7,13 +7,18 @@ import type { KeyService } from './keys'
 import type { SecureClipboard } from './secureClipboard'
 import { toISODate, type ISODate } from '@shared/dates'
 import {
+  effectiveGroup,
   generatePassword,
+  vaultGroupSchema,
   vaultMetaSchema,
   vaultSecretSchema,
   withNewPassword,
   type GeneratorOptions,
   type VaultEntryInput,
+  type VaultData,
   type VaultEntryView,
+  type VaultGroup,
+  type VaultGroupView,
   type VaultMeta,
   type VaultSecret
 } from '@shared/vault'
@@ -27,6 +32,8 @@ const EMPTY_SECRET: VaultSecret = { username: '', password: '', url: '', notes: 
  */
 export class VaultService {
   readonly meta: CollectionStore<VaultMeta>
+  /** Raccolte (progetti): cifrate con la sync key come i metadati. */
+  readonly groups: CollectionStore<VaultGroup>
   private secrets: CollectionStore<VaultSecret> | null = null
   private listeners = new Set<() => void>()
 
@@ -51,10 +58,26 @@ export class VaultService {
       onError
     })
     this.meta.onChange(() => this.emit())
+    this.groups = new CollectionStore<VaultGroup>({
+      dir: join(dataDir, 'vault-groups'),
+      name: 'vault-groups',
+      device,
+      schema: vaultGroupSchema,
+      codec: encryptedCodec({
+        key: () => keys.getSyncKey(),
+        aad: 'dock:vault-groups',
+        allowPlainRead: false,
+        plainWriteWhenNoKey: () => false
+      }),
+      onError
+    })
+    this.groups.onChange(() => this.emit())
   }
 
   async load(): Promise<void> {
-    if (this.keys.getSyncKey()) await this.meta.load()
+    if (!this.keys.getSyncKey()) return
+    await this.meta.load()
+    await this.groups.load()
   }
 
   /** Store dei segreti (solo a cassaforte aperta). */
@@ -81,6 +104,7 @@ export class VaultService {
       this.secrets.onChange(() => this.emit())
     }
     await this.meta.load()
+    await this.groups.load()
     await this.secrets.load()
     this.emit()
   }
@@ -96,7 +120,16 @@ export class VaultService {
     this.emit()
   }
 
+  groupList(): VaultGroupView[] {
+    return this.groups.list().sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+  }
+
+  data(): VaultData {
+    return { entries: this.list(), groups: this.groupList() }
+  }
+
   list(): VaultEntryView[] {
+    const groups = this.groups.list()
     return this.meta
       .list()
       .map((m) => {
@@ -104,6 +137,7 @@ export class VaultService {
         const view: VaultEntryView = {
           id: m.id,
           name: m.name,
+          groupId: effectiveGroup(m.groupId, groups),
           intervalDays: m.intervalDays,
           lastChanged: m.lastChanged,
           snoozedUntil: m.snoozedUntil
@@ -132,7 +166,8 @@ export class VaultService {
       name: input.name,
       intervalDays: input.intervalDays,
       lastChanged: prevMeta?.lastChanged ?? today,
-      snoozedUntil: prevMeta?.snoozedUntil ?? null
+      snoozedUntil: prevMeta?.snoozedUntil ?? null,
+      groupId: input.groupId
     }
     let secret: VaultSecret = {
       ...stripSecret(prevSecret),
@@ -166,6 +201,26 @@ export class VaultService {
 
   snooze(id: string, until: ISODate): boolean {
     return this.updateMeta(id, (m) => ({ ...m, snoozedUntil: until }))
+  }
+
+  /** Sposta una voce in una raccolta (null = senza raccolta). */
+  move(id: string, groupId: string | null): boolean {
+    if (groupId && !this.groups.get(groupId)) return false
+    return this.updateMeta(id, (m) => ({ ...m, groupId }))
+  }
+
+  /** Crea o rinomina/ricolora una raccolta. */
+  saveGroup(id: string | undefined, name: string, color: string): string {
+    const prev = id ? this.groups.get(id) : undefined
+    const order = prev?.order ?? Math.max(0, ...this.groups.list().map((g) => g.order)) + 1
+    return this.groups.put({ name, color, order, id }).id
+  }
+
+  /** Elimina una raccolta: le sue password restano, senza raccolta. */
+  removeGroup(id: string): boolean {
+    if (!this.groups.get(id)) return false
+    for (const m of this.meta.list()) if (m.groupId === id) this.updateMeta(m.id, (x) => ({ ...x, groupId: null }))
+    return this.groups.remove(id)
   }
 
   generate(opts: GeneratorOptions): string {
@@ -218,7 +273,7 @@ export class VaultService {
   }
 
   async flush(): Promise<void> {
-    await Promise.all([this.meta.flush(), this.secrets?.flush()])
+    await Promise.all([this.meta.flush(), this.groups.flush(), this.secrets?.flush()])
   }
 
   private updateMeta(id: string, fn: (m: VaultMeta) => VaultMeta): boolean {
@@ -239,7 +294,13 @@ export class VaultService {
 }
 
 function stripMeta(m: VaultMeta): VaultMeta {
-  return { name: m.name, intervalDays: m.intervalDays, lastChanged: m.lastChanged, snoozedUntil: m.snoozedUntil }
+  return {
+    name: m.name,
+    intervalDays: m.intervalDays,
+    lastChanged: m.lastChanged,
+    snoozedUntil: m.snoozedUntil,
+    groupId: m.groupId ?? null
+  }
 }
 
 function stripSecret(s: VaultSecret): VaultSecret {
