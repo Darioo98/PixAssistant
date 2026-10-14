@@ -4,6 +4,7 @@ import { PREVIEWS, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type SettingsPatch } from '@shared/settings'
 import { comboToAccelerator, formatAccelerator } from '@shared/accelerator'
 import { AppearanceSection } from './AppearanceSection'
+import { MaintenanceSection } from './MaintenanceSection'
 import { DEFAULT_MODELS } from '@shared/chat'
 
 export function SettingsTab({ state }: { state: UiState }) {
@@ -314,6 +315,10 @@ export function SettingsTab({ state }: { state: UiState }) {
             {t('settings.openDataDir')}
           </button>
         </div>
+      </Section>
+
+      <Section title={t('maint.title')}>
+        <MaintenanceSection />
       </Section>
     </div>
   )

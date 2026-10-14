@@ -130,6 +130,13 @@ export class KeyService {
     this.startSession(keys.dataKey)
   }
 
+  /** Adotta le chiavi di un backup su un PC non ancora configurato. */
+  async adopt(file: KeyFile, keys: { syncKey: Buffer; dataKey: Buffer }): Promise<void> {
+    this.file = file
+    await this.storeSyncKey(keys.syncKey)
+    this.startSession(keys.dataKey)
+  }
+
   async unlockWithHello(): Promise<void> {
     const hf = await this.readHelloFile()
     if (!hf) throw new KeyError('hello-not-enrolled')

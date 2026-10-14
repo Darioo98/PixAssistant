@@ -5,6 +5,7 @@ import type { DeadlineItem, DeadlineOp } from './deadlines'
 import type { VaultEntryView, VaultOp, VaultOpResult, VaultStatus } from './vault'
 import type { ChatOp, ChatOpResult, ChatState, ChatStreamEvent, ConversationItem } from './chat'
 import type { ClipOp, ClipState, LinkOp, LinkView, WeatherState } from './extras'
+import type { MaintenanceOp, MaintenanceResult, MaintenanceState } from './maintenance'
 import type { NoteItem, NoteOp, ReminderItem, ReminderOp, TimerOp, TimerView, TodoItem, TodoOp } from './productivity'
 
 export const TABS = [
@@ -76,6 +77,11 @@ export interface DockApi {
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
   previewMascot(preview: MascotPreview): void
   clearIntent(): void
+  maintenance: {
+    state(): Promise<MaintenanceState>
+    onChange(cb: (state: MaintenanceState) => void): () => void
+    apply(op: MaintenanceOp): Promise<MaintenanceResult>
+  }
   clipboard: {
     state(): Promise<ClipState>
     onChange(cb: (state: ClipState) => void): () => void
@@ -144,5 +150,8 @@ export const IPC = {
   linksList: 'links:list',
   linksChanged: 'links:changed',
   linksApply: 'links:apply',
-  weather: 'weather:get'
+  weather: 'weather:get',
+  maintState: 'maint:state',
+  maintChanged: 'maint:changed',
+  maintApply: 'maint:apply'
 } as const

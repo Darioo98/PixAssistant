@@ -521,6 +521,54 @@ input {
   text-transform: uppercase;
 }
 
+/* ---------- Backup e sincronizzazione ---------- */
+.maintenance {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.conflicts h3 {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.conflicts ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conflicts li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border-top: 1px solid var(--panel-border);
+}
+
+.conflict-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.maintenance .recovery-form input {
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: 'Cascadia Mono', Consolas, monospace;
+  color: inherit;
+}
+
 /* ---------- Movimento ridotto (anche "Effetti di animazione" di Windows) ---------- */
 @media (prefers-reduced-motion: reduce) {
   .panel {

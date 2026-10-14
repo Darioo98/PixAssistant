@@ -57,6 +57,11 @@ export class VaultService {
     if (this.keys.getSyncKey()) await this.meta.load()
   }
 
+  /** Store dei segreti (solo a cassaforte aperta). */
+  get secretsStore(): CollectionStore<VaultSecret> | null {
+    return this.secrets
+  }
+
   /** Da chiamare quando la cassaforte si apre: carica i segreti. */
   async opened(): Promise<void> {
     if (!this.secrets) {

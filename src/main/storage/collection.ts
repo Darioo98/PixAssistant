@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename } from 'node:fs/promises'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
@@ -79,6 +79,43 @@ export class CollectionStore<T extends object> {
 
   get ownFile(): string {
     return join(this.opts.dir, `${this.opts.device.id}.json`)
+  }
+
+  get name(): string {
+    return this.opts.name
+  }
+
+  get dir(): string {
+    return this.opts.dir
+  }
+
+  /**
+   * Copie di conflitto del NOSTRO file create da OneDrive (es. "<id>-PORTATILE.json"):
+   * dopo averle unite e riscritto il nostro file, si spostano in un archivio
+   * (mai cancellate) così non si accumulano.
+   */
+  async archiveConflictCopies(archiveDir: string): Promise<string[]> {
+    let names: string[] = []
+    try {
+      names = await readdir(this.opts.dir)
+    } catch {
+      return []
+    }
+    const own = `${this.opts.device.id}.json`
+    const copies = names.filter((n) => n !== own && n.startsWith(`${this.opts.device.id}-`) && n.toLowerCase().endsWith('.json'))
+    if (copies.length === 0) return []
+    await this.flush()
+    const target = join(archiveDir, this.opts.name)
+    await mkdir(target, { recursive: true })
+    for (const name of copies) {
+      await rename(join(this.opts.dir, name), join(target, `${Date.now()}-${name}`)).catch(() => undefined)
+    }
+    return copies
+  }
+
+  /** Ripristina una versione (es. quella scartata in un conflitto) come nuova modifica. */
+  restore(data: T & { id: string }): SyncItem<T> {
+    return this.put(data)
   }
 
   /** Legge tutti i file della cartella e li unisce a quanto già in memoria. */

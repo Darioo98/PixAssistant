@@ -631,5 +631,43 @@
       "snow": "Snow",
       "storm": "Thunderstorm"
     }
+  },
+  "sync": {
+    "category": "Sync",
+    "conflictNotice_one": "\"{{title}}\" was changed on two PCs: I kept the most recent version. You can restore the other one from the settings.",
+    "conflictNotice_other": "{{count}} items were changed on two PCs: I kept the most recent versions. You can restore the others from the settings."
+  },
+  "maint": {
+    "title": "Backup and sync",
+    "lastBackup": "Last automatic backup: {{date}}",
+    "noBackup": "No backups yet.",
+    "lastSync": "last sync: {{date}}",
+    "needsVault": "Backups are encrypted with the recovery key: set up the vault first.",
+    "export": "Export backup…",
+    "import": "Import backup…",
+    "backupNow": "Back up now",
+    "openBackups": "Backups folder",
+    "importHint": "A backup opens with its recovery key. Data is merged with your current data; nothing is overwritten.",
+    "chooseFile": "Choose the file and import",
+    "exported": "Backup saved to {{path}}",
+    "backupDone": "Backup created.",
+    "imported_one": "Imported: {{count}} file merged into your data.",
+    "imported_other": "Imported: {{count}} files merged into your data.",
+    "conflictsTitle_one": "{{count}} conflicting version",
+    "conflictsTitle_other": "{{count}} conflicting versions",
+    "conflictsHint": "These versions were changed on another PC at the same time and were discarded. Restore them if they were the right ones.",
+    "discardedVersion": "version from {{date}}",
+    "restore": "Restore",
+    "dismiss": "Dismiss",
+    "changeDataDir": "Change data folder…",
+    "changeDataDirHint": "If the new folder is empty I copy the current data there; then Dock restarts.",
+    "restarting": "Restarting…",
+    "errors": {
+      "wrong-key": "Wrong recovery key.",
+      "invalid-backup": "The file is not a valid Dock backup.",
+      "unlock-first": "The backup comes from another vault: unlock the vault first so passwords can be merged too.",
+      "not-configured": "Set up the vault first.",
+      "generic": "The operation failed."
+    }
   }
 }

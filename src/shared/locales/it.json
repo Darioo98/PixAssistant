@@ -631,5 +631,43 @@
       "snow": "Neve",
       "storm": "Temporale"
     }
+  },
+  "sync": {
+    "category": "Sincronizzazione",
+    "conflictNotice_one": "«{{title}}» è stata modificata su due PC: ho tenuto la versione più recente. Puoi ripristinare l’altra dalle impostazioni.",
+    "conflictNotice_other": "{{count}} voci sono state modificate su due PC: ho tenuto le versioni più recenti. Puoi ripristinare le altre dalle impostazioni."
+  },
+  "maint": {
+    "title": "Backup e sincronizzazione",
+    "lastBackup": "Ultimo backup automatico: {{date}}",
+    "noBackup": "Nessun backup ancora.",
+    "lastSync": "ultima sincronizzazione: {{date}}",
+    "needsVault": "Il backup è cifrato con la chiave di recupero: configura prima la cassaforte.",
+    "export": "Esporta backup…",
+    "import": "Importa backup…",
+    "backupNow": "Backup ora",
+    "openBackups": "Cartella dei backup",
+    "importHint": "Il backup si apre con la sua chiave di recupero. I dati vengono uniti a quelli attuali, niente viene sovrascritto.",
+    "chooseFile": "Scegli il file e importa",
+    "exported": "Backup salvato in {{path}}",
+    "backupDone": "Backup creato.",
+    "imported_one": "Importato: {{count}} file unito ai tuoi dati.",
+    "imported_other": "Importati: {{count}} file uniti ai tuoi dati.",
+    "conflictsTitle_one": "{{count}} versione in conflitto",
+    "conflictsTitle_other": "{{count}} versioni in conflitto",
+    "conflictsHint": "Queste versioni sono state modificate su un altro PC nello stesso momento e sono state scartate. Ripristinale se erano quelle giuste.",
+    "discardedVersion": "versione del {{date}}",
+    "restore": "Ripristina",
+    "dismiss": "Ignora",
+    "changeDataDir": "Cambia cartella dati…",
+    "changeDataDirHint": "Se la nuova cartella è vuota ci copio i dati attuali; poi Dock si riavvia.",
+    "restarting": "Riavvio…",
+    "errors": {
+      "wrong-key": "Chiave di recupero non corretta.",
+      "invalid-backup": "Il file non è un backup di Dock valido.",
+      "unlock-first": "Il backup viene da un’altra cassaforte: apri prima la cassaforte per poter unire anche le password.",
+      "not-configured": "Configura prima la cassaforte.",
+      "generic": "Operazione non riuscita."
+    }
   }
 }

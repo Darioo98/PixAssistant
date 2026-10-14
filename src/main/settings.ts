@@ -50,6 +50,11 @@ export class SettingsService {
     this.recompute()
   }
 
+  /** Store delle impostazioni condivise (per la sincronizzazione). */
+  get syncedStore(): CollectionStore<SettingValue> | null {
+    return this.synced
+  }
+
   get(): Settings {
     return this.current
   }

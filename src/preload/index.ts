@@ -4,6 +4,7 @@ import type { DeadlineItem } from '@shared/deadlines'
 import type { VaultEntryView } from '@shared/vault'
 import type { ChatState, ChatStreamEvent, ConversationItem } from '@shared/chat'
 import type { ClipState, LinkView } from '@shared/extras'
+import type { MaintenanceState } from '@shared/maintenance'
 
 /** Iscrizione a un evento dal processo main; restituisce la funzione per disiscriversi. */
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -28,6 +29,11 @@ const api: DockApi = {
   bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
   previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview),
   clearIntent: () => ipcRenderer.send(IPC.clearIntent),
+  maintenance: {
+    state: () => ipcRenderer.invoke(IPC.maintState),
+    onChange: (cb) => subscribe(IPC.maintChanged, (s: MaintenanceState) => cb(s)),
+    apply: (op) => ipcRenderer.invoke(IPC.maintApply, op)
+  },
   clipboard: {
     state: () => ipcRenderer.invoke(IPC.clipState),
     onChange: (cb) => subscribe(IPC.clipChanged, (s: ClipState) => cb(s)),

@@ -1,4 +1,4 @@
-import { Notification, app, clipboard, ipcMain, nativeTheme, powerMonitor, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
+import { Notification, app, clipboard, dialog, ipcMain, nativeTheme, powerMonitor, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { join } from 'node:path'
@@ -23,6 +23,8 @@ import { ClipboardHistory } from './clipboardHistory'
 import { LinksService } from './links'
 import { WeatherService } from './weather'
 import { safeStorageProtector } from './vaultController'
+import { SyncManager } from './sync'
+import { MaintenanceController } from './maintenance'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataCollection, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
@@ -33,6 +35,8 @@ import { deadlineOpSchema } from '@shared/deadlines'
 import { vaultOpSchema } from '@shared/vault'
 import { chatOpSchema } from '@shared/chat'
 import { clipOpSchema, linkOpSchema } from '@shared/extras'
+import { maintenanceOpSchema } from '@shared/maintenance'
+import { noteTitle } from '@shared/productivity'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Dock')
@@ -42,7 +46,13 @@ app.setAppUserModelId('com.dariocavallo.dock')
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
-  void main()
+  process.on('unhandledRejection', (err) => log.error('Promessa rifiutata non gestita', err))
+  main().catch((err) => {
+    // Un avvio a metà è peggio di un errore chiaro.
+    log.error('Avvio di Dock non riuscito', err)
+    dialog.showErrorBox('Dock', `Dock non è riuscito ad avviarsi.\n\n${err instanceof Error ? err.message : String(err)}\n\nDettagli nel log: ${join(localDir, 'logs', 'dock.log')}`)
+    app.quit()
+  })
 }
 
 async function main(): Promise<void> {
@@ -61,6 +71,8 @@ async function main(): Promise<void> {
   const onDataError = (err: unknown, file?: string) => log.warn(`Lettura dati non riuscita: ${file}`, err)
   await settings.attachSynced(dataDir.path, device, onDataError)
   // Chiavi e cassaforte prima degli altri dati: servono a decifrarli.
+  // La reazione ai cambi si collega più avanti, quando finestra e avvisi esistono.
+  let onVaultChange = () => {}
   const vaultCtl = new VaultController({
     native,
     dataDir: dataDir.path,
@@ -80,19 +92,19 @@ async function main(): Promise<void> {
       await links.store.flush()
       await vaultCtl.vault.load()
     },
-    onChange: () => {
-      pushVault()
-      pushState()
-      alerts.schedule()
-    }
+    onChange: () => onVaultChange()
   })
   await vaultCtl.init()
   const deadlines = new DeadlineService(dataDir.path, device, onDataError, () => mascot.celebrate(), syncCodec(vaultCtl.keys, 'deadlines'))
   await deadlines.load()
 
-  /** Invia un evento alla finestra (se esiste ancora). */
+  /**
+   * Invia un evento alla finestra. I dati si caricano prima che la finestra
+   * esista: fino ad allora gli eventi si ignorano (il renderer chiede lo stato all'avvio).
+   */
+  let window: OverlayWindow | null = null
   const sendToRenderer = (channel: string, payload: unknown) => {
-    if (!overlay.win.isDestroyed()) overlay.win.webContents.send(channel, payload)
+    if (window && !window.win.isDestroyed()) window.win.webContents.send(channel, payload)
   }
 
   // ---- Chat AI (abbonamento Claude tramite Claude Code) ----
@@ -153,6 +165,7 @@ async function main(): Promise<void> {
     ...OverlayWindow.rendererPaths(__dirname),
     devUrl: !app.isPackaged ? process.env.ELECTRON_RENDERER_URL : undefined
   })
+  window = overlay
 
   const uiState = (): UiState => ({
     panelOpen,
@@ -166,10 +179,10 @@ async function main(): Promise<void> {
     intent
   })
   const pushVault = () => {
-    if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.vaultChanged, vaultCtl.vault.list())
+    sendToRenderer(IPC.vaultChanged, vaultCtl.vault.list())
   }
   const pushState = () => {
-    if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.state, uiState())
+    if (window) sendToRenderer(IPC.state, uiState())
   }
 
   const mascot = new MascotService({
@@ -257,8 +270,13 @@ async function main(): Promise<void> {
     openSummary: () => openPanel('home')
   })
   await alerts.init()
+  onVaultChange = () => {
+    pushVault()
+    pushState()
+    alerts.schedule()
+  }
   const pushDeadlines = () => {
-    if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.deadlinesChanged, deadlines.list())
+    sendToRenderer(IPC.deadlinesChanged, deadlines.list())
   }
   productivity.todos.store.onChange(() => alerts.schedule())
   deadlines.onChange(() => {
@@ -306,6 +324,64 @@ async function main(): Promise<void> {
   links.store.onChange(() => sendToRenderer(IPC.linksChanged, links.list()))
 
   const weather = new WeatherService({ city: () => settings.get().weatherCity, lang: () => lang })
+
+  // ---- Sincronizzazione (modifiche da altri PC, conflitti) e backup ----
+  const sync = new SyncManager({
+    dataDir: dataDir.path,
+    localDir,
+    protector: safeStorageProtector(),
+    onNewConflicts: (list) => {
+      const t = i18next.t
+      const text = t('sync.conflictNotice', { count: list.length, title: list[0]?.title ?? '' })
+      toast(t('sync.category'), text, () => openPanel('settings'))
+      mascot.notify({
+        category: t('sync.category'),
+        text,
+        alert: false,
+        actions: [{ id: 'open', label: t('alerts.open'), primary: true }],
+        onOutcome: (o) => o.kind === 'action' && openPanel('settings')
+      })
+    }
+  })
+  const str = (v: unknown) => (typeof v === 'string' ? v : '')
+  sync.register({ name: 'settings', store: () => settings.syncedStore, title: (i) => str(i.id) })
+  sync.register({ name: 'deadlines', store: () => deadlines.store, title: (i) => str(i.title) })
+  sync.register({ name: 'vault-meta', store: () => vaultCtl.vault.meta, title: (i) => str(i.name) })
+  sync.register({
+    name: 'vault',
+    store: () => vaultCtl.vault.secretsStore,
+    title: (i) => vaultCtl.vault.meta.get(str(i.id))?.name ?? i18next.t('vault.category')
+  })
+  sync.register({ name: 'chats', store: () => chat.store, title: (i) => str(i.title) })
+  sync.register({ name: 'notes', store: () => productivity.notes.store, title: (i) => noteTitle({ title: str(i.title), body: str(i.body) }, '…') })
+  sync.register({ name: 'todos', store: () => productivity.todos.store, title: (i) => str(i.text) })
+  sync.register({ name: 'reminders', store: () => productivity.reminders.store, title: (i) => str(i.text) })
+  sync.register({ name: 'links', store: () => links.store, title: (i) => str(i.title) })
+
+  const maintenance = new MaintenanceController({
+    dataDir: dataDir.path,
+    localDir,
+    deviceId: device.id,
+    deviceName: device.name,
+    keys: vaultCtl.keys,
+    sync,
+    window: () => overlay.win,
+    holdOpen: (hold) => {
+      holdOpen = hold
+      if (!hold) overlay.focusForPanel()
+    },
+    afterImport: async () => {
+      if (vaultCtl.keys.unlocked) await vaultCtl.vault.opened()
+      await sync.reload()
+      pushState()
+    },
+    setDataDir: async (dir) => void (await settings.set({ dataDir: dir })),
+    onChange: () => sendToRenderer(IPC.maintChanged, maintenance.state())
+  })
+  sync.onChange(() => sendToRenderer(IPC.maintChanged, maintenance.state()))
+  await sync.init()
+  sync.start()
+  await maintenance.init()
 
   // ---- Servizi di sistema ----
   const shortcut = new GlobalShortcut(togglePanel)
@@ -474,6 +550,13 @@ async function main(): Promise<void> {
   })
   ipcMain.handle(IPC.weather, (e, force: unknown) => (fromOverlay(e) ? weather.get(force === true) : { status: 'off' }))
 
+  ipcMain.handle(IPC.maintState, (e) => (fromOverlay(e) ? maintenance.state() : null))
+  ipcMain.handle(IPC.maintApply, async (e, op: unknown) => {
+    if (!fromOverlay(e)) return { ok: false, error: 'forbidden' }
+    const parsed = maintenanceOpSchema.safeParse(op)
+    return parsed.success ? maintenance.apply(parsed.data) : { ok: false, error: 'invalid' }
+  })
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
@@ -483,6 +566,8 @@ async function main(): Promise<void> {
     mascot.dispose()
     chat.stopAll()
     productivity.dispose()
+    sync.dispose()
+    maintenance.dispose()
     void clipHistory.flush()
     void links.store.flush()
     void productivity.flush()
