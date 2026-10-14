@@ -11,8 +11,12 @@
   cursor: pointer;
 }
 
-.body {
-  transition: fill 0.45s ease;
+.pix-stop {
+  transition: stop-color 0.45s ease;
+}
+
+.mascot-svg {
+  transition: color 0.45s ease;
 }
 
 .body:focus {

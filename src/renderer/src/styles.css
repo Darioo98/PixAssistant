@@ -346,6 +346,104 @@ input {
   margin-bottom: 6px;
 }
 
+/* ---------- Aspetto di Pix ---------- */
+.appearance {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appearance-preview {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 18px;
+  padding: 14px 0 8px;
+  border-radius: 10px;
+  background: var(--rail-bg);
+}
+
+.appearance-moods {
+  display: flex;
+  gap: 6px;
+  opacity: 0.9;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field .label {
+  font-size: 13px;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 58px;
+  padding: 6px 0 4px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.choice:hover {
+  background: var(--hover);
+}
+
+.choice.selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--panel-border);
+}
+
+.swatch.selected {
+  border-color: var(--panel-bg);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.swatch.custom {
+  overflow: hidden;
+  background: conic-gradient(#f43f5e, #f59e0b, #22c55e, #0ea5e9, #8b5cf6, #f43f5e);
+}
+
+.swatch.custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
 /* ---------- Movimento ridotto (anche "Effetti di animazione" di Windows) ---------- */
 @media (prefers-reduced-motion: reduce) {
   .panel {

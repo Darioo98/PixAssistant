@@ -81,3 +81,53 @@ export const NIGHT = { from: '23:00', to: '07:00' } as const
 
 /** Dopo quanti secondi di inattività del PC Pix si addormenta. */
 export const SLEEP_AFTER_IDLE_S = 15 * 60
+
+// ---- Aspetto personalizzabile ----
+
+export const PIX_SHAPES = ['squircle', 'round', 'tile', 'egg', 'soft'] as const
+export type PixShape = (typeof PIX_SHAPES)[number]
+
+export const PIX_EYES = ['pill', 'dot', 'wide'] as const
+export type PixEyes = (typeof PIX_EYES)[number]
+
+export const PIX_FINISHES = ['flat', 'gradient'] as const
+export type PixFinish = (typeof PIX_FINISHES)[number]
+
+/** Tavolozza proposta per il colore di base (stato normale). */
+export const PIX_PALETTE = ['#6366F1', '#8B5CF6', '#3B82F6', '#0EA5E9', '#EC4899', '#F59E0B', '#475569'] as const
+
+export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+
+/**
+ * Colore del corpo per uno stato: normale, pensa e saluto usano il colore
+ * scelto dall'utente; avviso, felice e dorme restano fissi perché comunicano qualcosa.
+ */
+export function moodColor(mood: Mood, base: string): string {
+  if (mood === 'normal' || mood === 'think' || mood === 'greet') return HEX_COLOR.test(base) ? base : MOOD_COLORS.normal
+  return MOOD_COLORS[mood]
+}
+
+function rgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+/** Mescola il colore con il bianco (amount 0–1). */
+export function lighten(hex: string, amount: number): string {
+  const [r, g, b] = rgb(hex).map((c) => Math.round(c + (255 - c) * amount)) as [number, number, number]
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`
+}
+
+/** Luminanza relativa (WCAG). */
+export function luminance(hex: string): number {
+  const [r, g, b] = rgb(hex).map((c) => {
+    const s = c / 255
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+  }) as [number, number, number]
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** Occhi bianchi sui colori scuri, scuri sui colori chiari: sempre leggibili. */
+export function eyeColorFor(body: string): string {
+  return luminance(body) > 0.45 ? '#1F2033' : '#FFFFFF'
+}

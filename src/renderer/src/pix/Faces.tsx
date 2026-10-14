@@ -1,43 +1,79 @@
-import type { Mood } from '@shared/mascot'
+import { lighten, type Mood, type PixEyes, type PixFinish } from '@shared/mascot'
 
 /**
  * Occhi ed espressioni di Pix, nelle coordinate delle bozze (viewBox 100×100,
- * corpo x 20–80, y 22–88). Gli occhi sono l'espressione principale.
+ * corpo x 20–80, y 22–88). Gli occhi sono l'espressione principale; il colore
+ * arriva da `currentColor` (bianco, o scuro sui corpi chiari).
  */
-export function Eyes({ mood }: { mood: Mood }) {
+export function Eyes({ mood, style = 'pill' }: { mood: Mood; style?: PixEyes }) {
   switch (mood) {
     case 'alert':
       return (
         <>
-          <circle cx="41" cy="52" r="5.6" fill="#fff" />
-          <circle cx="59" cy="52" r="5.6" fill="#fff" />
-          <circle cx="50" cy="68" r="3" fill="#fff" />
+          <circle cx="41" cy="52" r="5.6" fill="currentColor" />
+          <circle cx="59" cy="52" r="5.6" fill="currentColor" />
+          <circle cx="50" cy="68" r="3" fill="currentColor" />
         </>
       )
     case 'happy':
     case 'greet':
       return (
         <>
-          <path d="M36.5 54 Q41 41.2 45.5 54" stroke="#fff" strokeWidth="4" fill="none" strokeLinecap="round" />
-          <path d="M54.5 54 Q59 41.2 63.5 54" stroke="#fff" strokeWidth="4" fill="none" strokeLinecap="round" />
-          {mood === 'happy' && <path d="M44 66q6 6 12 0" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" />}
+          <path d="M36.5 54 Q41 41.2 45.5 54" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d="M54.5 54 Q59 41.2 63.5 54" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" />
+          {mood === 'happy' && <path d="M44 66q6 6 12 0" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />}
         </>
       )
     case 'sleep':
       return (
         <>
-          <path d="M36.5 52 h9" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" />
-          <path d="M54.5 52 h9" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" />
+          <path d="M36.5 52 h9" stroke="currentColor" strokeWidth="3.6" strokeLinecap="round" />
+          <path d="M54.5 52 h9" stroke="currentColor" strokeWidth="3.6" strokeLinecap="round" />
         </>
       )
     default:
+      if (style === 'dot')
+        return (
+          <>
+            <circle cx="41" cy="52" r="4.2" fill="currentColor" />
+            <circle cx="59" cy="52" r="4.2" fill="currentColor" />
+          </>
+        )
+      if (style === 'wide')
+        return (
+          <>
+            <rect x="37.6" y="44.5" width="6.8" height="15" rx="3.4" fill="currentColor" />
+            <rect x="55.6" y="44.5" width="6.8" height="15" rx="3.4" fill="currentColor" />
+          </>
+        )
       return (
         <>
-          <rect x="38.3" y="46" width="5.4" height="12" rx="2.7" fill="#fff" />
-          <rect x="56.3" y="46" width="5.4" height="12" rx="2.7" fill="#fff" />
+          <rect x="38.3" y="46" width="5.4" height="12" rx="2.7" fill="currentColor" />
+          <rect x="56.3" y="46" width="5.4" height="12" rx="2.7" fill="currentColor" />
         </>
       )
   }
+}
+
+/** Riflesso bianco semitrasparente in alto a sinistra. */
+export function Shine() {
+  return <path d="M30 34q4-8 14-9" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".35" fill="none" />
+}
+
+/**
+ * Riempimento del corpo: piatto o con una leggera sfumatura verso l'alto.
+ * Gli stop cambiano colore con una transizione CSS (vedi .pix-stop).
+ */
+export function PixFill({ id, color, finish }: { id: string; color: string; finish: PixFinish }) {
+  const top = finish === 'gradient' ? lighten(color, 0.28) : color
+  return (
+    <defs>
+      <linearGradient id={id} x1="0" y1="0" x2="0.35" y2="1">
+        <stop className="pix-stop" offset="0" style={{ stopColor: top }} />
+        <stop className="pix-stop" offset="1" style={{ stopColor: color }} />
+      </linearGradient>
+    </defs>
+  )
 }
 
 /** Badge accanto alla testa: "!" (avviso), "z z" (dorme), coriandoli (felice), puntini (pensa). */

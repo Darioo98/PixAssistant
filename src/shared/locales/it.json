@@ -110,7 +110,32 @@
       "sleep": "Dorme",
       "greet": "Saluto"
     },
-    "animationsHint": "Riguarda i movimenti spontanei di Pix. La trasformazione della barra resta, a meno che in Windows siano disattivati gli effetti di animazione."
+    "animationsHint": "Riguarda i movimenti spontanei di Pix. La trasformazione della barra resta, a meno che in Windows siano disattivati gli effetti di animazione.",
+    "appearance": "Aspetto di Pix",
+    "shape": "Forma",
+    "shapeOptions": {
+      "squircle": "Squircle",
+      "round": "Tondo",
+      "tile": "Piastrella",
+      "egg": "Ovetto",
+      "soft": "Morbido"
+    },
+    "color": "Colore",
+    "customColor": "Scegli un colore",
+    "eyes": "Occhi",
+    "eyesOptions": {
+      "pill": "Pillole",
+      "dot": "Punti",
+      "wide": "Grandi"
+    },
+    "finish": "Finitura",
+    "finishOptions": {
+      "flat": "Piatta",
+      "gradient": "Sfumata"
+    },
+    "shine": "Riflesso",
+    "appearanceHint": "Il colore vale per Pix nello stato normale e per la barra. Avviso, felice e dorme mantengono i loro colori, così capisci subito cosa succede.",
+    "resetAppearance": "Ripristina l'aspetto originale"
   },
   "mascot": {
     "preview": {

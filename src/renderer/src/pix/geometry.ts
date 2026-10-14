@@ -1,4 +1,5 @@
 import { interpolate, type Interpolator } from 'flubber'
+import type { PixShape } from '@shared/mascot'
 
 /**
  * Forme chiave del morph barra → rigonfiamento → goccia → squircle, prese dalla
@@ -40,17 +41,43 @@ export const SHAPES = {
   pix: shift(DEMO.pix)
 }
 
-/** Squircle di Pix scalato attorno alla base (dimensioni piccola/media/grande). */
-export function pixPath(scale: number): string {
-  return mapPath(SHAPES.pix, (x, y) => [PIX_ANCHOR.x + (x - PIX_ANCHOR.x) * scale, PIX_ANCHOR.y + (y - PIX_ANCHOR.y) * scale])
+/**
+ * Forme del corpo, tutte con la base a y = 226 e centrate su x = 51
+ * (coordinate dell'SVG della mascotte, dimensione media). `faceDy` sposta
+ * occhi e riflesso in basso quando la forma ha la sommità più bassa.
+ */
+export const BODY_SHAPES: Record<PixShape, { path: string; faceDy: number }> = {
+  squircle: { path: SHAPES.pix, faceDy: 0 },
+  round: {
+    path: 'M51 164 C68.12 164 82 177.88 82 195 C82 212.12 68.12 226 51 226 C33.88 226 20 212.12 20 195 C20 177.88 33.88 164 51 164 Z',
+    faceDy: 3
+  },
+  tile: {
+    path: 'M33 166 L69 166 C75.6 166 81 171.4 81 178 L81 214 C81 220.6 75.6 226 69 226 L33 226 C26.4 226 21 220.6 21 214 L21 178 C21 171.4 26.4 166 33 166 Z',
+    faceDy: 4
+  },
+  egg: {
+    path: 'M51 158 C68 158 80 178 80 198 C80 215 67 226 51 226 C35 226 22 215 22 198 C22 178 34 158 51 158 Z',
+    faceDy: 2
+  },
+  soft: {
+    path: 'M52 161 C71 159 84 172 82 194 C81 214 70 226 50 226 C31 226 20 214 21 194 C22 174 34 162 52 161 Z',
+    faceDy: 1
+  }
+}
+
+/** Corpo di Pix scalato attorno alla base (dimensioni piccola/media/grande). */
+export function pixPath(scale: number, shape: PixShape = 'squircle'): string {
+  return mapPath(BODY_SHAPES[shape].path, (x, y) => [PIX_ANCHOR.x + (x - PIX_ANCHOR.x) * scale, PIX_ANCHOR.y + (y - PIX_ANCHOR.y) * scale])
 }
 
 /**
  * Trasformazione SVG che porta le bozze di Pix (viewBox 100×100, corpo x 20–80,
  * y 22–88) sullo squircle del morph, per disegnare occhi, riflesso e badge.
  */
-export function faceTransform(scale: number): string {
-  return `translate(${round(PIX_ANCHOR.x - 50 * scale)} ${round(PIX_ANCHOR.y - 88 * scale)}) scale(${scale})`
+export function faceTransform(scale: number, shape: PixShape = 'squircle'): string {
+  const dy = BODY_SHAPES[shape].faceDy * scale
+  return `translate(${round(PIX_ANCHOR.x - 50 * scale)} ${round(PIX_ANCHOR.y - 88 * scale + dy)}) scale(${scale})`
 }
 
 export interface MorphInterpolators {
@@ -60,13 +87,14 @@ export interface MorphInterpolators {
   pix: string
 }
 
-const cache = new Map<number, MorphInterpolators>()
+const cache = new Map<string, MorphInterpolators>()
 
-/** Interpolatori calcolati una sola volta per dimensione (operazione costosa). */
-export function morphFor(scale: number): MorphInterpolators {
-  let m = cache.get(scale)
+/** Interpolatori calcolati una sola volta per forma e dimensione (operazione costosa). */
+export function morphFor(scale: number, shape: PixShape = 'squircle'): MorphInterpolators {
+  const key = `${shape}:${scale}`
+  let m = cache.get(key)
   if (!m) {
-    const pix = pixPath(scale)
+    const pix = pixPath(scale, shape)
     const opts = { maxSegmentLength: 4 }
     m = {
       toBlob: interpolate(SHAPES.bar, SHAPES.blob, opts),
@@ -74,7 +102,7 @@ export function morphFor(scale: number): MorphInterpolators {
       toPix: interpolate(SHAPES.drop, pix, opts),
       pix
     }
-    cache.set(scale, m)
+    cache.set(key, m)
   }
   return m
 }

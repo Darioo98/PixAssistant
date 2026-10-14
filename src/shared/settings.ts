@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { HEX_COLOR, PIX_EYES, PIX_FINISHES, PIX_SHAPES } from './mascot'
 
 /**
  * Impostazioni dell'app. Alcune valgono per tutti i PC e si sincronizzano,
@@ -12,6 +13,11 @@ export const settingsSchema = z.object({
   closeOnMouseLeave: z.boolean(),
   animations: z.enum(['off', 'low', 'normal']),
   mascotSize: z.enum(['small', 'medium', 'large']),
+  pixShape: z.enum(PIX_SHAPES),
+  pixColor: z.string().regex(HEX_COLOR),
+  pixEyes: z.enum(PIX_EYES),
+  pixFinish: z.enum(PIX_FINISHES),
+  pixShine: z.boolean(),
   eyesFollowCursor: z.boolean(),
   bubbleSeconds: z.number().int().min(3).max(120),
   dndEnabled: z.boolean(),
@@ -54,6 +60,11 @@ export const DEFAULT_SETTINGS: Settings = {
   closeOnMouseLeave: false,
   animations: 'normal',
   mascotSize: 'medium',
+  pixShape: 'squircle',
+  pixColor: '#6366F1',
+  pixEyes: 'pill',
+  pixFinish: 'flat',
+  pixShine: true,
   eyesFollowCursor: true,
   bubbleSeconds: 12,
   dndEnabled: false,

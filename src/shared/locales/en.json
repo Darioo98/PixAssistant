@@ -110,7 +110,32 @@
       "sleep": "Sleeping",
       "greet": "Hello"
     },
-    "animationsHint": "Applies to Pix's spontaneous movements. The bar transformation stays, unless animation effects are turned off in Windows."
+    "animationsHint": "Applies to Pix's spontaneous movements. The bar transformation stays, unless animation effects are turned off in Windows.",
+    "appearance": "Pix appearance",
+    "shape": "Shape",
+    "shapeOptions": {
+      "squircle": "Squircle",
+      "round": "Round",
+      "tile": "Tile",
+      "egg": "Egg",
+      "soft": "Soft"
+    },
+    "color": "Color",
+    "customColor": "Pick a color",
+    "eyes": "Eyes",
+    "eyesOptions": {
+      "pill": "Pills",
+      "dot": "Dots",
+      "wide": "Big"
+    },
+    "finish": "Finish",
+    "finishOptions": {
+      "flat": "Flat",
+      "gradient": "Gradient"
+    },
+    "shine": "Highlight",
+    "appearanceHint": "The color applies to Pix in its normal state and to the bar. Alert, happy and sleeping keep their own colors, so you can tell at a glance what is going on.",
+    "resetAppearance": "Restore the original look"
   },
   "mascot": {
     "preview": {

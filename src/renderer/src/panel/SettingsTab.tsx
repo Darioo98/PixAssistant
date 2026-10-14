@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { PREVIEWS, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type SettingsPatch } from '@shared/settings'
 import { comboToAccelerator, formatAccelerator } from '@shared/accelerator'
+import { AppearanceSection } from './AppearanceSection'
 
 export function SettingsTab({ state }: { state: UiState }) {
   const { t } = useTranslation()
@@ -69,6 +70,10 @@ export function SettingsTab({ state }: { state: UiState }) {
         <Row label={t('settings.shortcut')}>
           <ShortcutRecorder value={s.shortcut} onChange={save} />
         </Row>
+      </Section>
+
+      <Section title={t('settings.appearance')}>
+        <AppearanceSection s={s} save={save} />
       </Section>
 
       <Section title={t('settings.mascot')}>

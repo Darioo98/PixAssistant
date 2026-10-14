@@ -1,10 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MASCOT_SCALE, MOOD_COLORS, type MascotState } from '@shared/mascot'
+import { MASCOT_SCALE, eyeColorFor, moodColor, type MascotState } from '@shared/mascot'
 import type { Settings } from '@shared/settings'
 import { MorphController } from './morph'
 import { PIX_ANCHOR, VIEW, faceTransform } from './geometry'
-import { Badge, Eyes } from './Faces'
+import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { useReducedMotion } from './useReducedMotion'
 import './mascot.css'
@@ -35,6 +35,8 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
   // Il morph risponde a un gesto dell'utente: resta anche con le animazioni spontanee spente.
   const instant = reducedMotion
   const { mood, bubble } = mascot
+  const shape = settings.pixShape
+  const fillId = `pix-fill-${useId().replace(/:/g, '')}`
 
   const bodyRef = useRef<SVGPathElement>(null)
   const faceRef = useRef<SVGGElement>(null)
@@ -57,7 +59,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
   // ---- Controller del morph ----
   useLayoutEffect(() => {
     const els = { body: bodyRef.current!, face: faceRef.current!, shadow: shadowRef.current! }
-    morph.current = new MorphController(els, scale, (isFormed) => {
+    morph.current = new MorphController(els, scale, shape, (isFormed) => {
       setFormed(isFormed)
       setCollapsed(!isFormed)
       if (isFormed) setBlink(true) // battito di palpebre di saluto
@@ -65,7 +67,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
     return () => morph.current?.dispose()
   }, [])
 
-  useEffect(() => morph.current?.setScale(scale), [scale])
+  useEffect(() => morph.current?.setShape(scale, shape), [scale, shape])
 
   useEffect(() => {
     const m = morph.current
@@ -178,20 +180,22 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
   }, [follow, scale])
 
   const toggle = () => (panelOpen ? window.dock.closePanel() : window.dock.openPanel())
-  const color = MOOD_COLORS[mood]
-  const face = faceTransform(scale)
+  const color = moodColor(mood, settings.pixColor)
+  const face = faceTransform(scale, shape)
 
   return (
     <div className="mascot" style={{ ['--pix-color' as string]: color }} data-anim={anim}>
       {bubble && <BubbleCard key={bubble.id} bubble={bubble} panelOpen={panelOpen} />}
       <svg
         ref={svgRef}
+        style={{ color: eyeColorFor(color) }}
         className={`mascot-svg ${instant && fadeKey ? `fade-${fadeKey % 2}` : ''}`}
         viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
         width={VIEW.width}
         height={VIEW.height}
         overflow="visible"
       >
+        <PixFill id={fillId} color={color} finish={settings.pixFinish} />
         {/* Area sensibile più larga della barra (24 px) */}
         {!panelOpen && (
           <rect
@@ -215,7 +219,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
             <path
               ref={bodyRef}
               className={`body ${breathing && collapsed ? 'breathe' : ''}`}
-              fill={color}
+              fill={`url(#${fillId})`}
               data-hit
               data-pix-zone
               role="button"
@@ -224,7 +228,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
               onAnimationEnd={() => setBreathing(false)}
             />
             <g ref={faceRef} transform={face} opacity="0" pointerEvents="none">
-              <path d="M30 34q4-8 14-9" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".35" fill="none" />
+              {settings.pixShine && <Shine />}
               <g
                 ref={lookRef}
                 className="look"
@@ -235,7 +239,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
               >
                 <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
                   <g className={`eyes ${blink ? 'blink' : ''}`}>
-                    <Eyes mood={formed ? mood : 'normal'} />
+                    <Eyes mood={formed ? mood : 'normal'} style={settings.pixEyes} />
                   </g>
                 </g>
               </g>

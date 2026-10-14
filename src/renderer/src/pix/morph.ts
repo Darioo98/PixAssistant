@@ -1,3 +1,4 @@
+import type { PixShape } from '@shared/mascot'
 import { bodyAt, faceOpacity, morphFor, remapOnReverse, shadowOpacity, type MorphInterpolators } from './geometry'
 
 export interface MorphElements {
@@ -27,9 +28,10 @@ export class MorphController {
   constructor(
     private readonly els: MorphElements,
     scale: number,
+    shape: PixShape,
     private readonly onSettled: (formed: boolean) => void
   ) {
-    this.m = morphFor(scale)
+    this.m = morphFor(scale, shape)
     this.render()
   }
 
@@ -41,8 +43,8 @@ export class MorphController {
     return this.p >= 1
   }
 
-  setScale(scale: number): void {
-    this.m = morphFor(scale)
+  setShape(scale: number, shape: PixShape): void {
+    this.m = morphFor(scale, shape)
     this.render()
   }
 
