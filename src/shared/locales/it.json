@@ -39,7 +39,9 @@
     "weekTitle": "Prossimi 7 giorni",
     "nothing": "Tutto tranquillo: niente in scadenza nei prossimi 7 giorni.",
     "seeAll": "Vedi tutte",
-    "passwordsTitle": "Password da cambiare"
+    "passwordsTitle": "Password da cambiare",
+    "quickAsk": "Chiedi a Claude…",
+    "quickAskSend": "Chiedi"
   },
   "settings": {
     "general": "Generale",
@@ -152,7 +154,14 @@
     "helloOff": "Non attivo",
     "helloRemove": "Disattiva",
     "helloEnable": "Attiva",
-    "generatorDefaults": "Generatore: lunghezza predefinita"
+    "generatorDefaults": "Generatore: lunghezza predefinita",
+    "ai": "Intelligenza artificiale",
+    "aiProvider": "Fornitore",
+    "aiProviders": {
+      "claude-subscription": "Abbonamento Claude (Claude Code)"
+    },
+    "aiModel": "Modello predefinito",
+    "aiFuture": "Altri fornitori (API Anthropic, OpenAI, Google Gemini, Ollama) potranno essere aggiunti in futuro."
   },
   "mascot": {
     "preview": {
@@ -402,5 +411,63 @@
     "cancel": "Annulla",
     "search": "Cerca",
     "copied": "Copiato"
+  },
+  "ai": {
+    "systemPrompt": "Sei l'assistente di Dock, un'app personale per Windows. Rispondi in italiano, a meno che l'utente non scriva in un'altra lingua. Sii chiaro e conciso e usa il Markdown quando aiuta (elenchi, tabelle, blocchi di codice). Non hai accesso a file, comandi, Internet o altri strumenti: se servono, spiega all'utente come procedere.",
+    "labels": {
+      "user": "Utente",
+      "assistant": "Assistente"
+    },
+    "newChat": "Nuova chat",
+    "chat": {
+      "new": "Nuova chat",
+      "rename": "Rinomina",
+      "model": "Modello",
+      "conversations": "Conversazioni",
+      "placeholder": "Scrivi un messaggio… (Invio per inviare, Maiusc+Invio per andare a capo)",
+      "send": "Invia",
+      "stop": "Stop",
+      "empty": "Fai una domanda a Claude.",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "copyAnswer": "Copia risposta",
+      "thinking": "Sto pensando…",
+      "more": "Altre azioni"
+    },
+    "quick": {
+      "summarize": "Riassumi",
+      "translate": "Traduci",
+      "email": "Scrivi una mail",
+      "fix": "Correggi"
+    },
+    "quickPrompts": {
+      "summarize": "Riassumi in modo chiaro il testo seguente:\n\n",
+      "translate": "Traduci in inglese il testo seguente (se è già in inglese, traducilo in italiano):\n\n",
+      "email": "Scrivi una mail cortese e concisa per:\n\n",
+      "fix": "Correggi ortografia, grammatica e punteggiatura del testo seguente, senza cambiarne il senso:\n\n"
+    },
+    "errors": {
+      "authentication_failed": "Accesso a Claude non valido: rifai il login.",
+      "rate_limit": "Hai raggiunto il limite di utilizzo dell'abbonamento. Riprova più tardi.",
+      "overloaded": "Claude è sovraccarico in questo momento. Riprova tra poco.",
+      "billing_error": "C'è un problema con l'abbonamento Claude.",
+      "model_not_found": "Questo modello non è disponibile con il tuo abbonamento.",
+      "stopped": "Risposta interrotta.",
+      "busy": "Aspetta la fine della risposta in corso.",
+      "not-installed": "Claude Code non è installato.",
+      "unknown": "La risposta non è arrivata. Riprova."
+    },
+    "connect": {
+      "checking": "Verifico il collegamento con Claude…",
+      "notLoggedInTitle": "Collega il tuo abbonamento Claude",
+      "notLoggedInText": "Dock usa Claude Code con il tuo account claude.ai (Pro o Max), senza API key. Apri Claude Code, digita /login e segui le istruzioni nel browser; poi torna qui e premi «Verifica di nuovo».",
+      "openLogin": "Apri Claude Code",
+      "recheck": "Verifica di nuovo",
+      "unavailableTitle": "Claude Code non trovato",
+      "unavailableText": "Installa Claude Code (bastano pochi minuti), fai il login con il tuo account e torna qui.",
+      "openDocs": "Come installarlo",
+      "errorTitle": "Non riesco a contattare Claude",
+      "account": "Collegato: {{plan}}"
+    }
   }
 }

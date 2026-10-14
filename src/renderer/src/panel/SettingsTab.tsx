@@ -4,6 +4,7 @@ import { PREVIEWS, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type SettingsPatch } from '@shared/settings'
 import { comboToAccelerator, formatAccelerator } from '@shared/accelerator'
 import { AppearanceSection } from './AppearanceSection'
+import { DEFAULT_MODELS } from '@shared/chat'
 
 export function SettingsTab({ state }: { state: UiState }) {
   const { t } = useTranslation()
@@ -191,6 +192,24 @@ export function SettingsTab({ state }: { state: UiState }) {
             )}
           </div>
         )}
+      </Section>
+
+      <Section title={t('settings.ai')}>
+        <Row label={t('settings.aiProvider')}>
+          <select value={s.aiProvider} onChange={(e) => void save({ aiProvider: e.target.value as typeof s.aiProvider })}>
+            <option value="claude-subscription">{t('settings.aiProviders.claude-subscription')}</option>
+          </select>
+        </Row>
+        <Row label={t('settings.aiModel')}>
+          <select value={s.aiModel} onChange={(e) => void save({ aiModel: e.target.value })}>
+            {DEFAULT_MODELS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </Row>
+        <p className="hint">{t('settings.aiFuture')}</p>
       </Section>
 
       <Section title={t('settings.dnd')}>

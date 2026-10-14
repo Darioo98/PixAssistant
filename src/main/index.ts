@@ -1,4 +1,4 @@
-import { Notification, app, ipcMain, nativeTheme, powerMonitor, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
+import { Notification, app, clipboard, ipcMain, nativeTheme, powerMonitor, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { join } from 'node:path'
@@ -16,6 +16,8 @@ import { AlertEngine } from './alerts'
 import { deadlineAlerts } from './deadlineAlerts'
 import { VaultController } from './vaultController'
 import { syncCodec } from './crypto/codec'
+import { ClaudeSubscriptionProvider } from './ai/claudeSubscription'
+import { ChatService } from './ai/chatService'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
@@ -24,6 +26,7 @@ import { resolveLang, resources, type Lang } from '@shared/i18n'
 import { inTimeRange, type BubbleOutcome } from '@shared/mascot'
 import { deadlineOpSchema } from '@shared/deadlines'
 import { vaultOpSchema } from '@shared/vault'
+import { chatOpSchema } from '@shared/chat'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Dock')
@@ -63,6 +66,8 @@ async function main(): Promise<void> {
       // Chiavi appena configurate o PC appena collegato: rilegge e riscrive cifrato.
       await deadlines.load()
       await deadlines.flush()
+      await chat.load()
+      await chat.flush()
       await vaultCtl.vault.load()
     },
     onChange: () => {
@@ -74,6 +79,32 @@ async function main(): Promise<void> {
   await vaultCtl.init()
   const deadlines = new DeadlineService(dataDir.path, device, onDataError, () => mascot.celebrate(), syncCodec(vaultCtl.keys, 'deadlines'))
   await deadlines.load()
+
+  /** Invia un evento alla finestra (se esiste ancora). */
+  const sendToRenderer = (channel: string, payload: unknown) => {
+    if (!overlay.win.isDestroyed()) overlay.win.webContents.send(channel, payload)
+  }
+
+  // ---- Chat AI (abbonamento Claude tramite Claude Code) ----
+  const aiProvider = new ClaudeSubscriptionProvider(join(localDir, 'ai-workdir'), !app.isPackaged)
+  const chat = new ChatService({
+    dataDir: dataDir.path,
+    device,
+    codec: syncCodec(vaultCtl.keys, 'chats'),
+    onError: onDataError,
+    provider: aiProvider,
+    claudePath: () => aiProvider.claudePath,
+    defaultModel: () => settings.get().aiModel,
+    systemPrompt: () => i18next.t('ai.systemPrompt'),
+    labels: () => ({ user: i18next.t('ai.labels.user'), assistant: i18next.t('ai.labels.assistant'), newChat: i18next.t('ai.newChat') }),
+    onThinking: (thinking) => mascot.setThinking(thinking),
+    onStream: (ev) => sendToRenderer(IPC.chatStream, ev),
+    onState: () => void chat.state().then((s) => sendToRenderer(IPC.chatStateChanged, s)),
+    copy: (text) => clipboard.writeText(text)
+  })
+  await chat.load()
+  chat.store.onChange(() => sendToRenderer(IPC.chatChanged, chat.list()))
+  let chatChecked = false
 
   let lang: Lang = resolveLang(settings.get().language, app.getPreferredSystemLanguages())
   await i18next.init({ resources, lng: lang, fallbackLng: 'it', interpolation: { escapeValue: false } })
@@ -338,6 +369,22 @@ async function main(): Promise<void> {
     pushState()
   })
 
+  ipcMain.handle(IPC.chatList, (e) => (fromOverlay(e) ? chat.list() : []))
+  ipcMain.handle(IPC.chatState, async (e) => {
+    if (!fromOverlay(e)) return null
+    // Il login si verifica la prima volta che serve, non a ogni avvio.
+    if (!chatChecked) {
+      chatChecked = true
+      void chat.checkStatus()
+    }
+    return chat.state()
+  })
+  ipcMain.handle(IPC.chatApply, async (e, op: unknown) => {
+    if (!fromOverlay(e)) return { ok: false, error: 'forbidden' }
+    const parsed = chatOpSchema.safeParse(op)
+    return parsed.success ? chat.apply(parsed.data) : { ok: false, error: 'invalid' }
+  })
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
@@ -345,6 +392,8 @@ async function main(): Promise<void> {
   app.on('before-quit', () => {
     shortcut.dispose()
     mascot.dispose()
+    chat.stopAll()
+    void chat.flush()
     alerts.dispose()
     clearInterval(alertTimer)
     void deadlines.flush()

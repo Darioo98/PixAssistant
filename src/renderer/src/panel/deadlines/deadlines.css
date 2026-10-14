@@ -435,3 +435,19 @@
 .home-link {
   cursor: pointer;
 }
+
+.quick-ask {
+  display: flex;
+  gap: 6px;
+}
+
+.quick-ask input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--surface);
+  font: inherit;
+  color: inherit;
+}

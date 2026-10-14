@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { quickAsk } from './chat/useChat'
 import { compareByUrgency, deadlineStatus } from '@shared/deadlines'
 import type { UiState } from '@shared/ipc'
 import { countdown } from '@shared/vault'
@@ -28,6 +30,7 @@ export function HomeTab({ state }: { state: UiState }) {
 
   return (
     <div className="home">
+      <QuickAsk />
       {overdue.length > 0 && (
         <section className="home-card">
           <h2 className="home-title st-overdue">
@@ -70,5 +73,32 @@ export function HomeTab({ state }: { state: UiState }) {
         </button>
       </section>
     </div>
+  )
+}
+
+/** Domanda veloce all'AI: apre una nuova conversazione nella Chat. */
+function QuickAsk() {
+  const { t } = useTranslation()
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  return (
+    <form
+      className="quick-ask"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const q = text.trim()
+        if (!q || busy) return
+        setBusy(true)
+        void quickAsk(q).finally(() => {
+          setBusy(false)
+          setText('')
+        })
+      }}
+    >
+      <input value={text} placeholder={t('home.quickAsk')} aria-label={t('home.quickAsk')} onChange={(e) => setText(e.target.value)} />
+      <button className="btn primary" type="submit" disabled={!text.trim() || busy}>
+        {t('home.quickAskSend')}
+      </button>
+    </form>
   )
 }

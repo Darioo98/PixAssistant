@@ -39,7 +39,9 @@
     "weekTitle": "Next 7 days",
     "nothing": "All quiet: nothing due in the next 7 days.",
     "seeAll": "See all",
-    "passwordsTitle": "Passwords to change"
+    "passwordsTitle": "Passwords to change",
+    "quickAsk": "Ask Claude…",
+    "quickAskSend": "Ask"
   },
   "settings": {
     "general": "General",
@@ -152,7 +154,14 @@
     "helloOff": "Off",
     "helloRemove": "Turn off",
     "helloEnable": "Turn on",
-    "generatorDefaults": "Generator: default length"
+    "generatorDefaults": "Generator: default length",
+    "ai": "Artificial intelligence",
+    "aiProvider": "Provider",
+    "aiProviders": {
+      "claude-subscription": "Claude plan (Claude Code)"
+    },
+    "aiModel": "Default model",
+    "aiFuture": "Other providers (Anthropic API, OpenAI, Google Gemini, Ollama) can be added in the future."
   },
   "mascot": {
     "preview": {
@@ -402,5 +411,63 @@
     "cancel": "Cancel",
     "search": "Search",
     "copied": "Copied"
+  },
+  "ai": {
+    "systemPrompt": "You are the assistant inside Dock, a personal Windows app. Answer in the user's language. Be clear and concise and use Markdown when it helps (lists, tables, code blocks). You have no access to files, commands, the Internet or other tools: if they are needed, explain to the user how to proceed.",
+    "labels": {
+      "user": "User",
+      "assistant": "Assistant"
+    },
+    "newChat": "New chat",
+    "chat": {
+      "new": "New chat",
+      "rename": "Rename",
+      "model": "Model",
+      "conversations": "Conversations",
+      "placeholder": "Write a message… (Enter to send, Shift+Enter for a new line)",
+      "send": "Send",
+      "stop": "Stop",
+      "empty": "Ask Claude something.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyAnswer": "Copy answer",
+      "thinking": "Thinking…",
+      "more": "More actions"
+    },
+    "quick": {
+      "summarize": "Summarize",
+      "translate": "Translate",
+      "email": "Write an email",
+      "fix": "Proofread"
+    },
+    "quickPrompts": {
+      "summarize": "Summarize the following text clearly:\n\n",
+      "translate": "Translate the following text into Italian (if it is already Italian, translate it into English):\n\n",
+      "email": "Write a polite, concise email to:\n\n",
+      "fix": "Fix spelling, grammar and punctuation in the following text without changing its meaning:\n\n"
+    },
+    "errors": {
+      "authentication_failed": "Claude sign-in is not valid: log in again.",
+      "rate_limit": "You have reached your plan usage limit. Try again later.",
+      "overloaded": "Claude is overloaded right now. Try again shortly.",
+      "billing_error": "There is a problem with your Claude plan.",
+      "model_not_found": "This model is not available on your plan.",
+      "stopped": "Answer stopped.",
+      "busy": "Wait for the current answer to finish.",
+      "not-installed": "Claude Code is not installed.",
+      "unknown": "The answer did not arrive. Try again."
+    },
+    "connect": {
+      "checking": "Checking the connection to Claude…",
+      "notLoggedInTitle": "Connect your Claude plan",
+      "notLoggedInText": "Dock uses Claude Code with your claude.ai account (Pro or Max), no API key. Open Claude Code, type /login and follow the steps in the browser; then come back and press \"Check again\".",
+      "openLogin": "Open Claude Code",
+      "recheck": "Check again",
+      "unavailableTitle": "Claude Code not found",
+      "unavailableText": "Install Claude Code (it takes a few minutes), log in with your account and come back.",
+      "openDocs": "How to install it",
+      "errorTitle": "Cannot reach Claude",
+      "account": "Connected: {{plan}}"
+    }
   }
 }

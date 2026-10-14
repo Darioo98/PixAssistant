@@ -1,0 +1,247 @@
+/* La chat occupa tutta l'altezza: scorre solo l'elenco dei messaggi. */
+.panel-content.tab-chat {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 12px;
+}
+
+.chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-select,
+.chat .model,
+.rename input {
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  color: inherit;
+}
+
+.chat-select,
+.rename {
+  flex: 1;
+  min-width: 0;
+}
+
+.rename input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chat-bar .btn {
+  white-space: nowrap;
+}
+
+.messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 2px;
+}
+
+.msg {
+  max-width: 92%;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.msg.user {
+  align-self: flex-end;
+  padding: 7px 11px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.msg-user-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.assistant {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 100%;
+}
+
+.msg-error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.msg-copy {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.msg-copy:hover {
+  color: var(--accent);
+}
+
+.chat-hint {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.chat-hint.center,
+.chat-empty {
+  margin: 30px 0;
+  text-align: center;
+}
+
+/* ---------- Markdown ---------- */
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md > :last-child {
+  margin-bottom: 0;
+}
+
+.md p,
+.md ul,
+.md ol {
+  margin: 0 0 8px;
+}
+
+.md ul,
+.md ol {
+  padding-left: 20px;
+}
+
+.md h1,
+.md h2,
+.md h3 {
+  margin: 10px 0 6px;
+  font-size: 14px;
+}
+
+.md code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--rail-bg);
+  font-family: 'Cascadia Mono', Consolas, monospace;
+  font-size: 12.5px;
+}
+
+.md table {
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+}
+
+.md th,
+.md td {
+  padding: 3px 8px;
+  border: 1px solid var(--panel-border);
+}
+
+.md blockquote {
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid var(--panel-border);
+  color: var(--text-muted);
+}
+
+.md-link {
+  color: var(--accent);
+  text-decoration: underline dotted;
+}
+
+.code-block {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--rail-bg);
+  overflow-x: auto;
+}
+
+.code-block pre code {
+  padding: 0;
+  background: none;
+}
+
+.code-copy {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* ---------- Composer ---------- */
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.quick .model {
+  margin-left: auto;
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+.composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.composer textarea {
+  flex: 1;
+  min-height: 38px;
+  max-height: 140px;
+  padding: 7px 9px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--surface);
+  font: inherit;
+  color: inherit;
+  resize: vertical;
+}
+
+.composer textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}

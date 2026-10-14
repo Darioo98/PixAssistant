@@ -3,6 +3,7 @@ import type { Lang } from './i18n'
 import type { BubbleOutcome, MascotState } from './mascot'
 import type { DeadlineItem, DeadlineOp } from './deadlines'
 import type { VaultEntryView, VaultOp, VaultOpResult, VaultStatus } from './vault'
+import type { ChatOp, ChatOpResult, ChatState, ChatStreamEvent, ConversationItem } from './chat'
 
 export const TABS = [
   'home',
@@ -57,6 +58,14 @@ export interface DockApi {
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
   previewMascot(preview: MascotPreview): void
   clearIntent(): void
+  chat: {
+    list(): Promise<ConversationItem[]>
+    onChange(cb: (items: ConversationItem[]) => void): () => void
+    state(): Promise<ChatState>
+    onState(cb: (state: ChatState) => void): () => void
+    onStream(cb: (ev: ChatStreamEvent) => void): () => void
+    apply(op: ChatOp): Promise<ChatOpResult>
+  }
   vault: {
     list(): Promise<VaultEntryView[]>
     onChange(cb: (items: VaultEntryView[]) => void): () => void
@@ -85,5 +94,11 @@ export const IPC = {
   clearIntent: 'ui:clear-intent',
   vaultList: 'vault:list',
   vaultChanged: 'vault:changed',
-  vaultApply: 'vault:apply'
+  vaultApply: 'vault:apply',
+  chatList: 'chat:list',
+  chatChanged: 'chat:changed',
+  chatState: 'chat:state',
+  chatStateChanged: 'chat:state-changed',
+  chatStream: 'chat:stream',
+  chatApply: 'chat:apply'
 } as const

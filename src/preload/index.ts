@@ -2,6 +2,14 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC, type DockApi, type UiState } from '@shared/ipc'
 import type { DeadlineItem } from '@shared/deadlines'
 import type { VaultEntryView } from '@shared/vault'
+import type { ChatState, ChatStreamEvent, ConversationItem } from '@shared/chat'
+
+/** Iscrizione a un evento dal processo main; restituisce la funzione per disiscriversi. */
+function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
+  const listener = (_e: IpcRendererEvent, payload: T) => cb(payload)
+  ipcRenderer.on(channel, listener)
+  return () => ipcRenderer.removeListener(channel, listener)
+}
 
 /** API minima esposta al renderer: nessun accesso diretto a Node o a ipcRenderer. */
 const api: DockApi = {
@@ -19,6 +27,14 @@ const api: DockApi = {
   bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
   previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview),
   clearIntent: () => ipcRenderer.send(IPC.clearIntent),
+  chat: {
+    list: () => ipcRenderer.invoke(IPC.chatList),
+    onChange: (cb) => subscribe(IPC.chatChanged, (items: ConversationItem[]) => cb(items)),
+    state: () => ipcRenderer.invoke(IPC.chatState),
+    onState: (cb) => subscribe(IPC.chatStateChanged, (s: ChatState) => cb(s)),
+    onStream: (cb) => subscribe(IPC.chatStream, (ev: ChatStreamEvent) => cb(ev)),
+    apply: (op) => ipcRenderer.invoke(IPC.chatApply, op)
+  },
   vault: {
     list: () => ipcRenderer.invoke(IPC.vaultList),
     onChange: (cb) => {
