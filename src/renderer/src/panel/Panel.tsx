@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { TABS, type TabId, type UiState } from '@shared/ipc'
+import { TABS, type UiState } from '@shared/ipc'
 import { CloseIcon, TabIcon } from './icons'
 import { SettingsTab } from './SettingsTab'
 import { HomeTab } from './HomeTab'
@@ -8,12 +8,8 @@ import { VaultTab } from './vault/VaultTab'
 import { ChatTab } from './chat/ChatTab'
 import { NotesTab } from './notes/NotesTab'
 import { TimersTab } from './timers/TimersTab'
-
-/** Milestone in cui arriva ciascuna sezione. */
-const MILESTONE: Partial<Record<TabId, number>> = {
-  clipboard: 7,
-  links: 7
-}
+import { ClipboardTab } from './extras/ClipboardTab'
+import { LinksTab } from './extras/LinksTab'
 
 export function Panel({ state }: { state: UiState }) {
   const { t } = useTranslation()
@@ -49,13 +45,9 @@ export function Panel({ state }: { state: UiState }) {
           {tab === 'chat' && <ChatTab />}
           {tab === 'notes' && <NotesTab />}
           {tab === 'timers' && <TimersTab />}
+          {tab === 'clipboard' && <ClipboardTab />}
+          {tab === 'links' && <LinksTab />}
           {tab === 'settings' && <SettingsTab state={state} />}
-          {MILESTONE[tab] && (
-            <div className="placeholder">
-              <h2>{t('placeholder.title')}</h2>
-              <p>{t('placeholder.body', { n: MILESTONE[tab] })}</p>
-            </div>
-          )}
         </div>
       </div>
     </section>

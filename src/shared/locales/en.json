@@ -9,7 +9,8 @@
     "showMascot": "Show the mascot",
     "pauseNotifications": "Pause notifications",
     "settings": "Settings",
-    "quit": "Quit"
+    "quit": "Quit",
+    "pauseClipboard": "Pause clipboard history"
   },
   "pix": {
     "label": "Pix: open Dock"
@@ -28,13 +29,7 @@
     "links": "Links and apps",
     "settings": "Settings"
   },
-  "placeholder": {
-    "title": "Coming soon",
-    "body": "This section arrives in milestone {{n}}."
-  },
   "home": {
-    "greeting": "Hi! I'm Pix.",
-    "intro": "Here you'll find a summary of deadlines, passwords, to-dos and reminders.",
     "overdueTitle": "Overdue",
     "weekTitle": "Next 7 days",
     "nothing": "All quiet: nothing due in the next 7 days.",
@@ -168,7 +163,16 @@
     "pomoWork": "Focus (minutes)",
     "pomoShort": "Short break (minutes)",
     "pomoLong": "Long break (minutes)",
-    "pomoLongEvery": "Long break every (cycles)"
+    "pomoLongEvery": "Long break every (cycles)",
+    "weather": "Weather",
+    "weatherCity": "City",
+    "weatherCityPlaceholder": "E.g. London",
+    "weatherHint": "Uses Open-Meteo (free): only the city name is sent.",
+    "clipboard": "Clipboard history",
+    "clipboardPaused": "Paused",
+    "clipboardMax": "Entries to keep",
+    "clipboardImages": "Keep images too",
+    "clipboardExcluded": "Excluded apps (comma separated)"
   },
   "mascot": {
     "preview": {
@@ -573,5 +577,59 @@
     "ok": "OK",
     "done": "Shown",
     "snoozedUntil": "Snoozed until {{time}}"
+  },
+  "clipboard": {
+    "search": "Search clipboard",
+    "paused": "History paused: new copies are not recorded.",
+    "resume": "Resume",
+    "pause": "Pause",
+    "clear": "Clear (except pinned)",
+    "empty": "Nothing yet. Copy something and it will show up here.",
+    "noResults": "No results.",
+    "unavailable": "Clipboard history needs Dock's native helper, which is not available.",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "copied": "Copied",
+    "image": "Image {{w}}×{{h}}",
+    "from": "from {{app}}",
+    "privacy": "Stays on this PC only, encrypted. Passwords and sensitive content are never recorded.",
+    "more": "More actions"
+  },
+  "links": {
+    "add": "Add",
+    "web": "Website",
+    "app": "Program",
+    "folder": "Folder",
+    "title": "Name",
+    "titlePlaceholder": "Optional",
+    "url": "Address",
+    "path": "Path",
+    "browse": "Browse…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "No favorites yet. Add websites, programs or folders.",
+    "invalidUrl": "Invalid address.",
+    "notFound": "Not found: it may have been moved.",
+    "dragHint": "Drag to reorder.",
+    "edit": "Edit",
+    "more": "More actions"
+  },
+  "weather": {
+    "loading": "Weather…",
+    "error": "Weather not available.",
+    "cityNotFound": "City not found: check the settings.",
+    "setCity": "Set the city for the weather",
+    "refresh": "Refresh",
+    "kinds": {
+      "clear": "Clear",
+      "partly": "Partly cloudy",
+      "cloudy": "Cloudy",
+      "fog": "Fog",
+      "drizzle": "Drizzle",
+      "rain": "Rain",
+      "showers": "Showers",
+      "snow": "Snow",
+      "storm": "Thunderstorm"
+    }
   }
 }

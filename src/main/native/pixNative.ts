@@ -73,6 +73,8 @@ export class PixNative {
     proc.stderr.on('data', (d: Buffer) => log.warn(`PixNative: ${d.toString().trim()}`))
     proc.on('exit', (code) => {
       if (this.proc === proc) this.proc = null
+      // Chi ascoltava eventi (es. appunti) deve riattivarli sul nuovo processo.
+      for (const cb of this.eventListeners) cb({ event: 'exit', code })
       for (const [, p] of this.pending) {
         clearTimeout(p.timer)
         p.reject(new Error(`native-exit:${code}`))

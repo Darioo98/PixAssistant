@@ -14,7 +14,7 @@ import type { Settings } from '@shared/settings'
 import { countdown, needsPasswordAlert, type VaultOp, type VaultOpResult, type VaultStatus } from '@shared/vault'
 
 /** DPAPI tramite safeStorage di Electron (legato all'utente Windows di questo PC). */
-function safeStorageProtector(): LocalProtector {
+export function safeStorageProtector(): LocalProtector {
   return {
     protect: (data) => {
       if (!safeStorage.isEncryptionAvailable()) throw new Error('dpapi-unavailable')

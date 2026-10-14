@@ -238,6 +238,55 @@ export function SettingsTab({ state }: { state: UiState }) {
         ))}
       </Section>
 
+      <Section title={t('settings.weather')}>
+        <Row label={t('settings.weatherCity')}>
+          <input
+            className="text"
+            defaultValue={s.weatherCity}
+            key={s.weatherCity}
+            maxLength={100}
+            placeholder={t('settings.weatherCityPlaceholder')}
+            onBlur={(e) => {
+              const v = e.target.value.trim()
+              if (v !== s.weatherCity) void save({ weatherCity: v })
+            }}
+          />
+        </Row>
+        <p className="hint">{t('settings.weatherHint')}</p>
+      </Section>
+
+      <Section title={t('settings.clipboard')}>
+        <Toggle label={t('settings.clipboardPaused')} checked={s.clipboardPaused} onChange={(v) => void save({ clipboardPaused: v })} />
+        <Toggle label={t('settings.clipboardImages')} checked={s.clipboardImages} onChange={(v) => void save({ clipboardImages: v })} />
+        <Row label={t('settings.clipboardMax')}>
+          <input
+            type="number"
+            className="num"
+            min={5}
+            max={500}
+            defaultValue={s.clipboardMax}
+            key={s.clipboardMax}
+            onBlur={(e) => {
+              const v = Math.min(500, Math.max(5, Math.round(Number(e.target.value)) || 50))
+              if (v !== s.clipboardMax) void save({ clipboardMax: v })
+            }}
+          />
+        </Row>
+        <label className="field">
+          <span className="label">{t('settings.clipboardExcluded')}</span>
+          <input
+            className="text"
+            defaultValue={s.clipboardExcluded}
+            key={s.clipboardExcluded}
+            maxLength={2000}
+            onBlur={(e) => {
+              const v = e.target.value.trim()
+              if (v !== s.clipboardExcluded) void save({ clipboardExcluded: v })
+            }}
+          />
+        </label>
+      </Section>
+
       <Section title={t('settings.dnd')}>
         <Toggle label={t('settings.dndEnabled')} checked={s.dndEnabled} onChange={(v) => void save({ dndEnabled: v })} />
         {s.dndEnabled && (

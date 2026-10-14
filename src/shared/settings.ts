@@ -21,6 +21,7 @@ export const settingsSchema = z.object({
   eyesFollowCursor: z.boolean(),
   bubbleSeconds: z.number().int().min(3).max(120),
   defaultLeadDays: z.number().int().min(0).max(365),
+  weatherCity: z.string().max(100),
   pomoWork: z.number().int().min(1).max(180),
   pomoShort: z.number().int().min(1).max(60),
   pomoLong: z.number().int().min(1).max(120),
@@ -41,6 +42,10 @@ export const settingsSchema = z.object({
   mascotHidden: z.boolean(),
   notificationsPaused: z.boolean(),
   hideInFullscreen: z.boolean(),
+  clipboardPaused: z.boolean(),
+  clipboardMax: z.number().int().min(5).max(500),
+  clipboardImages: z.boolean(),
+  clipboardExcluded: z.string().max(2000),
   /** Cartella dati scelta a mano; stringa vuota = rilevamento automatico di OneDrive. */
   dataDir: z.string().max(1024)
 })
@@ -54,6 +59,10 @@ export const LOCAL_KEYS = [
   'mascotHidden',
   'notificationsPaused',
   'hideInFullscreen',
+  'clipboardPaused',
+  'clipboardMax',
+  'clipboardImages',
+  'clipboardExcluded',
   'dataDir'
 ] as const satisfies readonly SettingKey[]
 
@@ -79,6 +88,7 @@ export const DEFAULT_SETTINGS: Settings = {
   eyesFollowCursor: true,
   bubbleSeconds: 12,
   defaultLeadDays: 3,
+  weatherCity: '',
   pomoWork: 25,
   pomoShort: 5,
   pomoLong: 15,
@@ -97,6 +107,10 @@ export const DEFAULT_SETTINGS: Settings = {
   mascotHidden: false,
   notificationsPaused: false,
   hideInFullscreen: true,
+  clipboardPaused: false,
+  clipboardMax: 50,
+  clipboardImages: true,
+  clipboardExcluded: 'KeePass.exe, KeePassXC.exe, 1Password.exe, Bitwarden.exe',
   dataDir: ''
 }
 

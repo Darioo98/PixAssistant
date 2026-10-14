@@ -1,0 +1,183 @@
+/* ---------- Cronologia appunti ---------- */
+.clip-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  border-radius: 8px;
+}
+
+.clip-row:hover {
+  background: var(--hover);
+}
+
+.clip-row.pinned {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.clip-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.clip-text {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+}
+
+.clip-image {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.clip-image img {
+  max-width: 96px;
+  max-height: 64px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--panel-border);
+}
+
+/* ---------- Link e app ---------- */
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link-tile {
+  position: relative;
+  border-radius: 10px;
+}
+
+.link-tile:hover {
+  background: var(--hover);
+}
+
+.link-tile.dragging {
+  opacity: 0.4;
+}
+
+.link-open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 4px 8px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.link-open img,
+.link-letter {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.link-letter {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.link-title {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.link-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0;
+}
+
+.link-tile:hover .link-menu,
+.link-menu:focus-within {
+  opacity: 1;
+}
+
+.link-form .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Meteo ---------- */
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.weather-empty {
+  width: 100%;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.weather-icon {
+  font-size: 26px;
+}
+
+.weather-now {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.weather-now strong {
+  font-size: 18px;
+}
+
+.weather-days {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.weather-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-transform: capitalize;
+}

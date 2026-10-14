@@ -4,6 +4,7 @@ import type { BubbleOutcome, MascotState } from './mascot'
 import type { DeadlineItem, DeadlineOp } from './deadlines'
 import type { VaultEntryView, VaultOp, VaultOpResult, VaultStatus } from './vault'
 import type { ChatOp, ChatOpResult, ChatState, ChatStreamEvent, ConversationItem } from './chat'
+import type { ClipOp, ClipState, LinkOp, LinkView, WeatherState } from './extras'
 import type { NoteItem, NoteOp, ReminderItem, ReminderOp, TimerOp, TimerView, TodoItem, TodoOp } from './productivity'
 
 export const TABS = [
@@ -75,6 +76,17 @@ export interface DockApi {
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
   previewMascot(preview: MascotPreview): void
   clearIntent(): void
+  clipboard: {
+    state(): Promise<ClipState>
+    onChange(cb: (state: ClipState) => void): () => void
+    apply(op: ClipOp): Promise<boolean>
+  }
+  links: {
+    list(): Promise<LinkView[]>
+    onChange(cb: (items: LinkView[]) => void): () => void
+    apply(op: LinkOp): Promise<{ ok: boolean; value?: string }>
+  }
+  weather(force?: boolean): Promise<WeatherState>
   data: {
     list<C extends DataCollection>(collection: C): Promise<DataItems[C]>
     onChange<C extends DataCollection>(collection: C, cb: (items: DataItems[C]) => void): () => void
@@ -125,5 +137,12 @@ export const IPC = {
   chatApply: 'chat:apply',
   dataList: 'data:list',
   dataChanged: 'data:changed',
-  dataApply: 'data:apply'
+  dataApply: 'data:apply',
+  clipState: 'clip:state',
+  clipChanged: 'clip:changed',
+  clipApply: 'clip:apply',
+  linksList: 'links:list',
+  linksChanged: 'links:changed',
+  linksApply: 'links:apply',
+  weather: 'weather:get'
 } as const

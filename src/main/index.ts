@@ -19,6 +19,10 @@ import { syncCodec } from './crypto/codec'
 import { ClaudeSubscriptionProvider } from './ai/claudeSubscription'
 import { ChatService } from './ai/chatService'
 import { ProductivityController } from './productivityController'
+import { ClipboardHistory } from './clipboardHistory'
+import { LinksService } from './links'
+import { WeatherService } from './weather'
+import { safeStorageProtector } from './vaultController'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataCollection, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
@@ -28,6 +32,7 @@ import { inTimeRange, type BubbleOutcome } from '@shared/mascot'
 import { deadlineOpSchema } from '@shared/deadlines'
 import { vaultOpSchema } from '@shared/vault'
 import { chatOpSchema } from '@shared/chat'
+import { clipOpSchema, linkOpSchema } from '@shared/extras'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Dock')
@@ -71,6 +76,8 @@ async function main(): Promise<void> {
       await chat.flush()
       await productivity.load()
       await productivity.flush()
+      await links.load()
+      await links.store.flush()
       await vaultCtl.vault.load()
     },
     onChange: () => {
@@ -268,6 +275,38 @@ async function main(): Promise<void> {
   powerMonitor.on('lock-screen', () => void vaultCtl.lock('Windows bloccato'))
   powerMonitor.on('suspend', () => void vaultCtl.lock('sospensione'))
 
+  // ---- Cronologia appunti, link e meteo ----
+  const clipHistory = new ClipboardHistory({
+    localDir,
+    native,
+    protector: safeStorageProtector(),
+    settings: () => {
+      const s = settings.get()
+      return { max: s.clipboardMax, paused: s.clipboardPaused, excluded: s.clipboardExcluded, images: s.clipboardImages }
+    },
+    setPaused: (paused) => void settings.set({ clipboardPaused: paused })
+  })
+  await clipHistory.init()
+  clipHistory.onChange(() => sendToRenderer(IPC.clipChanged, clipHistory.state()))
+
+  const links = new LinksService({
+    dataDir: dataDir.path,
+    localDir,
+    device,
+    codec: syncCodec(vaultCtl.keys, 'links'),
+    onError: onDataError,
+    window: () => overlay.win,
+    holdOpen: (hold) => {
+      holdOpen = hold
+      if (!hold) overlay.focusForPanel()
+    },
+    onIcons: () => sendToRenderer(IPC.linksChanged, links.list())
+  })
+  await links.load()
+  links.store.onChange(() => sendToRenderer(IPC.linksChanged, links.list()))
+
+  const weather = new WeatherService({ city: () => settings.get().weatherCity, lang: () => lang })
+
   // ---- Servizi di sistema ----
   const shortcut = new GlobalShortcut(togglePanel)
   if (!shortcut.apply(settings.get().shortcut)) {
@@ -285,6 +324,7 @@ async function main(): Promise<void> {
     openSettings: () => openPanel('settings'),
     toggleMascot: () => void settings.set({ mascotHidden: !settings.get().mascotHidden }),
     togglePauseNotifications: () => void settings.set({ notificationsPaused: !settings.get().notificationsPaused }),
+    toggleClipboardPause: () => void settings.set({ clipboardPaused: !settings.get().clipboardPaused }),
     quit: () => app.quit()
   })
 
@@ -420,6 +460,20 @@ async function main(): Promise<void> {
       : { ok: false }
   )
 
+  ipcMain.handle(IPC.clipState, (e) => (fromOverlay(e) ? clipHistory.state() : null))
+  ipcMain.handle(IPC.clipApply, async (e, op: unknown) => {
+    if (!fromOverlay(e)) return false
+    const parsed = clipOpSchema.safeParse(op)
+    return parsed.success ? clipHistory.apply(parsed.data) : false
+  })
+  ipcMain.handle(IPC.linksList, (e) => (fromOverlay(e) ? links.list() : []))
+  ipcMain.handle(IPC.linksApply, async (e, op: unknown) => {
+    if (!fromOverlay(e)) return { ok: false }
+    const parsed = linkOpSchema.safeParse(op)
+    return parsed.success ? links.apply(parsed.data) : { ok: false }
+  })
+  ipcMain.handle(IPC.weather, (e, force: unknown) => (fromOverlay(e) ? weather.get(force === true) : { status: 'off' }))
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
@@ -429,6 +483,8 @@ async function main(): Promise<void> {
     mascot.dispose()
     chat.stopAll()
     productivity.dispose()
+    void clipHistory.flush()
+    void links.store.flush()
     void productivity.flush()
     void chat.flush()
     alerts.dispose()

@@ -7,6 +7,7 @@ export interface TrayActions {
   openSettings(): void
   toggleMascot(): void
   togglePauseNotifications(): void
+  toggleClipboardPause(): void
   quit(): void
 }
 
@@ -36,6 +37,12 @@ export class DockTray {
           type: 'checkbox',
           checked: settings.notificationsPaused,
           click: () => this.actions.togglePauseNotifications()
+        },
+        {
+          label: t('tray.pauseClipboard'),
+          type: 'checkbox',
+          checked: settings.clipboardPaused,
+          click: () => this.actions.toggleClipboardPause()
         },
         { type: 'separator' },
         { label: t('tray.settings'), click: () => this.actions.openSettings() },

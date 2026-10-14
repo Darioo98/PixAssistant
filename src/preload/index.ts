@@ -3,6 +3,7 @@ import { IPC, type DockApi, type UiState } from '@shared/ipc'
 import type { DeadlineItem } from '@shared/deadlines'
 import type { VaultEntryView } from '@shared/vault'
 import type { ChatState, ChatStreamEvent, ConversationItem } from '@shared/chat'
+import type { ClipState, LinkView } from '@shared/extras'
 
 /** Iscrizione a un evento dal processo main; restituisce la funzione per disiscriversi. */
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -27,6 +28,17 @@ const api: DockApi = {
   bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
   previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview),
   clearIntent: () => ipcRenderer.send(IPC.clearIntent),
+  clipboard: {
+    state: () => ipcRenderer.invoke(IPC.clipState),
+    onChange: (cb) => subscribe(IPC.clipChanged, (s: ClipState) => cb(s)),
+    apply: (op) => ipcRenderer.invoke(IPC.clipApply, op)
+  },
+  links: {
+    list: () => ipcRenderer.invoke(IPC.linksList),
+    onChange: (cb) => subscribe(IPC.linksChanged, (items: LinkView[]) => cb(items)),
+    apply: (op) => ipcRenderer.invoke(IPC.linksApply, op)
+  },
+  weather: (force) => ipcRenderer.invoke(IPC.weather, Boolean(force)),
   data: {
     list: (collection) => ipcRenderer.invoke(IPC.dataList, collection),
     onChange: (collection, cb) =>

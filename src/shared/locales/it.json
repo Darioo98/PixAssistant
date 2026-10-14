@@ -9,7 +9,8 @@
     "showMascot": "Mostra la mascotte",
     "pauseNotifications": "Pausa notifiche",
     "settings": "Impostazioni",
-    "quit": "Esci"
+    "quit": "Esci",
+    "pauseClipboard": "Pausa cronologia appunti"
   },
   "pix": {
     "label": "Pix: apri Dock"
@@ -28,13 +29,7 @@
     "links": "Link e app",
     "settings": "Impostazioni"
   },
-  "placeholder": {
-    "title": "In arrivo",
-    "body": "Questa sezione arriva nella milestone {{n}}."
-  },
   "home": {
-    "greeting": "Ciao! Sono Pix.",
-    "intro": "Qui troverai il riepilogo di scadenze, password, to-do e promemoria.",
     "overdueTitle": "Scadute",
     "weekTitle": "Prossimi 7 giorni",
     "nothing": "Tutto tranquillo: niente in scadenza nei prossimi 7 giorni.",
@@ -168,7 +163,16 @@
     "pomoWork": "Concentrazione (minuti)",
     "pomoShort": "Pausa breve (minuti)",
     "pomoLong": "Pausa lunga (minuti)",
-    "pomoLongEvery": "Pausa lunga ogni (cicli)"
+    "pomoLongEvery": "Pausa lunga ogni (cicli)",
+    "weather": "Meteo",
+    "weatherCity": "Città",
+    "weatherCityPlaceholder": "Es. Bari",
+    "weatherHint": "Usa Open-Meteo (gratuito): viene inviato solo il nome della città.",
+    "clipboard": "Cronologia appunti",
+    "clipboardPaused": "In pausa",
+    "clipboardMax": "Voci da conservare",
+    "clipboardImages": "Conserva anche le immagini",
+    "clipboardExcluded": "App escluse (separate da virgola)"
   },
   "mascot": {
     "preview": {
@@ -573,5 +577,59 @@
     "ok": "OK",
     "done": "Mostrato",
     "snoozedUntil": "Posticipato alle {{time}}"
+  },
+  "clipboard": {
+    "search": "Cerca negli appunti",
+    "paused": "Cronologia in pausa: le nuove copie non vengono registrate.",
+    "resume": "Riprendi",
+    "pause": "Pausa",
+    "clear": "Svuota (tranne le fissate)",
+    "empty": "Niente ancora. Copia qualcosa e lo ritrovi qui.",
+    "noResults": "Nessun risultato.",
+    "unavailable": "La cronologia richiede l'helper nativo di Dock, che non è disponibile.",
+    "pin": "Fissa",
+    "unpin": "Togli",
+    "copied": "Copiato",
+    "image": "Immagine {{w}}×{{h}}",
+    "from": "da {{app}}",
+    "privacy": "Resta solo su questo PC, cifrata. Le password e i contenuti sensibili non vengono registrati.",
+    "more": "Altre azioni"
+  },
+  "links": {
+    "add": "Aggiungi",
+    "web": "Sito web",
+    "app": "Programma",
+    "folder": "Cartella",
+    "title": "Nome",
+    "titlePlaceholder": "Facoltativo",
+    "url": "Indirizzo",
+    "path": "Percorso",
+    "browse": "Sfoglia…",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "empty": "Nessun preferito. Aggiungi siti, programmi o cartelle.",
+    "invalidUrl": "Indirizzo non valido.",
+    "notFound": "Non trovato: forse è stato spostato.",
+    "dragHint": "Trascina per riordinare.",
+    "edit": "Modifica",
+    "more": "Altre azioni"
+  },
+  "weather": {
+    "loading": "Meteo…",
+    "error": "Meteo non disponibile.",
+    "cityNotFound": "Città non trovata: controlla le impostazioni.",
+    "setCity": "Imposta la città per il meteo",
+    "refresh": "Aggiorna",
+    "kinds": {
+      "clear": "Sereno",
+      "partly": "Poco nuvoloso",
+      "cloudy": "Nuvoloso",
+      "fog": "Nebbia",
+      "drizzle": "Pioviggine",
+      "rain": "Pioggia",
+      "showers": "Rovesci",
+      "snow": "Neve",
+      "storm": "Temporale"
+    }
   }
 }
