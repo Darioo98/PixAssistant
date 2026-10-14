@@ -1,4 +1,4 @@
-import { app, ipcMain, nativeTheme, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
+import { app, ipcMain, nativeTheme, powerMonitor, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { join } from 'node:path'
@@ -10,11 +10,13 @@ import { GlobalShortcut, applyAutostart } from './system'
 import { FullscreenWatcher } from './fullscreen'
 import { PixNative } from './native/pixNative'
 import { SettingsService } from './settings'
+import { MascotService } from './mascot'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
-import { IPC, TABS, type DataDirInfo, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
+import { IPC, PREVIEWS, TABS, type DataDirInfo, type MascotPreview, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type Settings } from '@shared/settings'
 import { resolveLang, resources, type Lang } from '@shared/i18n'
+import type { BubbleOutcome } from '@shared/mascot'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Dock')
@@ -61,11 +63,19 @@ async function main(): Promise<void> {
     lang,
     settings: settings.get(),
     dataDir,
-    autostartAvailable: app.isPackaged
+    autostartAvailable: app.isPackaged,
+    mascot: mascot.state()
   })
   const pushState = () => {
     if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.state, uiState())
   }
+
+  const mascot = new MascotService({
+    settings: () => settings.get(),
+    idleSeconds: () => powerMonitor.getSystemIdleTime(),
+    canShowBubbles: () => !settings.get().mascotHidden && !fullscreenBusy,
+    onChange: () => pushState()
+  })
 
   const updateVisibility = () => {
     const s = settings.get()
@@ -77,8 +87,11 @@ async function main(): Promise<void> {
   const openPanel = (next?: TabId) => {
     if (next) tab = next
     log.info(`Apro il pannello (${tab})`)
+    const wasOpen = panelOpen
     panelOpen = true
     overlay.focusForPanel()
+    mascot.wake()
+    if (!wasOpen) mascot.flash('greet')
     pushState()
   }
   const closePanel = () => {
@@ -132,9 +145,18 @@ async function main(): Promise<void> {
   // ---- IPC (validato: solo dalla nostra finestra, con argomenti controllati) ----
   const fromOverlay = (e: IpcMainEvent | IpcMainInvokeEvent) => e.sender === overlay.win.webContents
 
-  ipcMain.handle(IPC.getState, (e) => (fromOverlay(e) ? uiState() : null))
+  let greeted = false
+  ipcMain.handle(IPC.getState, (e) => {
+    if (!fromOverlay(e)) return null
+    // Saluto all'avvio, quando l'interfaccia è pronta a mostrarlo.
+    if (!greeted) {
+      greeted = true
+      setTimeout(() => mascot.flash('greet', 2200), 400)
+    }
+    return uiState()
+  })
   ipcMain.on(IPC.setInteractive, (e, value: unknown) => {
-    if (fromOverlay(e) && typeof value === 'boolean') overlay.setInteractive(value || panelOpen)
+    if (fromOverlay(e) && typeof value === 'boolean') overlay.setInteractive(value)
   })
   ipcMain.on(IPC.openPanel, (e, next: unknown) => {
     if (!fromOverlay(e)) return
@@ -153,17 +175,54 @@ async function main(): Promise<void> {
     if (fromOverlay(e)) void shell.openPath(dataDir.path)
   })
 
+  ipcMain.on(IPC.bubbleOutcome, (e, id: unknown, outcome: unknown) => {
+    if (fromOverlay(e) && typeof id === 'string' && isOutcome(outcome)) mascot.resolveBubble(id, outcome)
+  })
+  ipcMain.on(IPC.previewMascot, (e, preview: unknown) => {
+    if (!fromOverlay(e) || !(PREVIEWS as readonly string[]).includes(preview as string)) return
+    previewMascot(preview as MascotPreview)
+  })
+
+  /** Anteprima degli stati di Pix dalle impostazioni. */
+  const previewMascot = (preview: MascotPreview) => {
+    if (preview !== 'alert') {
+      mascot.flash(preview)
+      return
+    }
+    const t = i18next.t
+    mascot.notify({
+      category: t('mascot.preview.category'),
+      text: t('mascot.preview.text'),
+      actions: [
+        { id: 'generate', label: t('mascot.preview.generate'), primary: true },
+        { id: 'later', label: t('mascot.preview.later') }
+      ],
+      onOutcome: (o) => {
+        log.info(`Fumetto di prova chiuso: ${o.kind}`)
+        if (o.kind === 'action' && o.actionId === 'generate') mascot.celebrate()
+      }
+    })
+  }
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
   })
   app.on('before-quit', () => {
     shortcut.dispose()
+    mascot.dispose()
     fullscreen.dispose()
     native.dispose()
     tray.destroy()
     void settings.flush()
   })
+}
+
+function isOutcome(v: unknown): v is BubbleOutcome {
+  if (typeof v !== 'object' || v === null) return false
+  const o = v as Record<string, unknown>
+  if (o.kind === 'dismiss' || o.kind === 'timeout') return true
+  return o.kind === 'action' && typeof o.actionId === 'string' && o.actionId.length <= 64
 }
 
 /** Prepara la cartella dati; se OneDrive non è scrivibile ripiega su una cartella locale. */

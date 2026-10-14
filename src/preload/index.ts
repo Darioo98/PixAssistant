@@ -13,7 +13,9 @@ const api: DockApi = {
   openPanel: (tab) => ipcRenderer.send(IPC.openPanel, tab),
   closePanel: () => ipcRenderer.send(IPC.closePanel),
   setSettings: (patch) => ipcRenderer.invoke(IPC.setSettings, patch),
-  openDataDir: () => ipcRenderer.send(IPC.openDataDir)
+  openDataDir: () => ipcRenderer.send(IPC.openDataDir),
+  bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
+  previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview)
 }
 
 contextBridge.exposeInMainWorld('dock', api)

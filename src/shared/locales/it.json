@@ -88,6 +88,40 @@
       "Shift": "Maiusc",
       "Super": "Win",
       "Space": "Spazio"
+    },
+    "mascotSize": "Dimensione",
+    "mascotSizeOptions": {
+      "small": "Piccola",
+      "medium": "Media",
+      "large": "Grande"
+    },
+    "eyesFollowCursor": "Gli occhi seguono il cursore",
+    "bubbleSeconds": "Durata dei fumetti (secondi)",
+    "dnd": "Non disturbare",
+    "dndEnabled": "Attiva in una fascia oraria",
+    "dndFrom": "Dalle",
+    "dndTo": "Alle",
+    "dndHint": "In questa fascia Pix dorme e non mostra fumetti; gli avvisi restano in Home.",
+    "preview": "Prova gli stati di Pix",
+    "previewOptions": {
+      "alert": "Avviso",
+      "happy": "Felice",
+      "think": "Pensa",
+      "sleep": "Dorme",
+      "greet": "Saluto"
+    },
+    "animationsHint": "Riguarda i movimenti spontanei di Pix. La trasformazione della barra resta, a meno che in Windows siano disattivati gli effetti di animazione."
+  },
+  "mascot": {
+    "preview": {
+      "category": "Prova",
+      "text": "Gmail va cambiata tra 3 giorni. Ne genero una nuova?",
+      "generate": "Genera",
+      "later": "Più tardi"
     }
+  },
+  "bubble": {
+    "now": "ora",
+    "close": "Chiudi"
   }
 }

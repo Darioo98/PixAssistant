@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { UiState } from '@shared/ipc'
+import { PREVIEWS, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type SettingsPatch } from '@shared/settings'
 import { comboToAccelerator, formatAccelerator } from '@shared/accelerator'
 
@@ -81,6 +81,62 @@ export function SettingsTab({ state }: { state: UiState }) {
             ))}
           </select>
         </Row>
+        <p className="hint">{t('settings.animationsHint')}</p>
+        <Row label={t('settings.mascotSize')}>
+          <select value={s.mascotSize} onChange={(e) => void save({ mascotSize: e.target.value as typeof s.mascotSize })}>
+            {(['small', 'medium', 'large'] as const).map((v) => (
+              <option key={v} value={v}>
+                {t(`settings.mascotSizeOptions.${v}`)}
+              </option>
+            ))}
+          </select>
+        </Row>
+        <Toggle
+          label={t('settings.eyesFollowCursor')}
+          checked={s.eyesFollowCursor}
+          onChange={(v) => void save({ eyesFollowCursor: v })}
+        />
+        <Row label={t('settings.bubbleSeconds')}>
+          <input
+            type="number"
+            className="num"
+            min={3}
+            max={120}
+            defaultValue={s.bubbleSeconds}
+            key={s.bubbleSeconds}
+            onBlur={(e) => {
+              const v = Math.round(Number(e.target.value))
+              if (v !== s.bubbleSeconds) void save({ bubbleSeconds: Math.min(120, Math.max(3, v || 12)) })
+            }}
+          />
+        </Row>
+        <div className="row">
+          <span>{t('settings.preview')}</span>
+        </div>
+        <div className="preview-buttons">
+          {PREVIEWS.map((p) => (
+            <button key={p} className="pill" onClick={() => window.dock.previewMascot(p)}>
+              {t(`settings.previewOptions.${p}`)}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title={t('settings.dnd')}>
+        <Toggle label={t('settings.dndEnabled')} checked={s.dndEnabled} onChange={(v) => void save({ dndEnabled: v })} />
+        {s.dndEnabled && (
+          <div className="row">
+            <span>
+              {t('settings.dndFrom')}{' '}
+              <input type="time" value={s.dndFrom} onChange={(e) => e.target.value && void save({ dndFrom: e.target.value })} />
+            </span>
+            <span>
+              {t('settings.dndTo')}{' '}
+              <input type="time" value={s.dndTo} onChange={(e) => e.target.value && void save({ dndTo: e.target.value })} />
+            </span>
+          </div>
+        )}
+        <p className="hint">{t('settings.dndHint')}</p>
       </Section>
 
       <Section title={t('settings.data')}>

@@ -17,6 +17,7 @@
     "dist": "npm run native && npm run build && electron-builder --win nsis"
   },
   "dependencies": {
+    "flubber": "^0.4.2",
     "i18next": "^26.4.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -24,6 +25,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/flubber": "^0.4.0",
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

@@ -63,83 +63,7 @@ input {
   color: inherit;
 }
 
-/* ---------- Barra ---------- */
-.bar-hit {
-  position: absolute;
-  right: 0;
-  bottom: 40px;
-  width: 24px;
-  height: 180px;
-  display: flex;
-  justify-content: flex-end;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.bar-hit.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.bar {
-  width: 8px;
-  height: 180px;
-  border-radius: 4px;
-  background: var(--pix-color);
-  opacity: 0.85;
-}
-
-/* Un solo ciclo di respiro, poi nessuna animazione attiva. */
-.bar.breathe {
-  animation: breathe 3.2s ease-in-out 1;
-}
-
-@keyframes breathe {
-  0%,
-  100% {
-    opacity: 0.85;
-  }
-  50% {
-    opacity: 0.55;
-  }
-}
-
-/* ---------- Pix ---------- */
-.pix-slot {
-  position: absolute;
-  right: 6px;
-  bottom: 34px;
-  width: 84px;
-  height: 84px;
-  opacity: 0;
-  transform: scale(0.6);
-  transform-origin: 100% 80%;
-  transition:
-    opacity 0.2s ease,
-    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
-}
-
-.pix-slot.visible {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.pix {
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  border-radius: 24px;
-}
-
-.pix:focus-visible {
-  outline: 2px solid var(--accent);
-}
+/* Mascotte e fumetto: vedi pix/mascot.css */
 
 /* ---------- Pannello ---------- */
 .panel {
@@ -403,22 +327,30 @@ input {
   font-size: 12px;
 }
 
+.row input.num,
+.row input[type='time'] {
+  padding: 4px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.row input.num {
+  width: 64px;
+}
+
+.preview-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
 /* ---------- Movimento ridotto (anche "Effetti di animazione" di Windows) ---------- */
 @media (prefers-reduced-motion: reduce) {
   .panel {
     animation-name: fade-in;
   }
-  .pix-slot {
-    transform: none;
-    transition: opacity 0.2s ease;
-  }
-  .bar.breathe {
-    animation: none;
-  }
-}
-
-:root[data-animations='off'] .bar.breathe {
-  animation: none;
 }
 
 @keyframes fade-in {

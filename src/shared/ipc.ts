@@ -1,5 +1,6 @@
 import type { Settings, SettingsPatch } from './settings'
 import type { Lang } from './i18n'
+import type { BubbleOutcome, MascotState } from './mascot'
 
 export const TABS = [
   'home',
@@ -29,7 +30,11 @@ export interface UiState {
   dataDir: DataDirInfo
   /** In sviluppo l'avvio automatico non viene registrato. */
   autostartAvailable: boolean
+  mascot: MascotState
 }
+
+export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet'] as const
+export type MascotPreview = (typeof PREVIEWS)[number]
 
 export type SetSettingsResult = { ok: true } | { ok: false; error: 'invalid' | 'shortcutTaken' }
 
@@ -42,6 +47,8 @@ export interface DockApi {
   closePanel(): void
   setSettings(patch: SettingsPatch): Promise<SetSettingsResult>
   openDataDir(): void
+  bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
+  previewMascot(preview: MascotPreview): void
 }
 
 export const IPC = {
@@ -51,5 +58,7 @@ export const IPC = {
   openPanel: 'ui:open-panel',
   closePanel: 'ui:close-panel',
   setSettings: 'settings:set',
-  openDataDir: 'app:open-data-dir'
+  openDataDir: 'app:open-data-dir',
+  bubbleOutcome: 'mascot:bubble-outcome',
+  previewMascot: 'mascot:preview'
 } as const

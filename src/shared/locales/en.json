@@ -88,6 +88,40 @@
       "Shift": "Shift",
       "Super": "Win",
       "Space": "Space"
+    },
+    "mascotSize": "Size",
+    "mascotSizeOptions": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
+    },
+    "eyesFollowCursor": "Eyes follow the cursor",
+    "bubbleSeconds": "Bubble duration (seconds)",
+    "dnd": "Do not disturb",
+    "dndEnabled": "Enable during a time range",
+    "dndFrom": "From",
+    "dndTo": "To",
+    "dndHint": "During this time Pix sleeps and shows no bubbles; alerts stay in Home.",
+    "preview": "Try Pix states",
+    "previewOptions": {
+      "alert": "Alert",
+      "happy": "Happy",
+      "think": "Thinking",
+      "sleep": "Sleeping",
+      "greet": "Hello"
+    },
+    "animationsHint": "Applies to Pix's spontaneous movements. The bar transformation stays, unless animation effects are turned off in Windows."
+  },
+  "mascot": {
+    "preview": {
+      "category": "Preview",
+      "text": "Your Gmail password expires in 3 days. Shall I generate a new one?",
+      "generate": "Generate",
+      "later": "Later"
     }
+  },
+  "bubble": {
+    "now": "now",
+    "close": "Close"
   }
 }

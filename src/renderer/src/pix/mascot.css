@@ -1,0 +1,414 @@
+/* ---------- Mascotte: barra ↔ Pix ---------- */
+.mascot-svg {
+  position: absolute;
+  right: 0;
+  bottom: 30px;
+  overflow: visible;
+}
+
+.bar-zone,
+.body {
+  cursor: pointer;
+}
+
+.body {
+  transition: fill 0.45s ease;
+}
+
+.body:focus {
+  outline: none;
+}
+
+/* Respiro della barra: un ciclo singolo, poi nessuna animazione attiva. */
+.body.breathe {
+  animation: bar-breathe 3.2s ease-in-out 1;
+}
+
+@keyframes bar-breathe {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Movimento ridotto o animazioni spente: semplice dissolvenza barra ↔ Pix. */
+.mascot-svg.fade-0 {
+  animation: pix-fade-a 0.22s ease;
+}
+.mascot-svg.fade-1 {
+  animation: pix-fade-b 0.22s ease;
+}
+@keyframes pix-fade-a {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pix-fade-b {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Pose (statiche, con transizione morbida tra uno stato e l'altro) ---------- */
+.pose {
+  transform-box: fill-box;
+  transform-origin: 50% 60%;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pose-alert {
+  transform: rotate(-7deg);
+}
+
+.pose-happy {
+  transform: translateY(-5px);
+}
+
+.pose-sleep {
+  transform: rotate(4deg);
+}
+
+/* ---------- Movimenti per stato ---------- */
+.motion {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+[data-anim='normal'] .motion-normal.breath {
+  animation: pix-breathe 4s ease-in-out 1;
+}
+
+.motion-alert {
+  animation: pix-alert 0.7s ease-out 1;
+}
+
+.motion-happy {
+  animation: pix-jump 0.75s cubic-bezier(0.3, 0.7, 0.4, 1) 1;
+}
+
+.motion-greet {
+  animation: pix-hello 0.55s ease-out 1;
+}
+
+.motion-sleep {
+  animation: pix-breathe-slow 5s ease-in-out infinite;
+}
+
+.motion-think .body {
+  animation: pix-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pix-breathe {
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes pix-breathe-slow {
+  50% {
+    transform: scale(1.015, 1.03);
+  }
+}
+
+@keyframes pix-alert {
+  25% {
+    transform: translateY(-8px);
+  }
+  45% {
+    transform: translateY(0) rotate(3deg);
+  }
+  60% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+  90% {
+    transform: rotate(-2deg);
+  }
+}
+
+/* Saltello con schiacciamento e allungamento (squash & stretch). */
+@keyframes pix-jump {
+  0% {
+    transform: scale(1.12, 0.86);
+  }
+  30% {
+    transform: translateY(-14px) scale(0.92, 1.1);
+  }
+  60% {
+    transform: translateY(0) scale(1.1, 0.9);
+  }
+  80% {
+    transform: scale(0.97, 1.03);
+  }
+}
+
+@keyframes pix-hello {
+  30% {
+    transform: translateY(-6px);
+  }
+  60% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+}
+
+@keyframes pix-pulse {
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
+/* ---------- Occhi ---------- */
+.look {
+  transition: transform 0.12s linear;
+}
+
+.glance,
+.eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.eyes.blink {
+  animation: pix-blink 0.16s ease-in-out 1;
+}
+
+.glance.look-around {
+  animation: pix-look-around 1.8s ease-in-out 1;
+}
+
+.glance.thinking {
+  animation: pix-think 2.4s ease-in-out infinite;
+}
+
+@keyframes pix-blink {
+  50% {
+    transform: scaleY(0.12);
+  }
+}
+
+@keyframes pix-look-around {
+  20%,
+  45% {
+    transform: translate(-2.5px, 0);
+  }
+  60%,
+  85% {
+    transform: translate(2.5px, -1px);
+  }
+}
+
+/* Pensa: guarda in alto a destra e a sinistra */
+@keyframes pix-think {
+  0%,
+  100% {
+    transform: translate(2px, -3px);
+  }
+  50% {
+    transform: translate(-2px, -3px);
+  }
+}
+
+/* ---------- Badge ---------- */
+.badge-alert {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badge-pop {
+  from {
+    transform: scale(0);
+  }
+}
+
+.z {
+  opacity: 0;
+  animation: z-rise 2.6s ease-in-out infinite;
+}
+
+.z2 {
+  animation-delay: 1.3s;
+}
+
+@keyframes z-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(5px, -10px);
+  }
+}
+
+.confetti {
+  animation: confetti 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) 1 both;
+}
+
+.c1 {
+  --from: translate(-26px, 30px);
+}
+.c2 {
+  --from: translate(-36px, 40px);
+  animation-delay: 0.05s;
+}
+.c3 {
+  --from: translate(-38px, 28px);
+  animation-delay: 0.1s;
+}
+.c4 {
+  --from: translate(30px, 32px);
+}
+.c5 {
+  --from: translate(38px, 22px);
+  animation-delay: 0.08s;
+}
+.c6 {
+  --from: translate(22px, 40px);
+  animation-delay: 0.12s;
+}
+
+@keyframes confetti {
+  from {
+    opacity: 0;
+    transform: var(--from) scale(0.3);
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.dot {
+  opacity: 0.3;
+  animation: dot 1.2s ease-in-out infinite;
+}
+
+.d2 {
+  animation-delay: 0.2s;
+}
+
+.d3 {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot {
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Animazioni spente o movimento ridotto: solo pose statiche e colori. */
+[data-anim='off'] .motion,
+[data-anim='off'] .motion .body,
+[data-anim='off'] .badge *,
+[data-anim='off'] .badge,
+[data-anim='off'] .glance {
+  animation: none !important;
+}
+
+[data-anim='off'] .z,
+[data-anim='off'] .dot {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion,
+  .motion .body,
+  .badge,
+  .badge *,
+  .glance {
+    animation: none !important;
+  }
+  .z,
+  .dot {
+    opacity: 1;
+  }
+  .pose {
+    transition: none;
+  }
+}
+
+/* ---------- Fumetto (stile notifica moderna) ---------- */
+.bubble {
+  position: absolute;
+  right: 84px;
+  bottom: 56px;
+  width: 280px;
+  box-sizing: border-box;
+  padding: 10px 12px 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  animation: bubble-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  user-select: text;
+}
+
+.bubble.above {
+  right: 8px;
+  bottom: 132px;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation-name: pix-fade-a;
+  }
+}
+
+.bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.bubble-text {
+  margin: 2px 0 10px;
+  line-height: 1.4;
+}
+
+.bubble-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.pill {
+  padding: 5px 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pill:hover {
+  background: var(--hover);
+}
+
+.pill.primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.pill.primary:hover {
+  filter: brightness(1.08);
+}
+
+.icon-btn.small {
+  width: 24px;
+  height: 24px;
+}
