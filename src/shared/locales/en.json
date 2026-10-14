@@ -34,7 +34,11 @@
   },
   "home": {
     "greeting": "Hi! I'm Pix.",
-    "intro": "Here you'll find a summary of deadlines, passwords, to-dos and reminders."
+    "intro": "Here you'll find a summary of deadlines, passwords, to-dos and reminders.",
+    "overdueTitle": "Overdue",
+    "weekTitle": "Next 7 days",
+    "nothing": "All quiet: nothing due in the next 7 days.",
+    "seeAll": "See all"
   },
   "settings": {
     "general": "General",
@@ -135,7 +139,9 @@
     },
     "shine": "Highlight",
     "appearanceHint": "The color applies to Pix in its normal state and to the bar. Alert, happy and sleeping keep their own colors, so you can tell at a glance what is going on.",
-    "resetAppearance": "Restore the original look"
+    "resetAppearance": "Restore the original look",
+    "deadlines": "Deadlines",
+    "defaultLeadDays": "Default reminder (days)"
   },
   "mascot": {
     "preview": {
@@ -148,5 +154,102 @@
   "bubble": {
     "now": "now",
     "close": "Close"
+  },
+  "deadlines": {
+    "category": "Deadlines",
+    "new": "New deadline",
+    "list": "List",
+    "calendar": {
+      "today": "Today",
+      "prev": "Previous month",
+      "next": "Next month",
+      "add": "Add",
+      "noneOnDay": "No deadlines on this day."
+    },
+    "empty": "No deadlines yet. Add one with \"New deadline\".",
+    "emptyFilter": "No deadlines match this filter.",
+    "filters": {
+      "active": "To do",
+      "overdue": "Overdue",
+      "done": "Done",
+      "all": "All"
+    },
+    "allCategories": "All categories",
+    "due": {
+      "today": "Due today",
+      "in_one": "Due tomorrow",
+      "in_other": "Due in {{count}} days",
+      "overdue_one": "Overdue since yesterday",
+      "overdue_other": "Overdue by {{count}} days",
+      "done": "Done on {{date}}"
+    },
+    "actions": {
+      "done": "Done",
+      "reopen": "Reopen",
+      "snooze": "Snooze",
+      "edit": "Edit",
+      "delete": "Delete",
+      "more": "More actions"
+    },
+    "snoozeOptions": {
+      "d1": "Tomorrow",
+      "d3": "In 3 days",
+      "w1": "In a week"
+    },
+    "snoozedUntil": "Alerts snoozed until {{date}}",
+    "repeats": {
+      "day_one": "Every day",
+      "day_other": "Every {{count}} days",
+      "week_one": "Every week",
+      "week_other": "Every {{count}} weeks",
+      "month_one": "Every month",
+      "month_other": "Every {{count}} months",
+      "year_one": "Every year",
+      "year_other": "Every {{count}} years"
+    },
+    "form": {
+      "title": "Title",
+      "titlePlaceholder": "E.g. Car tax",
+      "date": "Date",
+      "recurrence": "Repeat",
+      "every": "Every",
+      "units": {
+        "none": "Does not repeat",
+        "day": "days",
+        "week": "weeks",
+        "month": "months",
+        "year": "years"
+      },
+      "lead": "Reminder",
+      "leadDefault_one": "Default ({{count}} day)",
+      "leadDefault_other": "Default ({{count}} days)",
+      "leadCustom": "Custom",
+      "leadDays": "days before",
+      "category": "Category",
+      "categoryPlaceholder": "E.g. Car, Home, Subscriptions",
+      "notes": "Notes",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "confirmDelete": "Confirm delete",
+      "history": "History",
+      "monthEndHint": "In shorter months the deadline moves to the last day of the month.",
+      "editTitle": "Edit deadline"
+    },
+    "alert": {
+      "overdue_one": "\"{{title}}\" was due yesterday.",
+      "overdue_other": "\"{{title}}\" is {{count}} days overdue.",
+      "today": "\"{{title}}\" is due today.",
+      "soon_one": "\"{{title}}\" is due tomorrow.",
+      "soon_other": "\"{{title}}\" is due in {{count}} days."
+    }
+  },
+  "alerts": {
+    "open": "Open",
+    "tomorrow": "Tomorrow",
+    "done": "Done",
+    "summaryCategory": "Alerts",
+    "summary_one": "You have {{count}} alert to look at.",
+    "summary_other": "You have {{count}} alerts to look at."
   }
 }

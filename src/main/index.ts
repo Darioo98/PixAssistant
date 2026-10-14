@@ -1,4 +1,4 @@
-import { app, ipcMain, nativeTheme, powerMonitor, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
+import { Notification, app, ipcMain, nativeTheme, powerMonitor, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron'
 import { mkdir } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { join } from 'node:path'
@@ -11,12 +11,16 @@ import { FullscreenWatcher } from './fullscreen'
 import { PixNative } from './native/pixNative'
 import { SettingsService } from './settings'
 import { MascotService } from './mascot'
+import { DeadlineService } from './deadlines'
+import { AlertEngine } from './alerts'
+import { deadlineAlerts } from './deadlineAlerts'
 import { loadDevice } from './storage/device'
 import { resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataDirInfo, type MascotPreview, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type Settings } from '@shared/settings'
 import { resolveLang, resources, type Lang } from '@shared/i18n'
-import type { BubbleOutcome } from '@shared/mascot'
+import { inTimeRange, type BubbleOutcome } from '@shared/mascot'
+import { deadlineOpSchema } from '@shared/deadlines'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Dock')
@@ -42,7 +46,10 @@ async function main(): Promise<void> {
   await settings.loadLocal()
   const device = await loadDevice(localDir)
   const dataDir = await prepareDataDir(settings.get().dataDir)
-  await settings.attachSynced(dataDir.path, device, (err, file) => log.warn(`Lettura dati non riuscita: ${file}`, err))
+  const onDataError = (err: unknown, file?: string) => log.warn(`Lettura dati non riuscita: ${file}`, err)
+  await settings.attachSynced(dataDir.path, device, onDataError)
+  const deadlines = new DeadlineService(dataDir.path, device, onDataError, () => mascot.celebrate())
+  await deadlines.load()
 
   let lang: Lang = resolveLang(settings.get().language, app.getPreferredSystemLanguages())
   await i18next.init({ resources, lng: lang, fallbackLng: 'it', interpolation: { escapeValue: false } })
@@ -109,6 +116,60 @@ async function main(): Promise<void> {
     if (panelOpen && settings.get().closeOnBlur) closePanel()
   })
 
+  // ---- Avvisi: notifiche di Windows + fumetti di Pix ----
+  const toasts = new Set<Notification>()
+  const toast = (title: string, body: string, onClick: () => void) => {
+    if (!Notification.isSupported()) return
+    const n = new Notification({ title, body, icon: join(resourcesDir, 'icons', 'pix-256.png') })
+    toasts.add(n) // riferimento finché la notifica è viva, altrimenti il clic si perde
+    n.on('click', onClick)
+    n.on('close', () => toasts.delete(n))
+    n.show()
+  }
+  const alerts = new AlertEngine({
+    localDir,
+    sources: [
+      deadlineAlerts({
+        deadlines,
+        defaultLead: () => settings.get().defaultLeadDays,
+        t: () => i18next.t,
+        open: () => openPanel('deadlines')
+      })
+    ],
+    isQuiet: () => {
+      const s = settings.get()
+      return s.notificationsPaused || (s.dndEnabled && inTimeRange(new Date(), s.dndFrom, s.dndTo))
+    },
+    toast,
+    bubble: (c) =>
+      mascot.notify({
+        category: c.category,
+        text: c.text,
+        actions: c.actions,
+        onOutcome: (o) => o.kind === 'action' && c.onAction(o.actionId)
+      }),
+    summary: (count) => ({
+      category: i18next.t('alerts.summaryCategory'),
+      title: i18next.t('app.name'),
+      text: i18next.t('alerts.summary', { count }),
+      openLabel: i18next.t('alerts.open')
+    }),
+    openSummary: () => openPanel('home')
+  })
+  await alerts.init()
+  const pushDeadlines = () => {
+    if (!overlay.win.isDestroyed()) overlay.win.webContents.send(IPC.deadlinesChanged, deadlines.list())
+  }
+  deadlines.onChange(() => {
+    pushDeadlines()
+    alerts.schedule()
+  })
+  // Controllo all'avvio (recupera gli avvisi persi), ogni 15 minuti e al ritorno dalla sospensione.
+  alerts.schedule(5000)
+  const alertTimer = setInterval(() => alerts.schedule(0), 15 * 60_000)
+  powerMonitor.on('resume', () => alerts.schedule(3000))
+  powerMonitor.on('unlock-screen', () => alerts.schedule(3000))
+
   // ---- Servizi di sistema ----
   const shortcut = new GlobalShortcut(togglePanel)
   if (!shortcut.apply(settings.get().shortcut)) {
@@ -138,6 +199,7 @@ async function main(): Promise<void> {
     tray.update(i18next.t, s)
     updateVisibility()
     pushState()
+    alerts.schedule()
   }
   applySettings(settings.get())
   settings.onChange((next, prev) => applySettings(next, prev))
@@ -204,6 +266,13 @@ async function main(): Promise<void> {
     })
   }
 
+  ipcMain.handle(IPC.deadlinesList, (e) => (fromOverlay(e) ? deadlines.list() : []))
+  ipcMain.handle(IPC.deadlinesApply, (e, op: unknown) => {
+    if (!fromOverlay(e)) return false
+    const parsed = deadlineOpSchema.safeParse(op)
+    return parsed.success ? deadlines.apply(parsed.data) : false
+  })
+
   app.on('second-instance', () => openPanel())
   app.on('window-all-closed', () => {
     // L'app vive nell'area di notifica: non si chiude con le finestre.
@@ -211,6 +280,9 @@ async function main(): Promise<void> {
   app.on('before-quit', () => {
     shortcut.dispose()
     mascot.dispose()
+    alerts.dispose()
+    clearInterval(alertTimer)
+    void deadlines.flush()
     fullscreen.dispose()
     native.dispose()
     tray.destroy()

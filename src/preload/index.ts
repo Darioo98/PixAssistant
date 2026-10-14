@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC, type DockApi, type UiState } from '@shared/ipc'
+import type { DeadlineItem } from '@shared/deadlines'
 
 /** API minima esposta al renderer: nessun accesso diretto a Node o a ipcRenderer. */
 const api: DockApi = {
@@ -15,7 +16,16 @@ const api: DockApi = {
   setSettings: (patch) => ipcRenderer.invoke(IPC.setSettings, patch),
   openDataDir: () => ipcRenderer.send(IPC.openDataDir),
   bubbleOutcome: (bubbleId, outcome) => ipcRenderer.send(IPC.bubbleOutcome, bubbleId, outcome),
-  previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview)
+  previewMascot: (preview) => ipcRenderer.send(IPC.previewMascot, preview),
+  deadlines: {
+    list: () => ipcRenderer.invoke(IPC.deadlinesList),
+    onChange: (cb) => {
+      const listener = (_e: IpcRendererEvent, items: DeadlineItem[]) => cb(items)
+      ipcRenderer.on(IPC.deadlinesChanged, listener)
+      return () => ipcRenderer.removeListener(IPC.deadlinesChanged, listener)
+    },
+    apply: (op) => ipcRenderer.invoke(IPC.deadlinesApply, op)
+  }
 }
 
 contextBridge.exposeInMainWorld('dock', api)

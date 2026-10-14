@@ -34,7 +34,11 @@
   },
   "home": {
     "greeting": "Ciao! Sono Pix.",
-    "intro": "Qui troverai il riepilogo di scadenze, password, to-do e promemoria."
+    "intro": "Qui troverai il riepilogo di scadenze, password, to-do e promemoria.",
+    "overdueTitle": "Scadute",
+    "weekTitle": "Prossimi 7 giorni",
+    "nothing": "Tutto tranquillo: niente in scadenza nei prossimi 7 giorni.",
+    "seeAll": "Vedi tutte"
   },
   "settings": {
     "general": "Generale",
@@ -135,7 +139,9 @@
     },
     "shine": "Riflesso",
     "appearanceHint": "Il colore vale per Pix nello stato normale e per la barra. Avviso, felice e dorme mantengono i loro colori, così capisci subito cosa succede.",
-    "resetAppearance": "Ripristina l'aspetto originale"
+    "resetAppearance": "Ripristina l'aspetto originale",
+    "deadlines": "Scadenze",
+    "defaultLeadDays": "Preavviso predefinito (giorni)"
   },
   "mascot": {
     "preview": {
@@ -148,5 +154,102 @@
   "bubble": {
     "now": "ora",
     "close": "Chiudi"
+  },
+  "deadlines": {
+    "category": "Scadenze",
+    "new": "Nuova scadenza",
+    "list": "Lista",
+    "calendar": {
+      "today": "Oggi",
+      "prev": "Mese precedente",
+      "next": "Mese successivo",
+      "add": "Aggiungi",
+      "noneOnDay": "Nessuna scadenza in questo giorno."
+    },
+    "empty": "Nessuna scadenza. Aggiungine una con «Nuova scadenza».",
+    "emptyFilter": "Nessuna scadenza con questo filtro.",
+    "filters": {
+      "active": "Da fare",
+      "overdue": "Scadute",
+      "done": "Fatte",
+      "all": "Tutte"
+    },
+    "allCategories": "Tutte le categorie",
+    "due": {
+      "today": "Scade oggi",
+      "in_one": "Scade domani",
+      "in_other": "Scade tra {{count}} giorni",
+      "overdue_one": "Scaduta ieri",
+      "overdue_other": "Scaduta da {{count}} giorni",
+      "done": "Fatta il {{date}}"
+    },
+    "actions": {
+      "done": "Fatto",
+      "reopen": "Riapri",
+      "snooze": "Posticipa",
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "more": "Altre azioni"
+    },
+    "snoozeOptions": {
+      "d1": "Domani",
+      "d3": "Tra 3 giorni",
+      "w1": "Tra una settimana"
+    },
+    "snoozedUntil": "Avvisi sospesi fino al {{date}}",
+    "repeats": {
+      "day_one": "Ogni giorno",
+      "day_other": "Ogni {{count}} giorni",
+      "week_one": "Ogni settimana",
+      "week_other": "Ogni {{count}} settimane",
+      "month_one": "Ogni mese",
+      "month_other": "Ogni {{count}} mesi",
+      "year_one": "Ogni anno",
+      "year_other": "Ogni {{count}} anni"
+    },
+    "form": {
+      "title": "Titolo",
+      "titlePlaceholder": "Es. Bollo auto",
+      "date": "Data",
+      "recurrence": "Ripetizione",
+      "every": "Ogni",
+      "units": {
+        "none": "Non si ripete",
+        "day": "giorni",
+        "week": "settimane",
+        "month": "mesi",
+        "year": "anni"
+      },
+      "lead": "Preavviso",
+      "leadDefault_one": "Predefinito ({{count}} giorno)",
+      "leadDefault_other": "Predefinito ({{count}} giorni)",
+      "leadCustom": "Personalizzato",
+      "leadDays": "giorni prima",
+      "category": "Categoria",
+      "categoryPlaceholder": "Es. Auto, Casa, Abbonamenti",
+      "notes": "Note",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "delete": "Elimina",
+      "confirmDelete": "Conferma eliminazione",
+      "history": "Storico",
+      "monthEndHint": "Nei mesi più corti la scadenza passa all'ultimo giorno del mese.",
+      "editTitle": "Modifica scadenza"
+    },
+    "alert": {
+      "overdue_one": "«{{title}}» è scaduta ieri.",
+      "overdue_other": "«{{title}}» è scaduta da {{count}} giorni.",
+      "today": "«{{title}}» scade oggi.",
+      "soon_one": "«{{title}}» scade domani.",
+      "soon_other": "«{{title}}» scade tra {{count}} giorni."
+    }
+  },
+  "alerts": {
+    "open": "Apri",
+    "tomorrow": "Domani",
+    "done": "Fatto",
+    "summaryCategory": "Avvisi",
+    "summary_one": "Hai {{count}} avviso da guardare.",
+    "summary_other": "Hai {{count}} avvisi da guardare."
   }
 }

@@ -1,6 +1,7 @@
 import type { Settings, SettingsPatch } from './settings'
 import type { Lang } from './i18n'
 import type { BubbleOutcome, MascotState } from './mascot'
+import type { DeadlineItem, DeadlineOp } from './deadlines'
 
 export const TABS = [
   'home',
@@ -49,6 +50,11 @@ export interface DockApi {
   openDataDir(): void
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
   previewMascot(preview: MascotPreview): void
+  deadlines: {
+    list(): Promise<DeadlineItem[]>
+    onChange(cb: (items: DeadlineItem[]) => void): () => void
+    apply(op: DeadlineOp): Promise<boolean>
+  }
 }
 
 export const IPC = {
@@ -60,5 +66,8 @@ export const IPC = {
   setSettings: 'settings:set',
   openDataDir: 'app:open-data-dir',
   bubbleOutcome: 'mascot:bubble-outcome',
-  previewMascot: 'mascot:preview'
+  previewMascot: 'mascot:preview',
+  deadlinesList: 'deadlines:list',
+  deadlinesChanged: 'deadlines:changed',
+  deadlinesApply: 'deadlines:apply'
 } as const

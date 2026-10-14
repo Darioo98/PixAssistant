@@ -127,6 +127,23 @@ export function SettingsTab({ state }: { state: UiState }) {
         </div>
       </Section>
 
+      <Section title={t('settings.deadlines')}>
+        <Row label={t('settings.defaultLeadDays')}>
+          <input
+            type="number"
+            className="num"
+            min={0}
+            max={365}
+            defaultValue={s.defaultLeadDays}
+            key={s.defaultLeadDays}
+            onBlur={(e) => {
+              const v = Math.min(365, Math.max(0, Math.round(Number(e.target.value)) || 0))
+              if (v !== s.defaultLeadDays) void save({ defaultLeadDays: v })
+            }}
+          />
+        </Row>
+      </Section>
+
       <Section title={t('settings.dnd')}>
         <Toggle label={t('settings.dndEnabled')} checked={s.dndEnabled} onChange={(v) => void save({ dndEnabled: v })} />
         {s.dndEnabled && (
