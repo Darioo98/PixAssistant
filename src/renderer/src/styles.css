@@ -764,3 +764,16 @@ input {
     opacity: 0;
   }
 }
+
+/* ---------- Icone di sistema (Segoe Fluent Icons / Segoe MDL2 Assets) ---------- */
+.glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe Fluent Icons', 'Segoe MDL2 Assets';
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  vertical-align: -0.15em;
+  -webkit-font-smoothing: antialiased;
+}

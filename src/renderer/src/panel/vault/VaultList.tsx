@@ -4,6 +4,7 @@ import type { ISODate } from '@shared/dates'
 import { countdown, type VaultEntryView, type VaultGroupView } from '@shared/vault'
 import { DeleteButton, RowMenu } from '../RowMenu'
 import { FolderMoveItems, entryDragProps } from './VaultGroups'
+import { Glyph } from '../Glyph'
 
 /**
  * Countdown compatto: pallino colorato (verde, giallo, rosso) e giorni al
@@ -140,11 +141,6 @@ export function VaultRowLocked({
   )
 }
 
-const icon = (d: string) => (
-  <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
-    <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-const UserIcon = () => icon('M10 10a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM4 16.5c.8-2.8 3.2-4.2 6-4.2s5.2 1.4 6 4.2')
-const KeyIcon = () => icon('M12.5 7.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zM11.5 10l5 5M14 12.5l-1.5 1.5M15.7 14.2l-1.4 1.4')
-const CheckIcon = () => icon('M4.5 10.5l3.5 3.5 7.5-8')
+const UserIcon = () => <Glyph name="user" size={15} />
+const KeyIcon = () => <Glyph name="key" size={15} />
+const CheckIcon = () => <Glyph name="check" size={15} />

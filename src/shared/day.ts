@@ -28,7 +28,8 @@ export interface SummaryInput {
   reminders: Reminder[]
   /** Fine del turno di oggi (ms), se iniziato. */
   shiftEndsAt: number | null
-  weather: { city: string; temperature: number; min: number; max: number; icon: string } | null
+  /** `kind`: descrizione già tradotta (es. "Sereno"). */
+  weather: { city: string; temperature: number; min: number; max: number; kind: string } | null
 }
 
 type T = (key: string, options?: Record<string, unknown>) => string
@@ -68,7 +69,7 @@ export function buildSummary(input: SummaryInput, today: ISODate, t: T): string 
 
   if (input.weather) {
     const w = input.weather
-    lines.push(t('day.summary.weather', { icon: w.icon, city: w.city, temp: Math.round(w.temperature), min: Math.round(w.min), max: Math.round(w.max) }))
+    lines.push(t('day.summary.weather', { kind: w.kind, city: w.city, temp: Math.round(w.temperature), min: Math.round(w.min), max: Math.round(w.max) }))
   }
   return lines.join('\n')
 }

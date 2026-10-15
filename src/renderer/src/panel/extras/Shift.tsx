@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatHHMM, formatRemaining, shiftProgress, type ShiftState } from '@shared/shift'
 import './extras.css'
+import { Glyph } from '../Glyph'
 
 export function useShift(): ShiftState | null {
   const [state, setState] = useState<ShiftState | null>(null)
@@ -50,7 +51,9 @@ export function ShiftCard({ defaultBreak }: { defaultBreak: number }) {
   if (!state.shift || editing) {
     return (
       <section className="home-card shift-card">
-        <h2 className="home-title">🏢 {t('shift.title')}</h2>
+        <h2 className="home-title">
+        <Glyph name="work" /> {t('shift.title')}
+      </h2>
         <form
           className="shift-form"
           onSubmit={(e) => {
@@ -97,7 +100,9 @@ export function ShiftCard({ defaultBreak }: { defaultBreak: number }) {
   const work = formatRemaining(s.workMinutes * 60_000, labels)
   return (
     <section className="home-card shift-card">
-      <h2 className="home-title">🏢 {t('shift.title')}</h2>
+      <h2 className="home-title">
+        <Glyph name="work" /> {t('shift.title')}
+      </h2>
       <div className="shift-main">
         <strong>{t('shift.endsAt', { time: formatHHMM(new Date(end).getHours() * 60 + new Date(end).getMinutes()) })}</strong>
         <span className={remaining > 0 ? 'shift-left' : 'shift-over'}>

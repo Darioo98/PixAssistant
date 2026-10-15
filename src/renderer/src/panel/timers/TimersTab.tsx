@@ -15,6 +15,7 @@ import { DeleteButton, RowMenu } from '../RowMenu'
 import '../notes/productivity.css'
 import { useShiftRemaining } from '../extras/Shift'
 import { formatRemaining } from '@shared/shift'
+import { Glyph } from '../Glyph'
 
 export function TimersTab({ cyclesToday = 0 }: { cyclesToday?: number }) {
   const { t } = useTranslation()
@@ -48,10 +49,10 @@ function Timers({ cyclesToday }: { cyclesToday: number }) {
     <>
       <div className="timer-start">
         <button className="btn primary" onClick={() => void window.pix.data.apply('timers', { op: 'startPomodoro' })}>
-          🍅 {t('timers.startPomodoro')}
+          <Glyph name="stopwatch" /> {t('timers.startPomodoro')}
         </button>
         <span className="hint focus-hint">
-          {cyclesToday > 0 ? `${t('timers.cyclesToday', { count: cyclesToday })} ${'🍅'.repeat(Math.min(cyclesToday, 8))}` : t('timers.focusHint')}
+          {cyclesToday > 0 ? t('timers.cyclesToday', { count: cyclesToday }) : t('timers.focusHint')}
         </span>
       </div>
       <form
@@ -148,16 +149,15 @@ export function TimerPill() {
     const time = formatRemaining(shiftLeft, { h: t('shift.h'), min: t('shift.min') })
     return (
       <button className="timer-pill" data-hit aria-label={t('shift.pill', { time })} onClick={() => window.pix.openPanel('home')}>
-        🏢 {time}
+        <Glyph name="work" size={13} /> {time}
       </button>
     )
   }
   const next = running.reduce<TimerView | null>((a, b) => (!a || (b.endsAt ?? 0) < (a.endsAt ?? 0) ? b : a), null)
-  const time = next ? formatDuration(remainingOf(next, now)) : '⏸'
+  const time = next ? formatDuration(remainingOf(next, now)) : null
   return (
     <button className="timer-pill" data-hit aria-label={t('timers.pillLabel', { time })} onClick={() => window.pix.openPanel('timers')}>
-      {next?.phase === 'work' ? '🍅 ' : '⏱ '}
-      {time}
+      <Glyph name={time === null ? 'pause' : next?.phase === 'work' ? 'stopwatch' : 'clock'} size={13} /> {time}
     </button>
   )
 }

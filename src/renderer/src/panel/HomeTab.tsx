@@ -15,6 +15,7 @@ import { VaultRowLocked } from './vault/VaultList'
 import './vault/vault.css'
 import { DeadlineRow } from './deadlines/DeadlineRow'
 import './deadlines/deadlines.css'
+import { Glyph } from './Glyph'
 
 /** Riepilogo: scadute e in scadenza nei prossimi 7 giorni (password, to-do e promemoria arriveranno qui). */
 export function HomeTab({ state }: { state: UiState }) {
@@ -52,7 +53,7 @@ export function HomeTab({ state }: { state: UiState }) {
           <ul className="todo-list">
             {todayReminders.map((r) => (
               <li key={r.id} className="todo-row home-link" onClick={() => window.pix.openPanel('timers')}>
-                <span aria-hidden="true">⏰</span>
+                <Glyph name="reminder" />
                 <span className="todo-text">
                   {r.text}
                   <em> · {new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(parseLocal(r.at))}</em>

@@ -180,7 +180,7 @@
     "shiftRemind": "Remind me before the end (minutes)",
     "transforms": "Spontaneous animations (now and then the body transforms and moves)",
     "tryTransforms": "Try the animations",
-    "tryPeek": "👀 Peek",
+    "tryPeek": "Peek",
     "transformOptions": {
       "wobble": "Jelly",
       "waves": "Waves",
@@ -200,7 +200,7 @@
     },
     "searchShortcut": "Global search shortcut",
     "morningSummary": "Daily summary on first use",
-    "tryYawn": "🥱 Yawn",
+    "tryYawn": "Yawn",
     "trySwallow": "Swallows a file",
     "trySwallowText": "A test letter for Pix"
   },
@@ -631,8 +631,8 @@
     "pomodoroBreak": "Great work! Now: {{phase}}.",
     "pomodoroWork": "Break over: back to work?",
     "pillLabel": "Timer: {{time}}",
-    "pomodoroBreakCycles_one": "Great work: first cycle today! 🍅 Next: {{phase}}.",
-    "pomodoroBreakCycles_other": "Great work: {{count}} cycles today! 🍅 Next: {{phase}}.",
+    "pomodoroBreakCycles_one": "Great work: first cycle today! Next: {{phase}}.",
+    "pomodoroBreakCycles_other": "Great work: {{count}} cycles today! Next: {{phase}}.",
     "cyclesToday_one": "{{count}} cycle today",
     "cyclesToday_other": "{{count}} cycles today",
     "focusHint": "While you work, Pix sleeps on the bar and holds alerts until the break."
@@ -796,11 +796,11 @@
     "dismiss": "Close",
     "searching": "Opening search…",
     "failed": "I couldn't save it. Please try again.",
-    "noteSaved": "📝 Note saved.",
-    "todoSaved": "☑️ To-do added.",
-    "todoSavedDue": "☑️ To-do added for {{date}}.",
-    "reminderSaved": "⏰ Reminder set: {{when}}.",
-    "deadlineSaved": "📅 Deadline added: {{date}}.",
+    "noteSaved": "Note saved.",
+    "todoSaved": "To-do added.",
+    "todoSavedDue": "To-do added for {{date}}.",
+    "reminderSaved": "Reminder set: {{when}}.",
+    "deadlineSaved": "Deadline added: {{date}}.",
     "escapeHint": "Pix runs them on your PC, not the AI. To send the AI a message starting with /, type //.",
     "errors": {
       "unknown": "Unknown command: /{{command}}. Type /help for the list.",
@@ -837,22 +837,22 @@
     }
   },
   "day": {
-    "allDone": "You finished all of today's to-dos! 🎉",
+    "allDone": "You finished all of today's to-dos!",
     "summary": {
       "category": "Your day",
       "open": "Open Home",
-      "morning": "Good morning! ☀️",
+      "morning": "Good morning!",
       "afternoon": "Hi! Here's your day:",
       "evening": "Good evening! Here's what's left today:",
-      "shift": "🏢 Shift: you finish at {{time}}",
-      "deadlines_one": "📅 {{count}} deadline today: {{names}}",
-      "deadlines_other": "📅 {{count}} deadlines today: {{names}}",
-      "noDeadlines": "📅 No deadlines today",
-      "todos_one": "☑️ {{count}} to-do for today",
-      "todos_other": "☑️ {{count}} to-dos for today",
-      "reminders_one": "⏰ {{time}} {{text}}",
-      "reminders_other": "⏰ {{time}} {{text}} (+ {{more}} more today)",
-      "weather": "{{icon}} {{city}} {{temp}}° (low {{min}}° · high {{max}}°)"
+      "shift": "Shift: you finish at {{time}}",
+      "deadlines_one": "{{count}} deadline today: {{names}}",
+      "deadlines_other": "{{count}} deadlines today: {{names}}",
+      "noDeadlines": "No deadlines today",
+      "todos_one": "{{count}} to-do for today",
+      "todos_other": "{{count}} to-dos for today",
+      "reminders_one": "Reminder at {{time}}: {{text}}",
+      "reminders_other": "Reminder at {{time}}: {{text}} (+ {{more}} more today)",
+      "weather": "Weather in {{city}}: {{kind}}, {{temp}}° (low {{min}}° · high {{max}}°)"
     }
   },
   "drop": {

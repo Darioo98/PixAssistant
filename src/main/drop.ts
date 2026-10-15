@@ -134,7 +134,7 @@ export async function handleDrop(payload: DropPayload, deps: DropDeps): Promise<
         deps.notes.apply({ op: 'save', note: { title: '', body: text.slice(0, 200_000), pinned: false } })
         deps.bubble({ category, text: t('drop.savedNote'), alert: false, actions: [{ id: 'notes', label: t('drop.openNotes'), primary: true }], onOutcome: (r) => r.kind === 'action' && deps.openPanel('notes') })
       } else {
-        void deps.analyze([{ name: t('drop.textName'), kind: 'text', text: text.slice(0, 400_000) }], t('drop.analyzeText'), `📎 ${t('drop.textName')}`)
+        void deps.analyze([{ name: t('drop.textName'), kind: 'text', text: text.slice(0, 400_000) }], t('drop.analyzeText'), t('drop.textName'))
       }
     }
   })
@@ -195,7 +195,7 @@ async function analyzeFiles(items: Item[], deps: DropDeps): Promise<void> {
     return
   }
   const prompt = files.length === 1 ? t(files[0]!.kind === 'image' ? 'drop.analyzeImage' : 'drop.analyzeDoc') : t('drop.analyzeMany')
-  const title = `📎 ${files.map((f) => f.name).join(', ')}`.slice(0, 120)
+  const title = files.map((f) => f.name).join(', ').slice(0, 120)
   await deps.analyze(files, prompt, title)
   if (problems.length) deps.bubble({ category: t('drop.category'), text: problems.join('\n'), alert: false })
 }

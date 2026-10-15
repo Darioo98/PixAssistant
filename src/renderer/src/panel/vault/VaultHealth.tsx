@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VaultEntryView } from '@shared/vault'
 import type { HealthIssue, VaultHealth } from '@shared/vaultHealth'
+import { Glyph } from '../Glyph'
 
 interface Props {
   entries: VaultEntryView[]
@@ -48,7 +49,7 @@ export function VaultHealthCard({ entries, onEdit, onNewPassword }: Props) {
                   .join(' · ')}
           </span>
         </span>
-        {health.issues.length > 0 && <span className="health-chevron">{open ? '▴' : '▾'}</span>}
+        {health.issues.length > 0 && <Glyph name={open ? 'chevronUp' : 'chevronDown'} size={11} className="health-chevron" />}
       </button>
       {open && (
         <ul className="health-list">

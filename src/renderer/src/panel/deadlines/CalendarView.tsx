@@ -4,6 +4,7 @@ import { addDays, diffDays, formatISODate, parseISODate, weekday, type ISODate }
 import { deadlineStatus, isRecurring, occurrencesBetween, type DeadlineItem, type DeadlineStatus } from '@shared/deadlines'
 import { firstDayOfWeek, formatDate } from '../../format'
 import { DeadlineRow } from './DeadlineRow'
+import { Glyph } from '../Glyph'
 
 type Mark = { item: DeadlineItem; kind: 'due' | 'future' | 'done'; status: DeadlineStatus }
 
@@ -74,11 +75,11 @@ export function CalendarView({ items, today, defaultLead, onEdit, onAdd }: Props
     <div className="calendar">
       <div className="cal-head">
         <button className="icon-btn" aria-label={t('deadlines.calendar.prev')} onClick={() => shift(-1)}>
-          ‹
+          <Glyph name="chevronLeft" size={12} />
         </button>
         <span className="cal-title">{formatDate(first, lang, { month: 'long', year: 'numeric' })}</span>
         <button className="icon-btn" aria-label={t('deadlines.calendar.next')} onClick={() => shift(1)}>
-          ›
+          <Glyph name="chevronRight" size={12} />
         </button>
         <button
           className="btn subtle"

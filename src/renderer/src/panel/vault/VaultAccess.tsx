@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VaultOp, VaultOpResult, VaultStatus } from '@shared/vault'
+import { Glyph } from '../Glyph'
 
 /** Esegue un'operazione della cassaforte e traduce l'eventuale errore. */
 export function useVaultOp() {
@@ -182,11 +183,5 @@ export function HelloBanner() {
 }
 
 export function LockIcon() {
-  return (
-    <svg className="vault-icon" viewBox="0 0 48 48" width="44" height="44" aria-hidden="true">
-      <rect x="9" y="20" width="30" height="22" rx="6" fill="var(--accent)" />
-      <path d="M16 20v-5a8 8 0 0 1 16 0v5" fill="none" stroke="var(--accent)" strokeWidth="4" strokeLinecap="round" />
-      <circle cx="24" cy="31" r="3" fill="var(--accent-text)" />
-    </svg>
-  )
+  return <Glyph name="lock" size={40} className="vault-icon" color="var(--accent)" />
 }

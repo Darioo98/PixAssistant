@@ -14,6 +14,7 @@ import { LinksTab } from './extras/LinksTab'
 import { SearchOverlay } from './search/SearchOverlay'
 import { FOCUS_EVENT, SEARCH_EVENT } from './focus'
 import { saveSelected } from './chat/useChat'
+import { Glyph } from './Glyph'
 
 export function Panel({ state }: { state: UiState }) {
   const { t } = useTranslation()
@@ -77,7 +78,7 @@ export function Panel({ state }: { state: UiState }) {
           <h1>{t(`tabs.${tab}`)}</h1>
           <div className="header-actions">
             <button className="icon-btn" aria-label={t('search.title')} title={t('search.button')} onClick={() => setSearching('')}>
-              <span aria-hidden="true">🔍</span>
+              <Glyph name="search" />
             </button>
             <button className="icon-btn" aria-label={t('panel.close')} title={t('panel.close')} onClick={() => window.pix.closePanel()}>
               <CloseIcon />

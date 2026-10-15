@@ -7,10 +7,11 @@ import { AppearanceSection } from './AppearanceSection'
 import { MaintenanceSection } from './MaintenanceSection'
 import { DEFAULT_MODELS } from '@shared/chat'
 import { formatHHMM, minutesOf } from '@shared/shift'
+import { Glyph, type GlyphName } from './Glyph'
 
 const CATEGORIES = ['general', 'pix', 'features', 'data'] as const
 type Category = (typeof CATEGORIES)[number]
-const CATEGORY_ICONS: Record<Category, string> = { general: '⚙️', pix: '🫧', features: '🧩', data: '💾' }
+const CATEGORY_ICONS: Record<Category, GlyphName> = { general: 'settings', pix: 'emoji', features: 'apps', data: 'save' }
 const CATEGORY_KEY = 'pix.settings.category'
 
 function loadCategory(): Category {
@@ -53,7 +54,7 @@ export function SettingsTab({ state }: { state: UiState }) {
       <div className="settings-cats" role="tablist">
         {CATEGORIES.map((c) => (
           <button key={c} role="tab" aria-selected={cat === c} className={cat === c ? 'on' : ''} onClick={() => pickCat(c)}>
-            <span aria-hidden="true">{CATEGORY_ICONS[c]}</span> {t(`settings.categories.${c}`)}
+            <Glyph name={CATEGORY_ICONS[c]} /> {t(`settings.categories.${c}`)}
           </button>
         ))}
       </div>

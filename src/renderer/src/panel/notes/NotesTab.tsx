@@ -8,6 +8,7 @@ import { DeleteButton, RowMenu } from '../RowMenu'
 import { Markdown } from '../chat/Markdown'
 import { takeFocus } from '../focus'
 import './productivity.css'
+import { Glyph } from '../Glyph'
 
 type Segment = 'notes' | 'todos'
 
@@ -72,7 +73,7 @@ function Notes({ initialOpen }: { initialOpen: string | null }) {
             <li key={n.id}>
               <button className="note-item" onClick={() => setOpen(n.id)}>
                 <span className="dl-title">
-                  {n.pinned && <span aria-hidden="true">📌 </span>}
+                  {n.pinned && <Glyph name="pinned" size={12} />} 
                   {noteTitle(n, t('notes.untitled'))}
                 </span>
                 <span className="dl-meta">{n.body.replace(/\s+/g, ' ').slice(0, 90)}</span>
@@ -265,7 +266,7 @@ function Todos() {
         <section className="todo-group">
           <h3>
             <button className="btn subtle" onClick={() => setShowDone(!showDone)}>
-              {showDone ? '▾' : '▸'} {t('todos.groups.done')} ({done.length})
+              <Glyph name={showDone ? 'chevronDown' : 'chevronRight'} size={10} /> {t('todos.groups.done')} ({done.length})
             </button>
             {showDone && (
               <button className="btn subtle" onClick={() => void window.pix.data.apply('todos', { op: 'clearDone' })}>
@@ -313,7 +314,7 @@ export function TodoRow({ todo, today, lang, compact = false }: { todo: TodoItem
                 })
               }
             >
-              {t('todos.today')}: {todo.today ? '✓' : '—'}
+              {t('todos.today')}: {todo.today ? <Glyph name="check" size={12} /> : '—'}
             </button>
           )}
           <DeleteButton onConfirm={() => void window.pix.data.apply('todos', { op: 'remove', id: todo.id })} />

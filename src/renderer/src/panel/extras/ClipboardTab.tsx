@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { ClipEntry, ClipState } from '@shared/extras'
 import { DeleteButton, RowMenu } from '../RowMenu'
 import './extras.css'
+import { Glyph } from '../Glyph'
 
 function useClipboardState(): ClipState | null {
   const [state, setState] = useState<ClipState | null>(null)
@@ -91,7 +92,7 @@ function ClipRow({ entry }: { entry: ClipEntry }) {
         <span className="dl-meta">
           {copied ? t('clipboard.copied') : time}
           {entry.source && ` · ${t('clipboard.from', { app: entry.source.replace(/\.exe$/i, '') })}`}
-          {entry.pinned && ' · 📌'}
+          {entry.pinned && <> · <Glyph name="pinned" size={12} /></>}
         </span>
       </button>
       <RowMenu label={t('clipboard.more')}>

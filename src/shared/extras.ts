@@ -147,15 +147,3 @@ export function weatherKind(code: number): 'clear' | 'partly' | 'cloudy' | 'fog'
   if (code >= 95) return 'storm'
   return 'cloudy'
 }
-
-export const WEATHER_ICONS: Record<ReturnType<typeof weatherKind>, { day: string; night: string }> = {
-  clear: { day: '☀️', night: '🌙' },
-  partly: { day: '⛅', night: '☁️' },
-  cloudy: { day: '☁️', night: '☁️' },
-  fog: { day: '🌫️', night: '🌫️' },
-  drizzle: { day: '🌦️', night: '🌧️' },
-  rain: { day: '🌧️', night: '🌧️' },
-  showers: { day: '🌦️', night: '🌧️' },
-  snow: { day: '🌨️', night: '🌨️' },
-  storm: { day: '⛈️', night: '⛈️' }
-}

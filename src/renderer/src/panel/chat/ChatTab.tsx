@@ -7,6 +7,7 @@ import { loadSelected, saveSelected, useChat } from './useChat'
 import { COMMANDS, COMMAND_ALIASES, isCommandInput, parseCommand, suggestCommands } from '@shared/commands'
 import { runCommand, type CommandResult } from './commands'
 import './chat.css'
+import { Glyph } from '../Glyph'
 
 const QUICK = ['summarize', 'translate', 'email', 'fix'] as const
 
@@ -162,7 +163,7 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
               <div className="msg-files">
                 {m.attachments.map((a) => (
                   <span key={a.name} className="msg-file" title={a.name}>
-                    {a.kind === 'pdf' ? '📕' : a.kind === 'image' ? '🖼️' : '📄'} {a.name}
+                    <Glyph name={a.kind === 'pdf' ? 'pdf' : a.kind === 'image' ? 'picture' : 'document'} size={13} /> {a.name}
                   </span>
                 ))}
               </div>
@@ -200,7 +201,7 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
                 </button>
               )}
               <button className="icon-btn small" aria-label={t('commands.dismiss')} onClick={() => setResult(null)}>
-                ×
+                <Glyph name="cancel" size={11} />
               </button>
             </div>
             {result.help && (

@@ -6,15 +6,16 @@ import { search, type SearchDoc, type SearchGroup, type SearchHit } from '@share
 import { formatDate } from '../../format'
 import { requestFocus } from '../focus'
 import './search.css'
+import { Glyph, type GlyphName } from '../Glyph'
 
-const ICONS: Record<SearchGroup, string> = {
-  notes: '📝',
-  todos: '☑️',
-  reminders: '⏰',
-  deadlines: '📅',
-  links: '🔗',
-  clipboard: '📋',
-  vault: '🔑'
+const ICONS: Record<SearchGroup, GlyphName> = {
+  notes: 'note',
+  todos: 'todo',
+  reminders: 'reminder',
+  deadlines: 'calendar',
+  links: 'link',
+  clipboard: 'clipboard',
+  vault: 'key'
 }
 
 /** Carica tutto ciò in cui si può cercare (le password non arrivano mai al renderer). */
@@ -110,7 +111,7 @@ export function SearchOverlay({ initial, onClose }: { initial: string; onClose: 
   return (
     <div className="search-overlay" role="dialog" aria-label={t('search.title')} onKeyDown={onKeyDown}>
       <div className="search-box">
-        <span aria-hidden="true">🔍</span>
+        <Glyph name="search" />
         <input
           ref={inputRef}
           type="search"
@@ -139,9 +140,7 @@ export function SearchOverlay({ initial, onClose }: { initial: string; onClose: 
                 onMouseEnter={() => setActive(i)}
                 onClick={() => void open(h)}
               >
-                <span className="search-icon" aria-hidden="true">
-                  {ICONS[h.group]}
-                </span>
+                <Glyph name={ICONS[h.group]} className="search-icon" />
                 <span className="search-text">
                   <span className="search-title">{h.title}</span>
                   {(h.snippet || h.detail) && <span className="search-detail">{h.snippet ?? h.detail}</span>}

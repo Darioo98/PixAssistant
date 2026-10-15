@@ -11,6 +11,7 @@ import {
   type VaultGroupView
 } from '@shared/vault'
 import { DeleteButton, RowMenu } from '../RowMenu'
+import { Glyph } from '../Glyph'
 
 /**
  * Cartelle della cassaforte (categorie e sottocategorie), mostrate come un
@@ -39,18 +40,7 @@ export function saveCollapsed(ids: string[]): void {
 }
 
 export function FolderIcon({ color, open = false }: { color?: string; open?: boolean }) {
-  return (
-    <svg className="folder-icon" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-      <path
-        d={open ? 'M2.5 6V4.5a1 1 0 0 1 1-1h4l2 2h6a1 1 0 0 1 1 1V8M2.5 6v9a1 1 0 0 0 1 1h12l2-7.5H5z' : 'M2.5 4.5a1 1 0 0 1 1-1h4l2 2h7a1 1 0 0 1 1 1v8.5a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1z'}
-        fill={color ?? 'var(--text-muted)'}
-        fillOpacity="0.25"
-        stroke={color ?? 'var(--text-muted)'}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <Glyph name={open ? 'folderOpen' : 'folder'} className="folder-icon" color={color ?? 'var(--text-muted)'} />
 }
 
 /** Scelta del colore di una cartella. */
@@ -242,7 +232,7 @@ export function FolderTree({ entries, groups, renderEntry, editable, onNewEntry,
       >
         <button className="folder-toggle" aria-expanded={open} onClick={() => toggle(g.id)}>
           <span className="chevron" aria-hidden="true">
-            {open ? '▾' : '▸'}
+            <Glyph name={open ? 'chevronDown' : 'chevronRight'} size={10} />
           </span>
           <FolderIcon color={g.color} open={open} />
           <span className="folder-name">{g.name}</span>

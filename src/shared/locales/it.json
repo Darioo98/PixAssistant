@@ -180,7 +180,7 @@
     "shiftRemind": "Avvisami prima della fine (minuti)",
     "transforms": "Animazioni spontanee (ogni tanto il corpo si trasforma e si muove)",
     "tryTransforms": "Prova le animazioni",
-    "tryPeek": "👀 Sbirciata",
+    "tryPeek": "Sbirciata",
     "transformOptions": {
       "wobble": "Budino",
       "waves": "Onda",
@@ -200,7 +200,7 @@
     },
     "searchShortcut": "Scorciatoia della ricerca globale",
     "morningSummary": "Riepilogo della giornata al primo utilizzo",
-    "tryYawn": "🥱 Sbadiglio",
+    "tryYawn": "Sbadiglio",
     "trySwallow": "Inghiotte un file",
     "trySwallowText": "Lettera di prova per Pix"
   },
@@ -631,8 +631,8 @@
     "pomodoroBreak": "Ottimo lavoro! Ora: {{phase}}.",
     "pomodoroWork": "Pausa finita: si torna al lavoro?",
     "pillLabel": "Timer: {{time}}",
-    "pomodoroBreakCycles_one": "Ottimo lavoro: primo ciclo di oggi! 🍅 Ora: {{phase}}.",
-    "pomodoroBreakCycles_other": "Ottimo lavoro: {{count}} cicli oggi! 🍅 Ora: {{phase}}.",
+    "pomodoroBreakCycles_one": "Ottimo lavoro: primo ciclo di oggi! Ora: {{phase}}.",
+    "pomodoroBreakCycles_other": "Ottimo lavoro: {{count}} cicli oggi! Ora: {{phase}}.",
     "cyclesToday_one": "Oggi {{count}} ciclo",
     "cyclesToday_other": "Oggi {{count}} cicli",
     "focusHint": "Durante il lavoro Pix dorme sulla barra e tiene gli avvisi per la pausa."
@@ -796,11 +796,11 @@
     "dismiss": "Chiudi",
     "searching": "Apro la ricerca…",
     "failed": "Non sono riuscito a salvarlo. Riprova.",
-    "noteSaved": "📝 Nota salvata.",
-    "todoSaved": "☑️ To-do aggiunto.",
-    "todoSavedDue": "☑️ To-do aggiunto per {{date}}.",
-    "reminderSaved": "⏰ Promemoria impostato: {{when}}.",
-    "deadlineSaved": "📅 Scadenza aggiunta: {{date}}.",
+    "noteSaved": "Nota salvata.",
+    "todoSaved": "To-do aggiunto.",
+    "todoSavedDue": "To-do aggiunto per {{date}}.",
+    "reminderSaved": "Promemoria impostato: {{when}}.",
+    "deadlineSaved": "Scadenza aggiunta: {{date}}.",
     "escapeHint": "Li esegue Pix sul PC, non l'AI. Per mandare all'AI un testo che inizia con /, scrivi //.",
     "errors": {
       "unknown": "Comando sconosciuto: /{{command}}. Scrivi /aiuto per l'elenco.",
@@ -837,22 +837,22 @@
     }
   },
   "day": {
-    "allDone": "Hai completato tutti i to-do di oggi! 🎉",
+    "allDone": "Hai completato tutti i to-do di oggi!",
     "summary": {
       "category": "La tua giornata",
       "open": "Apri Home",
-      "morning": "Buongiorno! ☀️",
+      "morning": "Buongiorno!",
       "afternoon": "Ciao! Ecco la tua giornata:",
       "evening": "Buonasera! Ecco cosa resta di oggi:",
-      "shift": "🏢 Turno: finisci alle {{time}}",
-      "deadlines_one": "📅 {{count}} scadenza oggi: {{names}}",
-      "deadlines_other": "📅 {{count}} scadenze oggi: {{names}}",
-      "noDeadlines": "📅 Nessuna scadenza oggi",
-      "todos_one": "☑️ {{count}} to-do per oggi",
-      "todos_other": "☑️ {{count}} to-do per oggi",
-      "reminders_one": "⏰ {{time}} {{text}}",
-      "reminders_other": "⏰ {{time}} {{text}} (+ altri {{more}} oggi)",
-      "weather": "{{icon}} {{city}} {{temp}}° (min {{min}}° · max {{max}}°)"
+      "shift": "Turno: finisci alle {{time}}",
+      "deadlines_one": "{{count}} scadenza oggi: {{names}}",
+      "deadlines_other": "{{count}} scadenze oggi: {{names}}",
+      "noDeadlines": "Nessuna scadenza oggi",
+      "todos_one": "{{count}} to-do per oggi",
+      "todos_other": "{{count}} to-do per oggi",
+      "reminders_one": "Promemoria alle {{time}}: {{text}}",
+      "reminders_other": "Promemoria alle {{time}}: {{text}} (+ altri {{more}} oggi)",
+      "weather": "Meteo a {{city}}: {{kind}}, {{temp}}° (min {{min}}° · max {{max}}°)"
     }
   },
   "drop": {
