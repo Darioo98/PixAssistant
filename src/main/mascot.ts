@@ -60,6 +60,7 @@ export class MascotService {
   private tickTimer: NodeJS.Timeout
   private asleep = false
   private last: string = ''
+  private gesture: MascotState['gesture'] = null
 
   constructor(private readonly deps: MascotDeps) {
     this.asleep = this.computeAsleep()
@@ -82,7 +83,8 @@ export class MascotService {
       queued: this.queue.length,
       spotlight: this.transient !== null,
       focus: this.deps.focus?.() ?? false,
-      tension: this.deps.tension?.() ?? false
+      tension: this.deps.tension?.() ?? false,
+      gesture: this.gesture
     }
   }
 
@@ -158,6 +160,16 @@ export class MascotService {
 
   celebrate(): void {
     this.flash('happy')
+  }
+
+  /** Fine del turno: Pix si stira, fa un inchino e saluta. */
+  farewell(): void {
+    this.gesture = { kind: 'farewell', at: this.now().getTime() }
+    this.flash('greet', 3800)
+    setTimeout(() => {
+      this.gesture = null
+      this.emit()
+    }, 4000)
   }
 
   /** Ricalcola lo stato (es. è cambiato il focus o una scadenza). */

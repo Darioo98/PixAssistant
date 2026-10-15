@@ -57,7 +57,7 @@ export function Eyes({ mood, style = 'pill' }: { mood: Mood; style?: PixEyes }) 
 
 /** Riflesso bianco semitrasparente in alto a sinistra. */
 export function Shine() {
-  return <path d="M30 34q4-8 14-9" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".35" fill="none" />
+  return <path className="shine" d="M30 34q4-8 14-9" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".35" fill="none" />
 }
 
 /**

@@ -113,7 +113,8 @@
       "think": "Pensa",
       "sleep": "Dorme",
       "greet": "Saluto",
-      "summary": "Riepilogo"
+      "summary": "Riepilogo",
+      "farewell": "Fine turno"
     },
     "animationsHint": "Riguarda i movimenti spontanei di Pix. La trasformazione della barra resta, a meno che in Windows siano disattivati gli effetti di animazione.",
     "appearance": "Aspetto di Pix",
@@ -202,7 +203,14 @@
     "morningSummary": "Riepilogo della giornata al primo utilizzo",
     "tryYawn": "Sbadiglio",
     "trySwallow": "Inghiotte un file",
-    "trySwallowText": "Lettera di prova per Pix"
+    "trySwallowText": "Lettera di prova per Pix",
+    "trySweep": "Elimina qualcosa",
+    "tryBoot": "Avvio di Windows",
+    "tryWeather": {
+      "rain": "Pioggia",
+      "sun": "Sole",
+      "cold": "Freddo"
+    }
   },
   "mascot": {
     "preview": {

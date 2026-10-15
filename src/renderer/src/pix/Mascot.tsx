@@ -9,6 +9,10 @@ import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
 import { SWALLOW_S } from './shapes'
+import { SweepDrop, DELETED_EVENT, SWEEP_MS } from './SweepDrop'
+import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
+import { useSlosh } from './useSlosh'
+import { weatherKind } from '@shared/extras'
 import type { DropPayload } from '@shared/extras'
 import { useReducedMotion } from './useReducedMotion'
 import './mascot.css'
@@ -26,6 +30,12 @@ export const PEEK_EVENT = 'pix:peek'
 export const YAWN_EVENT = 'pix:yawn'
 /** Evento con cui le impostazioni chiedono di provare l'inghiottire (senza file vero). */
 export const SWALLOW_EVENT = 'pix:swallow'
+/** Prova del meteo sul corpo (dettaglio: 'rain' | 'sun' | 'cold'). */
+export const WEATHER_FX_EVENT = 'pix:weather-fx'
+/** Prova del riempimento della barra all'avvio (chiude il pannello). */
+export const BOOT_EVENT = 'pix:boot'
+
+type WeatherFx = 'rain' | 'sun' | 'cold' | null
 
 type Tired = 'none' | 'evening' | 'late'
 
@@ -49,6 +59,8 @@ interface Props {
   /** Sezione aperta del pannello: Pix la accoglie con un'animazione a tema. */
   tab: string
   settings: Settings
+  /** Avvio con Windows: la barra si riempie dal basso prima che Pix si svegli. */
+  boot?: boolean
 }
 
 /**
@@ -56,7 +68,7 @@ interface Props {
  * trasforma (barra → goccia → squircle) e torna indietro. Da chiusa resta
  * solo la barra, senza animazioni attive.
  */
-export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
+export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props) {
   const { t } = useTranslation()
   const reducedMotion = useReducedMotion()
   const scale = MASCOT_SCALE[settings.mascotSize]
@@ -372,6 +384,185 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     return () => window.removeEventListener(YAWN_EVENT, onYawn)
   }, [])
 
+  // ---- Liquido nel bicchiere: mentre scorri una lista Pix si inclina e poi oscilla ----
+  const sloshRef = useRef<SVGGElement>(null)
+  useSlosh(sloshRef, formed && panelOpen && anim === 'normal' && !reducedMotion, scale)
+
+  // ---- Sonno più vivo: si affloscia, respira piano e ogni tanto si gira dall'altra parte ----
+  const [sleepSide, setSleepSide] = useState<1 | -1>(1)
+  const [turning, setTurning] = useState(false)
+  const sleeping = formed && mood === 'sleep' && anim !== 'off' && !reducedMotion
+  useEffect(() => {
+    if (!sleeping) return
+    let id: number
+    let end: number
+    const schedule = (first: boolean) => {
+      id = window.setTimeout(
+        () => {
+          setTurning(true)
+          setSleepSide((s) => (s === 1 ? -1 : 1))
+          end = window.setTimeout(() => setTurning(false), 900)
+          schedule(false)
+        },
+        first ? 2500 : 18_000 + Math.random() * 17_000
+      )
+    }
+    schedule(true)
+    return () => {
+      window.clearTimeout(id)
+      window.clearTimeout(end)
+    }
+  }, [sleeping])
+
+  // ---- Meteo sul corpo: pioggia sulla testa, riflesso col sole, brividi col freddo ----
+  const [weatherFx, setWeatherFx] = useState<WeatherFx>(null)
+  const [weatherPreview, setWeatherPreview] = useState<WeatherFx>(null)
+  useEffect(() => {
+    let alive = true
+    const load = () =>
+      void window.pix.weather().then((w) => {
+        if (!alive) return
+        if (w.status !== 'ok') return setWeatherFx(null)
+        const kind = weatherKind(w.weather.code)
+        if (kind === 'rain' || kind === 'drizzle' || kind === 'showers' || kind === 'storm') setWeatherFx('rain')
+        else if (kind === 'snow' || w.weather.temperature < 6) setWeatherFx('cold')
+        else if (kind === 'clear' && w.weather.isDay) setWeatherFx('sun')
+        else setWeatherFx(null)
+      })
+    load()
+    const id = window.setInterval(load, 20 * 60_000)
+    return () => {
+      alive = false
+      window.clearInterval(id)
+    }
+  }, [settings.weatherCity])
+  useEffect(() => {
+    let end: number | undefined
+    const onTry = (e: Event) => {
+      setWeatherPreview((e as CustomEvent<WeatherFx>).detail)
+      window.clearTimeout(end)
+      end = window.setTimeout(() => setWeatherPreview(null), 15_000)
+    }
+    window.addEventListener(WEATHER_FX_EVENT, onTry)
+    return () => {
+      window.clearTimeout(end)
+      window.removeEventListener(WEATHER_FX_EVENT, onTry)
+    }
+  }, [])
+  const fx = formed && mood === 'normal' && anim !== 'off' && !reducedMotion ? (weatherPreview ?? weatherFx) : null
+  const [rainKey, setRainKey] = useState(0)
+  const [shiver, setShiver] = useState(false)
+  useEffect(() => {
+    if (fx !== 'rain' && fx !== 'cold') return
+    let id: number
+    let end: number
+    const schedule = (first: boolean) => {
+      id = window.setTimeout(
+        () => {
+          if (fx === 'rain') setRainKey((k) => k + 1)
+          else {
+            setShiver(true)
+            end = window.setTimeout(() => setShiver(false), 800)
+          }
+          schedule(false)
+        },
+        first ? 900 : fx === 'rain' ? 6000 + Math.random() * 6000 : 14_000 + Math.random() * 10_000
+      )
+    }
+    schedule(true)
+    return () => {
+      window.clearTimeout(id)
+      window.clearTimeout(end)
+    }
+  }, [fx])
+
+  // ---- Fumetto: nasce come una bolla dalla testa, e Pix fa un piccolo sussulto ----
+  const [pop, setPop] = useState(false)
+  useEffect(() => {
+    if (!bubble) return
+    setPop(true)
+    const id = window.setTimeout(() => setPop(false), 500)
+    return () => window.clearTimeout(id)
+  }, [bubble?.id])
+
+  // ---- Fine del turno: si stira, fa un inchino e saluta ----
+  const [farewell, setFarewell] = useState(false)
+  const gestureAt = mascot.gesture?.at
+  useEffect(() => {
+    if (!gestureAt || reducedMotion) return
+    setFarewell(true)
+    const id = window.setTimeout(() => setFarewell(false), 3600)
+    return () => window.clearTimeout(id)
+  }, [gestureAt])
+
+  // ---- Eliminazione: una goccia si stacca dalla riga e Pix la spazza via ----
+  const [sweep, setSweep] = useState<{ id: number; from: { x: number; y: number } } | null>(null)
+  const [swat, setSwat] = useState(false)
+  useEffect(() => {
+    const timers: number[] = []
+    const onDeleted = (e: Event) => {
+      const at = (e as CustomEvent<{ x: number; y: number } | null>).detail
+      const r = svgRef.current?.getBoundingClientRect()
+      if (!at || !r || reducedMotion || anim === 'off') return
+      const from = { x: ((at.x - r.left) / r.width) * VIEW.width, y: ((at.y - r.top) / r.height) * VIEW.height }
+      setSweep({ id: performance.now(), from })
+      timers.push(window.setTimeout(() => setSwat(true), SWEEP_MS * 0.36))
+      timers.push(window.setTimeout(() => setSwat(false), SWEEP_MS * 0.36 + 450))
+      timers.push(window.setTimeout(() => setSweep(null), SWEEP_MS + 50))
+    }
+    window.addEventListener(DELETED_EVENT, onDeleted)
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t))
+      window.removeEventListener(DELETED_EVENT, onDeleted)
+    }
+  }, [reducedMotion, anim])
+
+  // ---- Avvio con Windows: la barra si riempie dal basso come un tubo, poi Pix si sveglia ----
+  const [booting, setBooting] = useState(false)
+  const bootDone = useRef(false)
+  const runBoot = () => {
+    if (reducedMotion) return
+    setBooting(true)
+    const start = performance.now()
+    const step = (now: number) => {
+      const t = (now - start) / 1000
+      const k = Math.min(1, t / BOOT_FILL_S)
+      // Sale svelto all'inizio e rallenta verso la cima, con un piccolo assestamento.
+      const fill = 1 - (1 - k) ** 2.4
+      if (t < BOOT_FILL_S + 0.7) {
+        morph.current?.setBar(bootBarPath(fill, t))
+        requestAnimationFrame(step)
+      } else {
+        morph.current?.setBar(null)
+        setBooting(false)
+      }
+    }
+    morph.current?.setBar('')
+    requestAnimationFrame(step)
+  }
+  useLayoutEffect(() => {
+    if (!boot || bootDone.current) return
+    bootDone.current = true
+    runBoot()
+  }, [boot])
+  const [bootSoon, setBootSoon] = useState(false)
+  useEffect(() => {
+    const onTry = () => {
+      setBootSoon(true)
+      window.pix.closePanel()
+    }
+    window.addEventListener(BOOT_EVENT, onTry)
+    return () => window.removeEventListener(BOOT_EVENT, onTry)
+  }, [])
+  useEffect(() => {
+    if (!bootSoon || !collapsed || wantPix) return
+    const id = window.setTimeout(() => {
+      setBootSoon(false)
+      runBoot()
+    }, 600)
+    return () => window.clearTimeout(id)
+  }, [bootSoon, collapsed, wantPix])
+
   // ---- Respiro di Pix: un ciclo ogni 10 s invece di un'animazione continua.
   // La finestra è trasparente: ogni fotogramma animato la ridisegna tutta. ----
   useEffect(() => {
@@ -423,6 +614,12 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
       data-yawn={yawning && formed && !reducedMotion ? '' : undefined}
       data-hungry={hungry && formed ? '' : undefined}
       data-swallow={formed && swallowPhase ? swallowPhase : undefined}
+      data-weather={fx ?? undefined}
+      data-shiver={shiver && fx === 'cold' ? '' : undefined}
+      data-pop={pop && formed ? '' : undefined}
+      data-farewell={farewell && formed ? '' : undefined}
+      data-swat={swat && formed ? '' : undefined}
+      data-turning={turning && sleeping ? '' : undefined}
     >
       {bubble && <BubbleCard key={bubble.id} bubble={bubble} panelOpen={panelOpen} />}
       <svg
@@ -450,7 +647,10 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
           />
         )}
         <ellipse ref={shadowRef} cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx={24 * scale} ry="3" fill="#000" opacity="0" />
-        <g className={`pose ${formed ? `pose-${mood}` : ''}`}>
+        {/* Avvio: il tubo vuoto che si riempie */}
+        {booting && <path className="boot-tube" d={tubeOutline()} fill="none" stroke={color} strokeWidth="1.2" />}
+        <g ref={sloshRef}>
+        <g className={`pose ${formed ? `pose-${mood}` : ''} ${sleeping && sleepSide === -1 ? 'side-left' : ''}`}>
           <g
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
             onAnimationEnd={(e) => e.animationName === 'pix-breathe' && setPixBreath(false)}
@@ -499,14 +699,30 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
                   </g>
                 )}
                 <ellipse className="yawn-mouth" cx="50" cy="69" rx="5.5" ry="7" fill="#000" opacity="0" />
+                {/* Sole: un luccichio sul riflesso */}
+                {fx === 'sun' && settings.pixShine && <path className="sparkle" d="M27 20l1.4 3.6 3.6 1.4-3.6 1.4L27 30l-1.4-3.6-3.6-1.4 3.6-1.4z" fill="#fff" />}
               </g>
             </g>
           </g>
         </g>
+        </g>
+        {/* Pioggia: una goccia cade sulla testa e schizza */}
+        {fx === 'rain' && rainKey > 0 && (
+          <g key={rainKey} className="rain" transform={`translate(${PIX_ANCHOR.x + 9 * scale} ${PIX_ANCHOR.y - 64 * scale})`} pointerEvents="none">
+            <path className="rain-drop" d="M0 -9 C2.4 -5 3.4 -3 3.4 -1.4 A3.4 3.4 0 0 1 -3.4 -1.4 C-3.4 -3 -2.4 -5 0 -9 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="0.8" />
+            <g className="rain-splash" fill="#8fd3ff">
+              <circle cx="-5" cy="-2" r="1.3" />
+              <circle cx="5" cy="-2.5" r="1.1" />
+              <circle cx="0" cy="-4" r="0.9" />
+            </g>
+          </g>
+        )}
+        {/* Eliminazione: la goccia spazzata via */}
+        {sweep && <SweepDrop key={sweep.id} from={sweep.from} pix={{ x: PIX_ANCHOR.x, y: PIX_ANCHOR.y - 33 * scale }} color={color} />}
         {/* Ciò che hai trascinato vola nella bocca di Pix */}
         {swallow && formed && swallowPhase === 'open' && <SwallowItem key={swallow.id} look={swallow.look} from={swallow.from} to={mouthPoint(scale, shape)} />}
         {/* Occhi della sbirciata: il corpo è la barra stessa (setBar). */}
-        {peek !== null && canPeek && (
+        {peek !== null && canPeek && !booting && (
           <Peek
             y={peek.y}
             scareRef={scareRef}

@@ -43,6 +43,8 @@ export interface MascotState {
   focus: boolean
   /** Scadenza vicina o to-do in ritardo: Pix è un po' preoccupato. */
   tension: boolean
+  /** Gesto speciale in corso (es. saluto di fine turno), con l'istante in cui è partito. */
+  gesture?: { kind: 'farewell'; at: number } | null
 }
 
 export const MASCOT_SCALE = { small: 0.85, medium: 1, large: 1.2 } as const

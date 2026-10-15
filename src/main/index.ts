@@ -172,6 +172,8 @@ async function main(): Promise<void> {
   await i18next.init({ resources, lng: lang, fallbackLng: 'it', interpolation: { escapeValue: false } })
 
   // ---- Stato dell'interfaccia ----
+  /** Avvio con Windows: la barra si riempie dal basso prima del saluto. */
+  let bootPending = process.argv.includes('--autostart')
   let panelOpen = false
   let tab: TabId = 'home'
   let fullscreenBusy = false
@@ -193,6 +195,7 @@ async function main(): Promise<void> {
     dataDir,
     autostartAvailable: app.isPackaged,
     mascot: mascot.state(),
+    boot: bootPending,
     day: { cyclesToday: day.cyclesToday() },
     vault: vaultCtl.status(),
     intent
@@ -440,7 +443,7 @@ async function main(): Promise<void> {
       const text = i18next.t('shift.ended', { time: hhmmOf(end) })
       toast(i18next.t('shift.category'), text, () => openPanel('home'))
       mascot.notify({ category: i18next.t('shift.category'), text, alert: false, actions: [{ id: 'ok', label: i18next.t('reminders.ok'), primary: true }] })
-      mascot.celebrate()
+      mascot.farewell()
     }
   })
   await shift.init()
@@ -567,12 +570,14 @@ async function main(): Promise<void> {
   let greeted = false
   ipcMain.handle(IPC.getState, (e) => {
     if (!fromOverlay(e)) return null
-    // Saluto all'avvio, quando l'interfaccia è pronta a mostrarlo.
+    // Saluto all'avvio, quando l'interfaccia è pronta a mostrarlo (dopo che la barra si è riempita).
+    const state = uiState()
     if (!greeted) {
       greeted = true
-      setTimeout(() => mascot.flash('greet', 2200), 400)
+      setTimeout(() => mascot.flash('greet', 2200), bootPending ? 2600 : 400)
+      bootPending = false
     }
-    return uiState()
+    return state
   })
   ipcMain.on(IPC.setInteractive, (e, value: unknown) => {
     if (fromOverlay(e) && typeof value === 'boolean') overlay.setInteractive(value)
@@ -607,6 +612,10 @@ async function main(): Promise<void> {
 
   /** Anteprima degli stati di Pix dalle impostazioni. */
   const previewMascot = (preview: MascotPreview) => {
+    if (preview === 'farewell') {
+      mascot.farewell()
+      return
+    }
     if (preview === 'summary') {
       void morningSummary(true)
       return

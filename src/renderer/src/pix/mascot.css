@@ -348,7 +348,7 @@
   background: var(--surface);
   border: 1px solid var(--panel-border);
   box-shadow: var(--shadow);
-  animation: bubble-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  animation: bubble-in 0.55s cubic-bezier(0.3, 0.8, 0.4, 1);
   user-select: text;
 }
 
@@ -357,10 +357,46 @@
   bottom: 132px;
 }
 
+/* Il fumetto nasce come una bolla che si stacca dalla testa di Pix e si apre. */
+.bubble {
+  transform-origin: 100% 100%;
+}
+
+.bubble.above {
+  transform-origin: calc(100% - 37px) 100%;
+}
+
 @keyframes bubble-in {
-  from {
+  0% {
     opacity: 0;
-    transform: translateX(10px) scale(0.96);
+    transform: scale(0.04);
+    border-radius: 50%;
+  }
+  22% {
+    opacity: 1;
+    transform: scale(0.13);
+    border-radius: 50%;
+  }
+  58% {
+    transform: scale(1.05, 0.95);
+    border-radius: 20px;
+  }
+  78% {
+    transform: scale(0.985, 1.015);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.bubble > * {
+  animation: bubble-content 0.5s ease-out;
+}
+
+@keyframes bubble-content {
+  0%,
+  45% {
+    opacity: 0;
   }
 }
 
@@ -549,5 +585,234 @@
 @keyframes pix-chew-eyes {
   50% {
     transform: scaleY(0.75) translateY(1px);
+  }
+}
+
+/* ---------- Fumetto: piccolo sussulto quando la bolla si stacca ---------- */
+[data-pop] .yawn-body {
+  animation: pix-pop 0.45s ease-out 1;
+}
+
+@keyframes pix-pop {
+  30% {
+    transform: scale(1.06, 0.93);
+  }
+  60% {
+    transform: scale(0.97, 1.04);
+  }
+}
+
+/* ---------- Sonno più vivo: afflosciato, respiro lento, si gira dall'altra parte ---------- */
+.motion-sleep {
+  animation: pix-sleep-breathe 5.5s ease-in-out infinite;
+}
+
+@keyframes pix-sleep-breathe {
+  0%,
+  100% {
+    transform: scale(1.06, 0.9);
+  }
+  50% {
+    transform: scale(1.09, 0.86);
+  }
+}
+
+.pose-sleep {
+  transition: transform 1.1s cubic-bezier(0.45, 0, 0.3, 1);
+}
+
+.pose-sleep.side-left {
+  transform: rotate(-4deg) translateX(-1px);
+}
+
+[data-turning] .yawn-body {
+  animation: pix-turn 0.9s ease-in-out 1;
+}
+
+@keyframes pix-turn {
+  40% {
+    transform: scale(1.12, 0.82);
+  }
+  70% {
+    transform: scale(0.97, 1.03);
+  }
+}
+
+/* ---------- Meteo sul corpo ---------- */
+[data-weather='sun'] .shine {
+  opacity: 0.8;
+}
+
+.sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pix-sparkle 1.6s ease-in-out 3;
+}
+
+@keyframes pix-sparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+
+[data-shiver] .yawn-body {
+  animation: pix-shiver 0.8s linear 1;
+}
+
+@keyframes pix-shiver {
+  0%,
+  100% {
+    transform: none;
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-0.9px) scale(0.98, 1.01);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(0.9px) scale(0.98, 1.01);
+  }
+}
+
+.rain-drop {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: pix-rain-drop 0.9s cubic-bezier(0.5, 0, 0.9, 0.6) 1 both;
+}
+
+@keyframes pix-rain-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-46px);
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1, 1.1);
+  }
+  80% {
+    opacity: 0.8;
+    transform: translateY(1px) scale(1.6, 0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(1px) scale(2, 0.1);
+  }
+}
+
+.rain-splash {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: pix-rain-splash 0.9s ease-out 1 both;
+}
+
+@keyframes pix-rain-splash {
+  0%,
+  70% {
+    opacity: 0;
+    transform: scale(0.3) translateY(4px);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(1) translateY(-2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4) translateY(1px);
+  }
+}
+
+/* ---------- Fine del turno: si stira, fa un inchino e saluta ---------- */
+[data-farewell] .yawn-body {
+  animation: pix-farewell 3.4s ease-in-out 1;
+}
+
+@keyframes pix-farewell {
+  0% {
+    transform: none;
+  }
+  18% {
+    transform: scale(0.88, 1.18);
+  }
+  28% {
+    transform: scale(1.05, 0.95);
+  }
+  34% {
+    transform: none;
+  }
+  46%,
+  54% {
+    transform: rotate(-14deg) scale(1.02, 0.96);
+  }
+  62% {
+    transform: rotate(2deg);
+  }
+  70% {
+    transform: rotate(-6deg);
+  }
+  78% {
+    transform: rotate(6deg);
+  }
+  86% {
+    transform: rotate(-5deg);
+  }
+  94% {
+    transform: rotate(3deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ---------- Eliminazione: colpetto per spazzare via la goccia ---------- */
+[data-swat] .yawn-body {
+  animation: pix-swat 0.45s cubic-bezier(0.3, 0.7, 0.4, 1.3) 1;
+}
+
+@keyframes pix-swat {
+  35% {
+    transform: rotate(-12deg) scale(1.05, 0.95);
+  }
+  70% {
+    transform: rotate(4deg);
+  }
+}
+
+/* ---------- Avvio: il tubo che si riempie ---------- */
+.boot-tube {
+  opacity: 0.35;
+  animation: boot-tube 2.4s ease-in-out 1 both;
+}
+
+@keyframes boot-tube {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  75% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble,
+  .bubble > * {
+    animation-duration: 0.01s;
   }
 }

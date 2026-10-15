@@ -66,7 +66,7 @@ export function App() {
   return (
     <div className="stage">
       {state.panelOpen && <Panel state={state} />}
-      <Mascot mascot={state.mascot} panelOpen={state.panelOpen} tab={state.tab} settings={state.settings} />
+      <Mascot mascot={state.mascot} panelOpen={state.panelOpen} tab={state.tab} settings={state.settings} boot={state.boot} />
       {!state.panelOpen && <TimerPill />}
     </div>
   )

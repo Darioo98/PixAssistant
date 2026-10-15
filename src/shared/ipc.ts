@@ -38,6 +38,8 @@ export interface UiState {
   /** In sviluppo l'avvio automatico non viene registrato. */
   autostartAvailable: boolean
   mascot: MascotState
+  /** Avvio con Windows: la barra si riempie dal basso (solo nel primo stato). */
+  boot: boolean
   /** Giornata su questo PC: cicli di focus completati oggi. */
   day: { cyclesToday: number }
   vault: VaultStatus
@@ -63,7 +65,7 @@ export type DataResult = { ok: boolean; id?: string }
 
 export type UiIntent = { kind: 'vault-generate'; id: string } | { kind: 'search'; query?: string } | { kind: 'chat'; id: string }
 
-export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet', 'summary'] as const
+export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet', 'farewell', 'summary'] as const
 export type MascotPreview = (typeof PREVIEWS)[number]
 
 export type SetSettingsResult = { ok: true } | { ok: false; error: 'invalid' | 'shortcutTaken' }

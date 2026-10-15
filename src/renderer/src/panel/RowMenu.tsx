@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { notifyDeleted } from '../pix/SweepDrop'
 
 /** Menu "…" con le azioni secondarie di una riga. */
 export function RowMenu({ label, children }: { label: string; children: ReactNode }) {
@@ -58,7 +59,15 @@ export function DeleteButton({ onConfirm, className = 'danger' }: { onConfirm: (
   const { t } = useTranslation()
   const [armed, setArmed] = useState(false)
   return armed ? (
-    <button type="button" className={className} onClick={onConfirm}>
+    <button
+      type="button"
+      className={className}
+      onClick={(e) => {
+        // Pix spazza via una goccia dalla riga eliminata.
+        notifyDeleted(e.currentTarget.closest('li, [class*="row"], .card') ?? e.currentTarget)
+        onConfirm()
+      }}
+    >
       {t('common.confirmDelete')}
     </button>
   ) : (

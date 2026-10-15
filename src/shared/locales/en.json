@@ -113,7 +113,8 @@
       "think": "Thinking",
       "sleep": "Sleeping",
       "greet": "Hello",
-      "summary": "Summary"
+      "summary": "Summary",
+      "farewell": "End of shift"
     },
     "animationsHint": "Applies to Pix's spontaneous movements. The bar transformation stays, unless animation effects are turned off in Windows.",
     "appearance": "Pix appearance",
@@ -202,7 +203,14 @@
     "morningSummary": "Daily summary on first use",
     "tryYawn": "Yawn",
     "trySwallow": "Swallows a file",
-    "trySwallowText": "A test letter for Pix"
+    "trySwallowText": "A test letter for Pix",
+    "trySweep": "Delete something",
+    "tryBoot": "Windows startup",
+    "tryWeather": {
+      "rain": "Rain",
+      "sun": "Sun",
+      "cold": "Cold"
+    }
   },
   "mascot": {
     "preview": {
