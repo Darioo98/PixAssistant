@@ -53,10 +53,10 @@ describe('selettore di colore', () => {
 })
 
 describe('animazioni del fluido', () => {
-  it('sceglie un’animazione spontanea diversa dall’ultima; antenne e cuore per gli stati', async () => {
+  it('sceglie un’animazione spontanea diversa dall’ultima; fumetto e cuore per gli stati', async () => {
     const { pickTransform, moodTransform } = await import('@shared/mascot')
     for (let i = 0; i < 50; i++) expect(pickTransform('wobble', Math.random)).not.toBe('wobble')
-    expect(moodTransform('think')).toBe('antennae')
+    expect(moodTransform('think')).toBe('bubble')
     expect(moodTransform('happy')).toBe('heart')
     expect(moodTransform('normal')).toBeNull()
   })

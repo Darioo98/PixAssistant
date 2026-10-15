@@ -95,6 +95,7 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
         <span>{t('settings.transforms')}</span>
         <input type="checkbox" role="switch" checked={s.pixTransforms} onChange={(e) => void save({ pixTransforms: e.target.checked })} />
       </label>
+      <p className="hint">{t('settings.transformsHint')}</p>
       <div className="field">
         <span className="label">{t('settings.tryTransforms')}</span>
         <div className="preview-buttons">

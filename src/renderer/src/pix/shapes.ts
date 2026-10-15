@@ -78,7 +78,10 @@ export interface Body {
   top: number[]
   low: number[]
   theta: number[]
+  /** Forme d'arrivo già allineate punto per punto al contorno. */
   heart: Pt[]
+  shield: Pt[]
+  bubble: Pt[]
 }
 
 function prepare(pts: Pt[]): Body {
@@ -120,8 +123,22 @@ function prepare(pts: Pt[]): Body {
     top: ny.map((v) => Math.max(0, -v) ** 3),
     low: ny.map((v) => Math.max(0, v) ** 3),
     theta: pts.map(([x, y]) => Math.atan2(y - cy, x - cx)),
-    heart: alignTo(pts, samplePath(heartPath(cx, maxY, w), n))
+    heart: alignTo(pts, samplePath(heartPath(cx, maxY, w), n)),
+    shield: alignTo(pts, samplePath(scaledPath(SHIELD, cx, maxY, w), n)),
+    bubble: alignTo(pts, samplePath(scaledPath(BUBBLE, cx, maxY, w), n))
   }
+}
+
+/** Scudo (cassaforte) e fumetto (chat), disegnati su un corpo largo 66 con base a y = 226. */
+const SHIELD =
+  'M51 160 C62 160 74 163 84 168 L84 190 C84 208 71 220 51 228 C31 220 18 208 18 190 L18 168 C28 163 40 160 51 160 Z'
+const BUBBLE =
+  'M30 162 L72 162 C80 162 84 166 84 174 L84 200 C84 208 80 212 72 212 L46 212 L31 227 L34 212 L30 212 C22 212 18 208 18 200 L18 174 C18 166 22 162 30 162 Z'
+
+/** Riporta un tracciato disegnato in quel riferimento alla misura del corpo attuale. */
+function scaledPath(d: string, cx: number, bottom: number, w: number): string {
+  const s = w / 66
+  return d.replace(/(-?\d*\.?\d+)\s+(-?\d*\.?\d+)/g, (_m, x: string, y: string) => `${cx + (Number(x) - 51) * s} ${bottom + (Number(y) - 226) * s}`)
 }
 
 /** Cuore della stessa misura del corpo, appoggiato alla stessa base. */
@@ -161,6 +178,27 @@ function beat(t: number): number {
  * `a` l'ampiezza (0 = forma a riposo, 1 = animazione piena; oltre 1 = rimbalzo).
  */
 export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt[] {
+  if (kind === 'shield') {
+    // Lo scudo "respira" piano e luccica con un leggero ondeggiare.
+    const k = 1 + 0.035 * Math.sin(2.4 * t) * Math.min(1, Math.max(0, a))
+    return b.pts.map(([x, y], i) => {
+      const [sx, sy] = b.shield[i]!
+      const mx = x + (sx - x) * a
+      const my = y + (sy - y) * a
+      return [b.cx + (mx - b.cx) * k, b.cy + (my - b.cy) * k] as Pt
+    })
+  }
+  if (kind === 'bubble') {
+    // Il fumetto "parla": piccoli sussulti verticali come sillabe, la punta che si muove.
+    const talk = 1 + 0.045 * Math.abs(Math.sin(7 * t)) * Math.min(1, Math.max(0, a))
+    return b.pts.map(([x, y], i) => {
+      const [sx, sy] = b.bubble[i]!
+      const mx = x + (sx - x) * a
+      const my = y + (sy - y) * a
+      const tail = Math.max(0, (my - b.cy) / (b.h / 2) - 0.75) * 4 * Math.sin(3 * t) * a
+      return [mx + tail, b.cy + 0.25 * b.h + (my - b.cy - 0.25 * b.h) * talk] as Pt
+    })
+  }
   if (kind === 'heart') {
     const pulse = 1 + 0.1 * beat(t) * clamp01(a)
     return b.pts.map(([x, y], i) => {
@@ -203,13 +241,15 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
           dx += 0.12 * b.w * g * g * a * Math.sin(4.5 * t + k * 1.4)
         })
         break
-      case 'antennae':
-        ;[-0.3, 0.3].forEach((u0, k) => {
-          const g = top * gauss(u - u0, 0.09)
-          dy -= (0.4 + 0.05 * Math.sin(8 * t + k)) * b.h * g * a
-          dx += (Math.sign(u0) * 0.08 + 0.1 * Math.sin(5 * t + k * Math.PI * 0.7)) * b.w * g * g * a
-        })
+      case 'hourglass': {
+        // Clessidra: il corpo si stringe in vita e pulsa, la sabbia "scende".
+        // Strozzatura sotto gli occhi, così il viso resta libero.
+        const v = (y - b.cy) / (b.h / 2) - 0.3
+        const pinch = Math.exp(-((v / 0.32) ** 2)) * (0.85 + 0.15 * Math.sin(3 * t))
+        dx -= Math.sign(x - b.cx) * Math.abs(nx) * 0.22 * b.w * pinch * a
+        dy += 0.03 * b.h * Math.sin(2 * t) * top * a
         break
+      }
       case 'melt':
         // Le gocce si allungano piano, ognuna con la sua velocità.
         ;[
@@ -225,5 +265,36 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
         break
     }
     return [x + dx, y + dy] as Pt
+  })
+}
+
+// ---- "Spiare" dalla barra ----
+
+const BAR_PTS = new Map<string, Body>()
+
+/** Contorno della barra (per farla gonfiare quando Pix spia). */
+export function barBody(barPath: string): Body {
+  let b = BAR_PTS.get(barPath)
+  if (!b) {
+    b = prepare(samplePath(barPath))
+    BAR_PTS.set(barPath, b)
+  }
+  return b
+}
+
+/** Raggio della bolla che spunta dalla barra (in unità SVG). */
+export const PEEK_RADIUS = 15
+
+/**
+ * Pix che spia: dal bordo sinistro della barra, all'altezza `y0`, si gonfia
+ * una bolla di fluido (una piccola testa) con ampiezza `a`.
+ */
+export function peekShape(b: Body, y0: number, a: number): Pt[] {
+  return b.pts.map(([x, y], i) => {
+    const left = Math.max(0, -b.nx[i]!) // solo il bordo che guarda fuori dallo schermo
+    const d = (y - y0) / PEEK_RADIUS
+    const round = Math.max(0, 1 - d * d) ** 0.55 // profilo da semicerchio, ammorbidito
+    const soft = Math.exp(-((d / 1.25) ** 2)) * 0.25 // raccordo fluido con la barra
+    return [x - left * (round + soft) * PEEK_RADIUS * 1.25 * a, y] as Pt
   })
 }

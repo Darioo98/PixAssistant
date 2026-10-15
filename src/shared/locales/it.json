@@ -183,10 +183,13 @@
       "wobble": "Budino",
       "waves": "Onda",
       "tentacles": "Medusa",
-      "antennae": "Antenne",
       "heart": "Cuore che batte",
-      "melt": "Si scioglie"
-    }
+      "melt": "Si scioglie",
+      "shield": "Scudo",
+      "bubble": "Fumetto",
+      "hourglass": "Clessidra"
+    },
+    "transformsHint": "Pix accoglie ogni sezione con la sua animazione e, a pannello chiuso, ogni tanto spia dalla barra."
   },
   "mascot": {
     "preview": {

@@ -38,7 +38,7 @@ export function Panel({ state }: { state: UiState }) {
             <CloseIcon />
           </button>
         </header>
-        <div className={`panel-content tab-${tab}`}>
+        <div key={tab} className={`panel-content tab-${tab}`}>
           {tab === 'home' && <HomeTab state={state} />}
           {tab === 'deadlines' && <DeadlinesTab defaultLead={state.settings.defaultLeadDays} />}
           {tab === 'vault' && <VaultTab state={state} />}

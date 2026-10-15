@@ -135,12 +135,12 @@ export function eyeColorFor(body: string): string {
 // ---- Trasformazioni del fluido ----
 
 /** Animazioni del corpo di Pix (un unico fluido che si deforma e si muove). */
-export const PIX_TRANSFORMS = ['wobble', 'waves', 'tentacles', 'antennae', 'heart', 'melt'] as const
+export const PIX_TRANSFORMS = ['wobble', 'waves', 'tentacles', 'heart', 'melt', 'shield', 'bubble', 'hourglass'] as const
 export type PixTransform = (typeof PIX_TRANSFORMS)[number]
 
-/** Trasformazioni legate allo stato: antenne mentre pensa, cuore quando festeggia. */
+/** Animazioni legate allo stato: fumetto che parla mentre l'AI pensa, cuore quando festeggia. */
 export function moodTransform(mood: Mood): PixTransform | null {
-  if (mood === 'think') return 'antennae'
+  if (mood === 'think') return 'bubble'
   if (mood === 'happy') return 'heart'
   return null
 }
@@ -149,4 +149,17 @@ export function moodTransform(mood: Mood): PixTransform | null {
 export function pickTransform(last: PixTransform | null, random: () => number): PixTransform {
   const options = PIX_TRANSFORMS.filter((x) => x !== last)
   return options[Math.floor(random() * options.length) % options.length]!
+}
+
+/** Animazione con cui Pix accoglie ogni sezione del pannello. */
+export const SECTION_ANIMATIONS: Record<string, PixTransform | null> = {
+  home: 'wobble',
+  deadlines: 'melt',
+  vault: 'shield',
+  chat: 'bubble',
+  notes: 'waves',
+  timers: 'hourglass',
+  clipboard: 'tentacles',
+  links: 'wobble',
+  settings: null
 }

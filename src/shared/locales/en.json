@@ -183,10 +183,13 @@
       "wobble": "Jelly",
       "waves": "Waves",
       "tentacles": "Jellyfish",
-      "antennae": "Antennae",
       "heart": "Beating heart",
-      "melt": "Melts"
-    }
+      "melt": "Melts",
+      "shield": "Shield",
+      "bubble": "Speech bubble",
+      "hourglass": "Hourglass"
+    },
+    "transformsHint": "Pix greets each section with its own animation and, with the panel closed, peeks out of the bar now and then."
   },
   "mascot": {
     "preview": {
