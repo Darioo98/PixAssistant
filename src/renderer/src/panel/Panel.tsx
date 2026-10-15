@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TABS, type UiState } from '@shared/ipc'
 import { CloseIcon, TabIcon } from './icons'
@@ -10,10 +11,42 @@ import { NotesTab } from './notes/NotesTab'
 import { TimersTab } from './timers/TimersTab'
 import { ClipboardTab } from './extras/ClipboardTab'
 import { LinksTab } from './extras/LinksTab'
+import { SearchOverlay } from './search/SearchOverlay'
+import { FOCUS_EVENT, SEARCH_EVENT } from './focus'
 
 export function Panel({ state }: { state: UiState }) {
   const { t } = useTranslation()
   const { tab } = state
+  /** Ricerca globale aperta (con il testo iniziale) o chiusa. */
+  const [searching, setSearching] = useState<string | null>(null)
+  /** Cambia a ogni apertura mirata: la sezione si rimonta e legge la richiesta. */
+  const [focusSeq, setFocusSeq] = useState(0)
+
+  useEffect(() => {
+    const onSearch = (e: Event) => setSearching((e as CustomEvent<string>).detail ?? '')
+    const onFocus = () => setFocusSeq((n) => n + 1)
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'f' || e.key === 'k')) {
+        e.preventDefault()
+        setSearching((q) => q ?? '')
+      }
+    }
+    window.addEventListener(SEARCH_EVENT, onSearch)
+    window.addEventListener(FOCUS_EVENT, onFocus)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener(SEARCH_EVENT, onSearch)
+      window.removeEventListener(FOCUS_EVENT, onFocus)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [])
+
+  // Scorciatoia globale della ricerca: arriva come richiesta dal processo principale.
+  useEffect(() => {
+    if (state.intent?.kind !== 'search') return
+    setSearching(state.intent.query ?? '')
+    window.pix.clearIntent()
+  }, [state.intent])
 
   return (
     <section className="panel" data-hit aria-label={t(`tabs.${tab}`)}>
@@ -34,11 +67,17 @@ export function Panel({ state }: { state: UiState }) {
       <div className="panel-body">
         <header className="panel-header">
           <h1>{t(`tabs.${tab}`)}</h1>
-          <button className="icon-btn" aria-label={t('panel.close')} title={t('panel.close')} onClick={() => window.pix.closePanel()}>
-            <CloseIcon />
-          </button>
+          <div className="header-actions">
+            <button className="icon-btn" aria-label={t('search.title')} title={t('search.button')} onClick={() => setSearching('')}>
+              <span aria-hidden="true">🔍</span>
+            </button>
+            <button className="icon-btn" aria-label={t('panel.close')} title={t('panel.close')} onClick={() => window.pix.closePanel()}>
+              <CloseIcon />
+            </button>
+          </div>
         </header>
-        <div key={tab} className={`panel-content tab-${tab}`}>
+        {searching !== null && <SearchOverlay key={searching} initial={searching} onClose={() => setSearching(null)} />}
+        <div key={`${tab}-${focusSeq}`} className={`panel-content tab-${tab}`}>
           {tab === 'home' && <HomeTab state={state} />}
           {tab === 'deadlines' && <DeadlinesTab defaultLead={state.settings.defaultLeadDays} />}
           {tab === 'vault' && <VaultTab state={state} />}

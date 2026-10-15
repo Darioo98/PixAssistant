@@ -1,0 +1,124 @@
+/* ---------- Ricerca globale (sopra il contenuto del pannello) ---------- */
+.panel-body {
+  position: relative;
+}
+
+.search-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  animation: search-in 0.16s ease-out;
+}
+
+@keyframes search-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 12px 8px 18px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+.search-box input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  padding: 8px 0;
+}
+
+.search-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 16px 12px;
+}
+
+.search-results .hint {
+  padding: 8px 6px;
+}
+
+.search-group {
+  margin: 12px 6px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.search-hit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-hit.active {
+  background: var(--hover);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.search-icon {
+  flex: none;
+  width: 22px;
+  text-align: center;
+}
+
+.search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.search-title,
+.search-detail {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.search-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.search-badge {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.header-actions {
+  display: flex;
+  gap: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-overlay {
+    animation: none;
+  }
+}

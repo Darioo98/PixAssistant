@@ -6,13 +6,18 @@ import { useData, useToday } from '../../hooks'
 import { formatDate } from '../../format'
 import { DeleteButton, RowMenu } from '../RowMenu'
 import { Markdown } from '../chat/Markdown'
+import { takeFocus } from '../focus'
 import './productivity.css'
 
 type Segment = 'notes' | 'todos'
 
 export function NotesTab() {
   const { t } = useTranslation()
-  const [segment, setSegment] = useState<Segment>(() => (sessionStorageGet('pix.notes.segment') === 'todos' ? 'todos' : 'notes'))
+  // Apertura dalla ricerca: sezione e nota richieste hanno la precedenza sull'ultima vista.
+  const [focus] = useState(() => takeFocus('notes'))
+  const [segment, setSegment] = useState<Segment>(() =>
+    focus?.segment ?? (focus?.noteId ? 'notes' : sessionStorageGet('pix.notes.segment') === 'todos' ? 'todos' : 'notes')
+  )
   const pick = (s: Segment) => {
     setSegment(s)
     sessionStorageSet('pix.notes.segment', s)
@@ -26,18 +31,18 @@ export function NotesTab() {
           </button>
         ))}
       </div>
-      {segment === 'notes' ? <Notes /> : <Todos />}
+      {segment === 'notes' ? <Notes initialOpen={focus?.noteId ?? null} /> : <Todos />}
     </div>
   )
 }
 
 // ======================= Note =======================
 
-function Notes() {
+function Notes({ initialOpen }: { initialOpen: string | null }) {
   const { t } = useTranslation()
   const notes = useData('notes')
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState<string | 'new' | null>(null)
+  const [open, setOpen] = useState<string | 'new' | null>(initialOpen)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

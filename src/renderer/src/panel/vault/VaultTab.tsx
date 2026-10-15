@@ -7,6 +7,7 @@ import { HelloBanner, LinkPc, RecoveryKeyStep, SetupIntro, UnlockPanel } from '.
 import { VaultRow, VaultRowLocked } from './VaultList'
 import { NewPasswordDialog, VaultForm } from './VaultForm'
 import { FolderTree } from './VaultGroups'
+import { takeFocus } from '../focus'
 import './vault.css'
 
 type View =
@@ -20,7 +21,7 @@ export function VaultTab({ state }: { state: UiState }) {
   const data = useVaultData()
   const today = useToday()
   const lead = state.settings.defaultLeadDays
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => takeFocus('vault')?.query ?? '')
   const [view, setView] = useState<View>({ kind: 'list' })
   /** Nuova cartella al primo livello in corso di creazione. */
   const [newRoot, setNewRoot] = useState(false)

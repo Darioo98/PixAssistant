@@ -43,6 +43,8 @@ export const settingsSchema = z.object({
   // Solo locali (legate a questo PC)
   autostart: z.boolean(),
   shortcut: z.string().min(1).max(64),
+  /** Scorciatoia globale della ricerca. */
+  searchShortcut: z.string().min(1).max(64),
   mascotHidden: z.boolean(),
   notificationsPaused: z.boolean(),
   hideInFullscreen: z.boolean(),
@@ -60,6 +62,7 @@ export type SettingKey = keyof Settings
 export const LOCAL_KEYS = [
   'autostart',
   'shortcut',
+  'searchShortcut',
   'mascotHidden',
   'notificationsPaused',
   'hideInFullscreen',
@@ -112,6 +115,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dndTo: '07:00',
   autostart: true,
   shortcut: 'Control+Alt+Space',
+  searchShortcut: 'Control+Alt+F',
   mascotHidden: false,
   notificationsPaused: false,
   hideInFullscreen: true,

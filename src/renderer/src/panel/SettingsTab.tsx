@@ -104,6 +104,9 @@ export function SettingsTab({ state }: { state: UiState }) {
             <Row label={t('settings.shortcut')}>
               <ShortcutRecorder value={s.shortcut} onChange={save} />
             </Row>
+            <Row label={t('settings.searchShortcut')}>
+              <ShortcutRecorder value={s.searchShortcut} field="searchShortcut" onChange={save} />
+            </Row>
           </Section>
         </div>
       )}
@@ -429,7 +432,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   )
 }
 
-function ShortcutRecorder({ value, onChange }: { value: string; onChange: (p: SettingsPatch) => Promise<boolean> }) {
+function ShortcutRecorder({ value, field = 'shortcut', onChange }: { value: string; field?: 'shortcut' | 'searchShortcut'; onChange: (p: SettingsPatch) => Promise<boolean> }) {
   const { t } = useTranslation()
   const [recording, setRecording] = useState(false)
   const [invalid, setInvalid] = useState(false)
@@ -447,7 +450,7 @@ function ShortcutRecorder({ value, onChange }: { value: string; onChange: (p: Se
     setInvalid(!acc)
     if (acc) {
       setRecording(false)
-      void onChange({ shortcut: acc })
+      void onChange({ [field]: acc })
     }
   }
 
@@ -461,8 +464,8 @@ function ShortcutRecorder({ value, onChange }: { value: string; onChange: (p: Se
       >
         {recording ? t('settings.shortcutRecording') : formatAccelerator(value, t('settings.keys', { returnObjects: true }) as Record<string, string>)}
       </button>
-      {value !== DEFAULT_SETTINGS.shortcut && (
-        <button className="btn subtle" onClick={() => void onChange({ shortcut: DEFAULT_SETTINGS.shortcut })}>
+      {value !== DEFAULT_SETTINGS[field] && (
+        <button className="btn subtle" onClick={() => void onChange({ [field]: DEFAULT_SETTINGS[field] })}>
           {t('settings.shortcutReset')}
         </button>
       )}

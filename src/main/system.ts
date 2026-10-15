@@ -35,6 +35,7 @@ export class GlobalShortcut {
   }
 
   dispose(): void {
-    globalShortcut.unregisterAll()
+    if (this.current) globalShortcut.unregister(this.current)
+    this.current = null
   }
 }

@@ -196,7 +196,8 @@
       "pix": "Pix",
       "features": "Funzioni",
       "data": "Dati"
-    }
+    },
+    "searchShortcut": "Scorciatoia della ricerca globale"
   },
   "mascot": {
     "preview": {
@@ -482,10 +483,10 @@
       "rename": "Rinomina",
       "model": "Modello",
       "conversations": "Conversazioni",
-      "placeholder": "Scrivi un messaggio… (Invio per inviare, Maiusc+Invio per andare a capo)",
+      "placeholder": "Scrivi un messaggio o / per i comandi… (Invio invia, Maiusc+Invio va a capo)",
       "send": "Invia",
       "stop": "Stop",
-      "empty": "Fai una domanda a Claude.",
+      "empty": "Fai una domanda a Pix, oppure scrivi / per i comandi rapidi.",
       "copy": "Copia",
       "copied": "Copiato",
       "copyAnswer": "Copia risposta",
@@ -737,5 +738,70 @@
     "h": "h",
     "min": "min",
     "pill": "Fine turno: mancano {{time}}"
+  },
+  "search": {
+    "title": "Ricerca",
+    "button": "Cerca ovunque (Ctrl+F)",
+    "placeholder": "Cerca in note, to-do, promemoria, scadenze, link, appunti e password…",
+    "hint": "Scrivi per cercare. Della cassaforte si cercano solo i nomi delle voci, mai le password. Invio apre il risultato, Esc chiude.",
+    "none": "Nessun risultato.",
+    "close": "Esc",
+    "copied": "Copiato",
+    "done": "Fatto",
+    "groups": {
+      "notes": "Note",
+      "todos": "To-do",
+      "reminders": "Promemoria",
+      "deadlines": "Scadenze",
+      "links": "Link e app",
+      "clipboard": "Appunti",
+      "vault": "Password"
+    }
+  },
+  "commands": {
+    "helpTitle": "Comandi rapidi",
+    "open": "Apri",
+    "dismiss": "Chiudi",
+    "searching": "Apro la ricerca…",
+    "failed": "Non sono riuscito a salvarlo. Riprova.",
+    "noteSaved": "📝 Nota salvata.",
+    "todoSaved": "☑️ To-do aggiunto.",
+    "todoSavedDue": "☑️ To-do aggiunto per {{date}}.",
+    "reminderSaved": "⏰ Promemoria impostato: {{when}}.",
+    "deadlineSaved": "📅 Scadenza aggiunta: {{date}}.",
+    "escapeHint": "Li esegue Pix sul PC, non l'AI. Per mandare all'AI un testo che inizia con /, scrivi //.",
+    "errors": {
+      "unknown": "Comando sconosciuto: /{{command}}. Scrivi /aiuto per l'elenco.",
+      "missingText": "Manca il testo: ad esempio /{{command}} chiamare Marco.",
+      "missingTime": "Indica quando: ad esempio /{{command}} domani 15:30 chiamare Marco, oppure tra 20 min.",
+      "missingDate": "Indica la data: ad esempio /{{command}} 25/12 regali.",
+      "pastTime": "Quell'ora è già passata."
+    },
+    "list": {
+      "note": {
+        "usage": "/{{cmd}} testo",
+        "text": "Salva una nota"
+      },
+      "todo": {
+        "usage": "/{{cmd}} [domani | 25/12] testo",
+        "text": "Aggiunge un to-do, anche con data"
+      },
+      "reminder": {
+        "usage": "/{{cmd}} [domani | venerdì | 25/12] 15:30 testo · tra 20 min testo",
+        "text": "Imposta un promemoria"
+      },
+      "deadline": {
+        "usage": "/{{cmd}} 25/12 titolo",
+        "text": "Aggiunge una scadenza"
+      },
+      "search": {
+        "usage": "/{{cmd}} parole",
+        "text": "Cerca ovunque"
+      },
+      "help": {
+        "usage": "/{{cmd}}",
+        "text": "Mostra questo elenco"
+      }
+    }
   }
 }

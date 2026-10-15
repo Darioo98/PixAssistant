@@ -245,3 +245,87 @@
   outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
+
+/* ---------- Comandi rapidi (/nota, /promemoria…) ---------- */
+.cmd-suggest {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: pop-in 0.14s ease-out;
+}
+
+.cmd-option {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cmd-option:hover,
+.cmd-option:first-child {
+  background: var(--hover);
+}
+
+.cmd-option code,
+.cmd-help code {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.cmd-option span,
+.cmd-help span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.cmd-result {
+  padding: 6px 6px 6px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  font-size: 13px;
+  animation: pop-in 0.14s ease-out;
+}
+
+.cmd-result.err {
+  border-left-color: var(--danger);
+}
+
+.cmd-result-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cmd-result-row > span {
+  flex: 1;
+}
+
+.icon-btn.small {
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+}
+
+.cmd-help {
+  margin: 6px 0 2px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.cmd-help li {
+  display: flex;
+  flex-direction: column;
+}

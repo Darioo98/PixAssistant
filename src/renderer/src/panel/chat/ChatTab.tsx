@@ -4,6 +4,8 @@ import type { ChatState, ConversationItem } from '@shared/chat'
 import { RowMenu, DeleteButton } from '../RowMenu'
 import { Markdown } from './Markdown'
 import { loadSelected, saveSelected, useChat } from './useChat'
+import { COMMANDS, COMMAND_ALIASES, isCommandInput, parseCommand, suggestCommands } from '@shared/commands'
+import { runCommand, type CommandResult } from './commands'
 import './chat.css'
 
 const QUICK = ['summarize', 'translate', 'email', 'fix'] as const
@@ -112,11 +114,37 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
     if (el) el.scrollTop = el.scrollHeight
   }, [conv.messages.length, streaming, conv.id])
 
+  const lang = i18n.language.startsWith('en') ? 'en' : 'it'
+  const [result, setResult] = useState<CommandResult | null>(null)
+  const suggestions = suggestCommands(draft, lang)
+
+  // L'esito di un comando resta visibile qualche secondo (l'elenco dei comandi finché non lo chiudi).
+  useEffect(() => {
+    if (!result || result.help) return
+    const id = window.setTimeout(() => setResult(null), 7000)
+    return () => window.clearTimeout(id)
+  }, [result])
+
   const send = () => {
     const text = draft.trim()
-    if (!text || busy) return
+    if (!text) return
+    // Comandi rapidi: eseguiti dall'app, senza passare dall'AI.
+    if (isCommandInput(text)) {
+      const cmd = parseCommand(text, new Date())
+      if (!cmd) return
+      if (cmd.kind !== 'error') setDraft('')
+      void runCommand(cmd, t, i18n.language).then(setResult)
+      return
+    }
+    if (busy) return
     setDraft('')
-    void window.pix.chat.apply({ op: 'send', id: conv.id, text })
+    // "//testo" manda all'AI un messaggio che inizia con "/".
+    void window.pix.chat.apply({ op: 'send', id: conv.id, text: text.startsWith('//') ? text.slice(1) : text })
+  }
+
+  const complete = (alias: string) => {
+    setDraft(`/${alias} `)
+    inputRef.current?.focus()
   }
 
   const errorText = (code: string) => {
@@ -143,6 +171,42 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
       </div>
 
       <div className="composer">
+        {suggestions.length > 0 && (
+          <div className="cmd-suggest" role="listbox" aria-label={t('commands.helpTitle')}>
+            {suggestions.map((c) => (
+              <button key={c.name} role="option" aria-selected="false" className="cmd-option" onMouseDown={(e) => e.preventDefault()} onClick={() => complete(c.alias)}>
+                <code>/{c.alias}</code>
+                <span>{t(`commands.list.${c.name}.text`)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {result && (
+          <div className={`cmd-result ${result.ok ? 'ok' : 'err'}`} role="status">
+            <div className="cmd-result-row">
+              <span>{result.text}</span>
+              {result.open && (
+                <button className="btn subtle" onClick={result.open}>
+                  {t('commands.open')}
+                </button>
+              )}
+              <button className="icon-btn small" aria-label={t('commands.dismiss')} onClick={() => setResult(null)}>
+                ×
+              </button>
+            </div>
+            {result.help && (
+              <ul className="cmd-help">
+                {COMMANDS.map((name) => (
+                  <li key={name}>
+                    <code>{t(`commands.list.${name}.usage`, { cmd: COMMAND_ALIASES[name][lang][0] })}</code>
+                    <span>{t(`commands.list.${name}.text`)}</span>
+                  </li>
+                ))}
+                <li className="hint">{t('commands.escapeHint')}</li>
+              </ul>
+            )}
+          </div>
+        )}
         <div className="quick">
           {QUICK.map((q) => (
             <button
@@ -178,6 +242,11 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
             placeholder={t('ai.chat.placeholder')}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
+              if (e.key === 'Tab' && suggestions[0]) {
+                e.preventDefault()
+                complete(suggestions[0].alias)
+                return
+              }
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
                 send()

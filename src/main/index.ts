@@ -424,6 +424,12 @@ async function main(): Promise<void> {
     log.warn(`Scorciatoia ${settings.get().shortcut} occupata, uso quella predefinita`)
     shortcut.apply(DEFAULT_SETTINGS.shortcut)
   }
+  // Ricerca globale: apre il pannello direttamente nella ricerca.
+  const searchShortcut = new GlobalShortcut(() => {
+    intent = { kind: 'search' }
+    openPanel()
+  })
+  if (!searchShortcut.apply(settings.get().searchShortcut)) log.warn(`Scorciatoia della ricerca ${settings.get().searchShortcut} occupata`)
 
   const fullscreen = new FullscreenWatcher(native, (busy) => {
     fullscreenBusy = busy
@@ -480,6 +486,9 @@ async function main(): Promise<void> {
     if (!fromOverlay(e) || typeof patch !== 'object' || patch === null) return { ok: false, error: 'invalid' }
     const p = patch as Record<string, unknown>
     if (typeof p.shortcut === 'string' && !shortcut.apply(p.shortcut)) return { ok: false, error: 'shortcutTaken' }
+    if (typeof p.searchShortcut === 'string' && (p.searchShortcut === settings.get().shortcut || !searchShortcut.apply(p.searchShortcut))) {
+      return { ok: false, error: 'shortcutTaken' }
+    }
     return (await settings.set(p)) ? { ok: true } : { ok: false, error: 'invalid' }
   })
   ipcMain.on(IPC.openDataDir, (e) => {
@@ -605,6 +614,7 @@ async function main(): Promise<void> {
   })
   app.on('before-quit', () => {
     shortcut.dispose()
+    searchShortcut.dispose()
     mascot.dispose()
     chat.stopAll()
     productivity.dispose()

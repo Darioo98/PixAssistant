@@ -196,7 +196,8 @@
       "pix": "Pix",
       "features": "Features",
       "data": "Data"
-    }
+    },
+    "searchShortcut": "Global search shortcut"
   },
   "mascot": {
     "preview": {
@@ -482,10 +483,10 @@
       "rename": "Rename",
       "model": "Model",
       "conversations": "Conversations",
-      "placeholder": "Write a message… (Enter to send, Shift+Enter for a new line)",
+      "placeholder": "Type a message or / for commands… (Enter sends, Shift+Enter for a new line)",
       "send": "Send",
       "stop": "Stop",
-      "empty": "Ask Claude something.",
+      "empty": "Ask Pix a question, or type / for quick commands.",
       "copy": "Copy",
       "copied": "Copied",
       "copyAnswer": "Copy answer",
@@ -737,5 +738,70 @@
     "h": "h",
     "min": "min",
     "pill": "Workday: {{time}} left"
+  },
+  "search": {
+    "title": "Search",
+    "button": "Search everywhere (Ctrl+F)",
+    "placeholder": "Search notes, to-dos, reminders, deadlines, links, clipboard and passwords…",
+    "hint": "Type to search. In the vault only entry names are searched, never passwords. Enter opens the result, Esc closes.",
+    "none": "No results.",
+    "close": "Esc",
+    "copied": "Copied",
+    "done": "Done",
+    "groups": {
+      "notes": "Notes",
+      "todos": "To-dos",
+      "reminders": "Reminders",
+      "deadlines": "Deadlines",
+      "links": "Links and apps",
+      "clipboard": "Clipboard",
+      "vault": "Passwords"
+    }
+  },
+  "commands": {
+    "helpTitle": "Quick commands",
+    "open": "Open",
+    "dismiss": "Close",
+    "searching": "Opening search…",
+    "failed": "I couldn't save it. Please try again.",
+    "noteSaved": "📝 Note saved.",
+    "todoSaved": "☑️ To-do added.",
+    "todoSavedDue": "☑️ To-do added for {{date}}.",
+    "reminderSaved": "⏰ Reminder set: {{when}}.",
+    "deadlineSaved": "📅 Deadline added: {{date}}.",
+    "escapeHint": "Pix runs them on your PC, not the AI. To send the AI a message starting with /, type //.",
+    "errors": {
+      "unknown": "Unknown command: /{{command}}. Type /help for the list.",
+      "missingText": "Text is missing: for example /{{command}} call Mark.",
+      "missingTime": "Say when: for example /{{command}} tomorrow 15:30 call Mark, or in 20 min.",
+      "missingDate": "Add the date: for example /{{command}} 25/12 gifts.",
+      "pastTime": "That time has already passed."
+    },
+    "list": {
+      "note": {
+        "usage": "/{{cmd}} text",
+        "text": "Saves a note"
+      },
+      "todo": {
+        "usage": "/{{cmd}} [tomorrow | 25/12] text",
+        "text": "Adds a to-do, optionally with a date"
+      },
+      "reminder": {
+        "usage": "/{{cmd}} [tomorrow | friday | 25/12] 15:30 text · in 20 min text",
+        "text": "Sets a reminder"
+      },
+      "deadline": {
+        "usage": "/{{cmd}} 25/12 title",
+        "text": "Adds a deadline"
+      },
+      "search": {
+        "usage": "/{{cmd}} words",
+        "text": "Searches everywhere"
+      },
+      "help": {
+        "usage": "/{{cmd}}",
+        "text": "Shows this list"
+      }
+    }
   }
 }
