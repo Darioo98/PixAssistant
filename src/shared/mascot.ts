@@ -135,7 +135,7 @@ export function eyeColorFor(body: string): string {
 // ---- Trasformazioni del fluido ----
 
 /** Animazioni del corpo di Pix (un unico fluido che si deforma e si muove). */
-export const PIX_TRANSFORMS = ['wobble', 'waves', 'tentacles', 'antennae', 'horns', 'heart', 'melt', 'spiky'] as const
+export const PIX_TRANSFORMS = ['wobble', 'waves', 'tentacles', 'antennae', 'heart', 'melt'] as const
 export type PixTransform = (typeof PIX_TRANSFORMS)[number]
 
 /** Trasformazioni legate allo stato: antenne mentre pensa, cuore quando festeggia. */

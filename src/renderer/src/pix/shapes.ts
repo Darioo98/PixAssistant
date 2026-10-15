@@ -210,13 +210,6 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
           dx += (Math.sign(u0) * 0.08 + 0.1 * Math.sin(5 * t + k * Math.PI * 0.7)) * b.w * g * g * a
         })
         break
-      case 'horns':
-        ;[-0.5, 0.5].forEach((u0) => {
-          const g = top * gauss(u - u0, 0.16)
-          dy -= 0.42 * b.h * g * a
-          dx += (Math.sign(u0) * 0.14 + 0.07 * Math.sin(11 * t)) * b.w * g * g * a
-        })
-        break
       case 'melt':
         // Le gocce si allungano piano, ognuna con la sua velocità.
         ;[
@@ -230,13 +223,6 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
         dx += nx * 0.05 * b.w * Math.max(0, ny) * a
         dy += 0.04 * b.h * top * a
         break
-      case 'spiky': {
-        // Riccio: spine che ruotano attorno al corpo.
-        const k = Math.max(0, Math.cos(9 * (th - 1.4 * t))) ** 4
-        dx += nx * 0.16 * b.h * k * a
-        dy += ny * 0.16 * b.h * k * a
-        break
-      }
     }
     return [x + dx, y + dy] as Pt
   })
