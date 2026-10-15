@@ -20,8 +20,22 @@ describe('sbirciata', () => {
     }
   })
 
-  it('sbatte le palpebre quando è fuori', () => {
-    expect(peekFrame(3.38).eyeOpen).toBeLessThan(0.3)
-    expect(peekFrame(3).face).toBeCloseTo(1, 2)
+  it('sbatte le palpebre quando è fuori, poi si spaventa', () => {
+    expect(peekFrame(2.31).eyeOpen).toBeLessThan(0.3)
+    expect(peekFrame(3.3).eyeScale).toBeGreaterThan(1.2)
+    expect(peekFrame(3.3).sweat).toBeGreaterThan(0.9)
+  })
+
+  it('viene risucchiato di colpo e la barra fa un’onda d’urto', () => {
+    expect(peekFrame(3.45).grow).toBeGreaterThan(0.8)
+    expect(peekFrame(3.7).grow).toBe(0)
+    const bar = (t: number) => coords(peekBodyPath(peekFrame(t), 140, 1, 'squircle'))
+    // l'onda è partita: il bordo sinistro sporge sopra e sotto il punto del risucchio
+    const bulge = (t: number, near: number) => Math.min(...bar(t).filter((p) => Math.abs(p[1] - near) < 4).map((p) => p[0]))
+    expect(bulge(3.8, 140 - 17)).toBeLessThan(86)
+    expect(bulge(3.8, 140 + 17)).toBeLessThan(86)
+    // mentre è fuori la barra è molto più corta
+    const height = (t: number) => { const ys = bar(t).map((p) => p[1]); return Math.max(...ys) - Math.min(...ys) }
+    expect(height(2.5)).toBeLessThan(140)
   })
 })

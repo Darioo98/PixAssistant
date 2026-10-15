@@ -7,17 +7,20 @@ import type { PixShape } from '@shared/mascot'
  * Poi la goccia viene riassorbita. Tutto è un solo tracciato (la barra stessa),
  * calcolato da funzioni pure così i fotogrammi si possono verificare nei test.
  */
-export const PEEK_DURATION_S = 5.2
-
 /** Dimensione della testa rispetto a Pix normale. */
 export const PEEK_SCALE = 0.62
 
 /** Barra a riposo (coordinate dell'SVG): x 88–96, y 50–230, estremità arrotondate. */
 const BAR = { left: 88, right: 96, top: 50, bottom: 230 } as const
-/** Accorciamento di ogni estremità della barra quando la testa è formata. */
-const SHRINK = 5
+/** Accorciamento di ogni estremità della barra quando la testa è formata: Pix usa molta barra. */
+const SHRINK = 26
 /** Distanza massima fra barra e testa (lunghezza del collo). */
 const GAP_OUT = 8.5
+/** Momenti chiave: inizio della paura, risucchio, fine del risucchio. */
+const T_WORRY = 2.95
+const T_SUCK = 3.5
+const T_IN = 3.68
+export const PEEK_DURATION_S = 5
 
 export interface PeekFrame {
   /** Crescita della goccia (0 = barra liscia, 1 = testa formata). */
@@ -32,8 +35,14 @@ export interface PeekFrame {
   eyeY: number
   /** Apertura degli occhi (1 aperti, ~0.1 chiusi). */
   eyeOpen: number
+  /** Occhi sgranati per lo spavento (1 normali). */
+  eyeScale: number
+  /** Goccia di sudore (0–1). */
+  sweat: number
   /** Visibilità del viso (gli occhi compaiono quando la testa è formata). */
   face: number
+  /** Secondi dal risucchio (onda d'urto sulla barra); negativo prima. */
+  shock: number
 }
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
@@ -45,41 +54,73 @@ const easeOutBack = (x: number) => {
 }
 /** Picco "a campana" fra a e b (0 ai bordi, 1 al centro). */
 const bump = (t: number, a: number, b: number) => (t <= a || t >= b ? 0 : Math.sin(Math.PI * seg(t, a, b)))
+/** Risucchio: parte piano e accelera di colpo. */
+const suck = (t: number) => seg(t, T_SUCK, T_IN) ** 2.4
 
 function growAt(t: number): number {
   if (t < 1.3) return easeOutBack(seg(t, 0, 1.3))
-  if (t < 4.0) return 1
-  return 1 - smooth(seg(t, 4.0, 4.9))
+  // Spaventato si rannicchia un po', poi viene risucchiato.
+  const cower = 1 - 0.12 * smooth(seg(t, T_WORRY, T_SUCK))
+  return cower * (1 - suck(t))
 }
 
 function gapAt(t: number): number {
-  const out = t < 3.85 ? easeOutBack(seg(t, 0.5, 1.8)) : 1 - smooth(seg(t, 3.85, 4.6))
-  return 0.6 + (GAP_OUT - 0.6) * out
+  const out = easeOutBack(seg(t, 0.5, 1.8)) * (1 - 0.35 * smooth(seg(t, T_WORRY, T_SUCK)))
+  return 0.6 + (GAP_OUT - 0.6) * out * (1 - suck(t))
 }
 
 export function peekFrame(t: number): PeekFrame {
   const grow = growAt(t)
   const gap = gapAt(t)
-  // Si allunga quando il collo si muove, poi tremola come una gelatina.
+  const worry = smooth(seg(t, T_WORRY, T_WORRY + 0.15)) * (t < T_IN ? 1 : 0)
+  // Si allunga quando il collo si muove, poi tremola come una gelatina; risucchiato si stira verso la barra.
   const dt = 1 / 120
   const v = (gapAt(t + dt) - gapAt(t - dt)) / (2 * dt)
   const jiggle = 0.06 * Math.sin((t - 1.3) * 13) * Math.exp(-(t - 1.3) * 3.5) * (t > 1.3 && t < 2.6 ? 1 : 0)
-  const stretch = Math.min(0.15, Math.abs(v) * 0.012) + jiggle
+  const tremble = 0.035 * Math.sin(t * 70) * worry
+  const stretch = Math.min(0.15, Math.abs(v) * 0.012) + jiggle + tremble + 0.45 * bump(t, T_SUCK, T_IN + 0.04)
 
-  const out = smooth(seg(t, 1.0, 1.8)) * (1 - smooth(seg(t, 3.8, 4.3)))
-  const rot = -8 * out + 3 * Math.sin(t * 2.3) * out
+  const out = smooth(seg(t, 1.0, 1.8)) * (1 - smooth(seg(t, T_WORRY, T_SUCK)))
+  const rot = -8 * out + 3 * Math.sin(t * 2.3) * out + 2.5 * Math.sin(t * 57) * worry
   const bob = -1.5 * Math.sin(t * 2.9) * out
 
+  // Sguardo: a sinistra, battito di palpebre, in alto a destra; poi la paura.
   let eyeX = 0
   let eyeY = 0
-  eyeX -= 3 * bump(t, 1.4, 2.4)
-  eyeY += 1 * bump(t, 1.4, 2.4)
-  eyeX += 1.8 * bump(t, 2.5, 3.2)
-  eyeY -= 1.4 * bump(t, 2.5, 3.2)
-  const blink = Math.max(bump(t, 3.3, 3.46), bump(t, 3.56, 3.72))
+  eyeX -= 3 * bump(t, 1.4, 2.2)
+  eyeY += 1 * bump(t, 1.4, 2.2)
+  eyeX += 1.8 * bump(t, 2.5, 2.95)
+  eyeY -= 1.4 * bump(t, 2.5, 2.95)
+  // Occhi che saettano a destra e sinistra, preoccupati.
+  eyeX += 2.6 * Math.sign(Math.sin((t - T_WORRY) * 16)) * worry * (t > T_WORRY + 0.1 ? 1 : 0)
+  eyeY -= 0.8 * worry
+  const blink = Math.max(bump(t, 2.24, 2.38), bump(t, 2.44, 2.58))
   const eyeOpen = 1 - 0.88 * blink
-  const face = smooth(seg(grow, 0.6, 0.9)) * (1 - smooth(seg(t, 3.95, 4.35)))
-  return { grow, gap, stretch, rot, bob, eyeX, eyeY, eyeOpen, face }
+  const eyeScale = 1 + 0.32 * worry
+  const sweat = worry * (1 - seg(t, T_SUCK, T_SUCK + 0.08))
+  const face = smooth(seg(grow, 0.6, 0.9)) * (1 - seg(t, T_SUCK + 0.02, T_SUCK + 0.12))
+  const shock = t - T_IN
+  return { grow, gap, stretch, rot, bob, eyeX, eyeY, eyeOpen, eyeScale, sweat, face, shock }
+}
+
+/**
+ * Spostamento verso sinistra del bordo della barra all'altezza `yy`:
+ * l'onda d'urto parte dal punto del risucchio e corre in su e in giù smorzandosi.
+ */
+function shockAt(shock: number, y: number, yy: number): number {
+  if (shock < 0 || shock > 1.4) return 0
+  const decay = Math.exp(-2.4 * shock)
+  const front = 170 * shock
+  const g = (d: number) => Math.exp(-((d / 7) ** 2))
+  const pulse = 3.4 * decay * (g(yy - y - front) + g(yy - y + front))
+  const recoil = 5 * Math.exp(-10 * shock) * g((yy - y) * 0.7)
+  return pulse + recoil
+}
+
+/** Le estremità tornano al loro posto rimbalzando dopo il risucchio. */
+function endSpring(shock: number): number {
+  if (shock < 0) return 0
+  return 7 * Math.exp(-3.5 * shock) * Math.sin(10 * shock)
 }
 
 /** Esponente del superellisse della testa, secondo la forma scelta per Pix. */
@@ -127,8 +168,9 @@ function unit(v: [number, number]): [number, number] {
  * spigolo, come una goccia di liquido che si stira.
  */
 export function peekBodyPath(f: PeekFrame, y: number, scale: number, shape: PixShape): string {
-  const top = BAR.top + SHRINK * f.grow
-  const bottom = BAR.bottom - SHRINK * f.grow
+  const used = SHRINK * clamp01(f.grow) - endSpring(f.shock)
+  const top = BAR.top + used
+  const bottom = BAR.bottom - used
   const rad = (BAR.right - BAR.left) / 2
   const mid = BAR.left + rad
   const k = rad * 0.5523
@@ -173,6 +215,10 @@ export function peekBodyPath(f: PeekFrame, y: number, scale: number, shape: PixS
     parts.push(`C${r(ct[0])} ${r(ct[1])} ${BAR.left} ${r(y1 + fillet)} ${BAR.left} ${r(y1)}`)
   }
 
+  if (f.shock >= 0 && f.shock <= 1.4) {
+    // Onda d'urto: il bordo sinistro ondeggia dal basso verso l'alto.
+    for (let yy = bottom - rad - 1.5; yy > top + rad; yy -= 1.5) parts.push(`L${r(BAR.left - shockAt(f.shock, y, yy))} ${r(yy)}`)
+  }
   parts.push(`L${BAR.left} ${r(top + rad)}`)
   parts.push(`C${BAR.left} ${r(top + rad - k)} ${r(mid - k)} ${r(top)} ${r(mid)} ${r(top)} Z`)
   return parts.join(' ')
@@ -186,7 +232,7 @@ export function peekFaceTransform(f: PeekFrame, y: number, scale: number, shape:
 
 /** Trasformazione degli occhi (centro occhi 50,52). */
 export function peekEyesTransform(f: PeekFrame): string {
-  return `translate(${r(f.eyeX)} ${r(f.eyeY)}) translate(50 52) scale(1 ${r(f.eyeOpen)}) translate(-50 -52)`
+  return `translate(${r(f.eyeX)} ${r(f.eyeY)}) translate(50 52) scale(${r(f.eyeScale)} ${r(f.eyeOpen * f.eyeScale)}) translate(-50 -52)`
 }
 
 const sub = (p: [number, number], q: [number, number]): [number, number] => [p[0] - q[0], p[1] - q[1]]
