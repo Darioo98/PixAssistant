@@ -24,6 +24,7 @@ import {
   type VaultMeta,
   type VaultSecret
 } from '@shared/vault'
+import { analyzeVault, type VaultHealth } from '@shared/vaultHealth'
 
 const EMPTY_SECRET: VaultSecret = { username: '', password: '', url: '', notes: '', history: [] }
 
@@ -263,6 +264,13 @@ export class VaultService {
     if (field === 'password') await this.clip.copySecret(s.password)
     else this.clip.copyPlain(s.username)
     return true
+  }
+
+  /** Controllo salute: password deboli, ripetute o vecchie. Le password non escono da qui. */
+  health(today = toISODate(new Date())): VaultHealth {
+    const secrets = this.requireOpen()
+    const entries = this.meta.list().map((m) => ({ id: m.id, password: secrets.get(m.id)?.password ?? '', lastChanged: m.lastChanged }))
+    return analyzeVault(entries, today)
   }
 
   reveal(id: string): string | null {

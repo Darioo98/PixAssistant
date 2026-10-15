@@ -461,6 +461,28 @@
       "more": "Azioni della cartella",
       "dropRoot": "Rilascia qui per portare al primo livello",
       "dragHint": "Trascina password e cartelle per riorganizzarle. Eliminando una cartella il suo contenuto sale di un livello."
+    },
+    "health": {
+      "title": "Salute delle password",
+      "allGood": "Tutto a posto: {{count}} password controllate.",
+      "weakCount_one": "{{count}} debole",
+      "weakCount_other": "{{count}} deboli",
+      "reusedCount_one": "{{count}} ripetuta",
+      "reusedCount_other": "{{count}} ripetute",
+      "oldCount_one": "{{count}} vecchia",
+      "oldCount_other": "{{count}} vecchie",
+      "weak": {
+        "short": "troppo corta",
+        "common": "molto comune",
+        "pattern": "sequenza prevedibile",
+        "simple": "poco varia"
+      },
+      "reused_one": "usata anche in {{count}} altra voce",
+      "reused_other": "usata anche in {{count}} altre voci",
+      "old_one": "non cambiata da {{count}} mese",
+      "old_other": "non cambiata da {{count}} mesi",
+      "fix": "Nuova password",
+      "privacy": "Il controllo avviene solo su questo PC: le password non vengono mai inviate da nessuna parte."
     }
   },
   "common": {

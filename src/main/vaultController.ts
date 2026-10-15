@@ -151,6 +151,8 @@ export class VaultController {
       case 'copyText':
         await this.clipboard.copySecret(op.text)
         return { ok: true }
+      case 'health':
+        return { ok: true, health: this.vault.health() }
       case 'reveal': {
         const value = this.vault.reveal(op.id)
         return value === null ? { ok: false, error: 'not-found' } : { ok: true, value }

@@ -461,6 +461,28 @@
       "more": "Folder actions",
       "dropRoot": "Drop here to move to the top level",
       "dragHint": "Drag passwords and folders to reorganize them. Deleting a folder moves its contents up one level."
+    },
+    "health": {
+      "title": "Password health",
+      "allGood": "All good: {{count}} passwords checked.",
+      "weakCount_one": "{{count}} weak",
+      "weakCount_other": "{{count}} weak",
+      "reusedCount_one": "{{count}} reused",
+      "reusedCount_other": "{{count}} reused",
+      "oldCount_one": "{{count}} old",
+      "oldCount_other": "{{count}} old",
+      "weak": {
+        "short": "too short",
+        "common": "very common",
+        "pattern": "predictable pattern",
+        "simple": "low variety"
+      },
+      "reused_one": "also used in {{count}} other entry",
+      "reused_other": "also used in {{count}} other entries",
+      "old_one": "not changed for {{count}} month",
+      "old_other": "not changed for {{count}} months",
+      "fix": "New password",
+      "privacy": "The check runs only on this PC: passwords are never sent anywhere."
     }
   },
   "common": {

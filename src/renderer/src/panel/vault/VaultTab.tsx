@@ -7,6 +7,7 @@ import { HelloBanner, LinkPc, RecoveryKeyStep, SetupIntro, UnlockPanel } from '.
 import { VaultRow, VaultRowLocked } from './VaultList'
 import { NewPasswordDialog, VaultForm } from './VaultForm'
 import { FolderTree } from './VaultGroups'
+import { VaultHealthCard } from './VaultHealth'
 import { takeFocus } from '../focus'
 import './vault.css'
 
@@ -123,6 +124,13 @@ export function VaultTab({ state }: { state: UiState }) {
           {t('vault.lock')}
         </button>
       </div>
+      {!results && (
+        <VaultHealthCard
+          entries={entries}
+          onEdit={(entry) => setView({ kind: 'edit', entry })}
+          onNewPassword={(entry) => setView({ kind: 'newPassword', entry })}
+        />
+      )}
       {results ? (
         results.length === 0 ? (
           <p className="empty">{t('vault.noResults')}</p>

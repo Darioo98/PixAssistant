@@ -1,3 +1,4 @@
+import type { VaultHealth } from './vaultHealth'
 import { z } from 'zod'
 import { addDays, diffDays, type ISODate } from './dates'
 import { isoDate } from './deadlines'
@@ -313,6 +314,7 @@ export const vaultOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('copy'), id, field: z.enum(['username', 'password']) }),
   z.object({ op: z.literal('copyText'), text: z.string().max(1000) }),
   z.object({ op: z.literal('reveal'), id }),
+  z.object({ op: z.literal('health') }),
   z.object({ op: z.literal('openUrl'), id }),
   z.object({ op: z.literal('snooze'), id, until: isoDate }),
   z.object({ op: z.literal('move'), id, groupId: id.nullable() }),
@@ -329,4 +331,4 @@ export const vaultOpSchema = z.discriminatedUnion('op', [
 ])
 export type VaultOp = z.infer<typeof vaultOpSchema>
 
-export type VaultOpResult = { ok: true; value?: string } | { ok: false; error: string }
+export type VaultOpResult = { ok: true; value?: string; health?: VaultHealth } | { ok: false; error: string }
