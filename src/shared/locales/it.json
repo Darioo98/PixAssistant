@@ -210,7 +210,11 @@
       "rain": "Pioggia",
       "sun": "Sole",
       "cold": "Freddo"
-    }
+    },
+    "barPosition": "Posizione della barra",
+    "barReset": "Riporta in basso",
+    "barDefault": "In basso (predefinita)",
+    "barHint": "Trascina la barra su o giù lungo il bordo dello schermo per spostarla. Un clic senza trascinare apre Pix."
   },
   "mascot": {
     "preview": {

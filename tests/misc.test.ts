@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { windowBounds, LAYOUT } from '@shared/layout'
+import { splitLift, windowBounds, LAYOUT } from '@shared/layout'
 import { comboToAccelerator } from '@shared/accelerator'
 import { coerceSettings, DEFAULT_SETTINGS } from '@shared/settings'
 import { resolveLang } from '@shared/i18n'
@@ -58,5 +58,17 @@ describe('impostazioni e lingua', () => {
     expect(resolveLang('system', ['en-GB', 'it-IT'])).toBe('en')
     expect(resolveLang('system', ['de-DE'])).toBe('it')
     expect(resolveLang('en', ['it-IT'])).toBe('en')
+  })
+})
+
+describe('barra spostabile', () => {
+  it('sale prima con la finestra, poi dentro la finestra, senza uscire dallo schermo', () => {
+    const area = { x: 0, y: 0, width: 1920, height: 1040 }
+    const h = LAYOUT.panelHeight + 2 * LAYOUT.margin
+    expect(splitLift(area, 100)).toEqual({ lift: 100, shift: 100, inner: 0 })
+    expect(splitLift(area, 600)).toEqual({ lift: 600, shift: 1040 - h, inner: 600 - (1040 - h) })
+    expect(splitLift(area, 99999).lift).toBe(1040 - LAYOUT.barBottom - LAYOUT.barHeight - 10)
+    expect(splitLift(area, -50).lift).toBe(0)
+    expect(windowBounds(area, 100).y).toBe(1040 - h - 100)
   })
 })

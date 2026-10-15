@@ -24,6 +24,7 @@ const api: PixApi = {
   },
   setInteractive: (interactive) => ipcRenderer.send(IPC.setInteractive, Boolean(interactive)),
   openPanel: (tab) => ipcRenderer.send(IPC.openPanel, tab),
+  moveBar: (lift, save) => ipcRenderer.invoke(IPC.moveBar, lift, save),
   closePanel: () => ipcRenderer.send(IPC.closePanel),
   setSettings: (patch) => ipcRenderer.invoke(IPC.setSettings, patch),
   openDataDir: () => ipcRenderer.send(IPC.openDataDir),

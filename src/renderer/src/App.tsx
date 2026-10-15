@@ -64,7 +64,7 @@ export function App() {
 
   if (!state) return null
   return (
-    <div className="stage">
+    <div className="stage" style={{ ['--lift' as string]: `${state.barInnerLift}px` }}>
       {state.panelOpen && <Panel state={state} />}
       <Mascot mascot={state.mascot} panelOpen={state.panelOpen} tab={state.tab} settings={state.settings} boot={state.boot} />
       {!state.panelOpen && <TimerPill />}

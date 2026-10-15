@@ -45,6 +45,8 @@ export const settingsSchema = z.object({
   // Solo locali (legate a questo PC)
   autostart: z.boolean(),
   shortcut: z.string().min(1).max(64),
+  /** Barra spostata in su (px) rispetto alla posizione di base, trascinandola. */
+  barLift: z.number().int().min(0).max(5000),
   /** Scorciatoia globale della ricerca. */
   searchShortcut: z.string().min(1).max(64),
   mascotHidden: z.boolean(),
@@ -64,6 +66,7 @@ export type SettingKey = keyof Settings
 export const LOCAL_KEYS = [
   'autostart',
   'shortcut',
+  'barLift',
   'searchShortcut',
   'mascotHidden',
   'notificationsPaused',
@@ -118,6 +121,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dndTo: '07:00',
   autostart: true,
   shortcut: 'Control+Alt+Space',
+  barLift: 0,
   searchShortcut: 'Control+Alt+F',
   mascotHidden: false,
   notificationsPaused: false,

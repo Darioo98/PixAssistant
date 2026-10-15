@@ -2,7 +2,7 @@
 .mascot-svg {
   position: absolute;
   right: 0;
-  bottom: 30px;
+  bottom: calc(30px + var(--lift, 0px));
   overflow: visible;
 }
 
@@ -340,7 +340,7 @@
 .bubble {
   position: absolute;
   right: 84px;
-  bottom: 56px;
+  bottom: calc(56px + var(--lift, 0px));
   width: 280px;
   box-sizing: border-box;
   padding: 10px 12px 12px 14px;
@@ -354,7 +354,7 @@
 
 .bubble.above {
   right: 8px;
-  bottom: 132px;
+  bottom: calc(132px + var(--lift, 0px));
 }
 
 /* Il fumetto nasce come una bolla che si stacca dalla testa di Pix e si apre. */

@@ -1,6 +1,6 @@
 import { BrowserWindow, screen } from 'electron'
 import { join } from 'node:path'
-import { sameRect, windowBounds } from '@shared/layout'
+import { sameRect, splitLift, windowBounds } from '@shared/layout'
 import { log } from '../log'
 
 /**
@@ -13,6 +13,10 @@ export class OverlayWindow {
   readonly win: BrowserWindow
   private interactive = false
   private repositionTimer: NodeJS.Timeout | null = null
+  /** Spostamento della barra verso l'alto (px) e la parte fatta dentro la finestra. */
+  private lift = 0
+  private innerLift = 0
+  private onInnerLift: (inner: number) => void = () => {}
 
   constructor(opts: { preload: string; devUrl?: string; rendererFile: string }) {
     const bounds = windowBounds(screen.getPrimaryDisplay().workArea)
@@ -116,9 +120,31 @@ export class OverlayWindow {
     this.repositionTimer = setTimeout(() => this.reposition(), 150)
   }
 
+  /** Sposta la barra (e Pix) in su di `lift` px; restituisce il valore effettivo, limitato allo schermo. */
+  setLift(lift: number): number {
+    this.lift = lift
+    this.reposition()
+    return splitLift(screen.getPrimaryDisplay().workArea, lift).lift
+  }
+
+  get inner(): number {
+    return this.innerLift
+  }
+
+  /** Avvisa quando cambia la parte di spostamento fatta dentro la finestra. */
+  onInner(cb: (inner: number) => void): void {
+    this.onInnerLift = cb
+  }
+
   reposition(): void {
     if (this.win.isDestroyed()) return
-    const target = windowBounds(screen.getPrimaryDisplay().workArea)
+    const area = screen.getPrimaryDisplay().workArea
+    const split = splitLift(area, this.lift)
+    if (split.inner !== this.innerLift) {
+      this.innerLift = split.inner
+      this.onInnerLift(split.inner)
+    }
+    const target = windowBounds(area, split.shift)
     if (!sameRect(target, this.win.getBounds())) {
       this.win.setBounds(target)
       log.info(`Riposiziono la finestra: ${JSON.stringify(target)} -> ${JSON.stringify(this.win.getBounds())}`)

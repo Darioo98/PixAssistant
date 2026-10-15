@@ -186,6 +186,8 @@ async function main(): Promise<void> {
     devUrl: !app.isPackaged ? process.env.ELECTRON_RENDERER_URL : undefined
   })
   window = overlay
+  overlay.setLift(settings.get().barLift)
+  overlay.onInner(() => pushState())
 
   const uiState = (): UiState => ({
     panelOpen,
@@ -196,6 +198,7 @@ async function main(): Promise<void> {
     autostartAvailable: app.isPackaged,
     mascot: mascot.state(),
     boot: bootPending,
+    barInnerLift: overlay.inner,
     day: { cyclesToday: day.cyclesToday() },
     vault: vaultCtl.status(),
     intent
@@ -585,6 +588,12 @@ async function main(): Promise<void> {
   ipcMain.on(IPC.openPanel, (e, next: unknown) => {
     if (!fromOverlay(e)) return
     openPanel(typeof next === 'string' && (TABS as readonly string[]).includes(next) ? (next as TabId) : undefined)
+  })
+  ipcMain.handle(IPC.moveBar, async (e, lift: unknown, save: unknown) => {
+    if (!fromOverlay(e) || typeof lift !== 'number' || !Number.isFinite(lift)) return settings.get().barLift
+    const applied = overlay.setLift(lift)
+    if (save === true) await settings.set({ barLift: applied })
+    return applied
   })
   ipcMain.on(IPC.closePanel, (e) => {
     if (fromOverlay(e)) closePanel()

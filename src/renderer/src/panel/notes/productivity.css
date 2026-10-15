@@ -223,7 +223,7 @@
 .timer-pill {
   position: absolute;
   right: 6px;
-  bottom: 236px;
+  bottom: calc(236px + var(--lift, 0px));
   padding: 3px 9px;
   border: 1px solid var(--panel-border);
   border-radius: 999px;

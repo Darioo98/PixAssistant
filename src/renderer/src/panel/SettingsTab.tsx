@@ -143,6 +143,16 @@ export function SettingsTab({ state }: { state: UiState }) {
               onChange={(v) => void save({ eyesFollowCursor: v })}
             />
             <Toggle label={t('settings.morningSummary')} checked={s.morningSummary} onChange={(v) => void save({ morningSummary: v })} />
+            <Row label={t('settings.barPosition')}>
+              {s.barLift > 0 ? (
+                <button className="btn subtle" onClick={() => void window.pix.moveBar(0, true)}>
+                  {t('settings.barReset')}
+                </button>
+              ) : (
+                <span className="hint">{t('settings.barDefault')}</span>
+              )}
+            </Row>
+            <p className="hint">{t('settings.barHint')}</p>
             <Row label={t('settings.bubbleSeconds')}>
               <input
                 type="number"

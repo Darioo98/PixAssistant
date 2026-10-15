@@ -38,6 +38,8 @@ export interface UiState {
   /** In sviluppo l'avvio automatico non viene registrato. */
   autostartAvailable: boolean
   mascot: MascotState
+  /** Parte dello spostamento della barra fatta dentro la finestra (px): Pix e fumetti salgono di tanto. */
+  barInnerLift: number
   /** Avvio con Windows: la barra si riempie dal basso (solo nel primo stato). */
   boot: boolean
   /** Giornata su questo PC: cicli di focus completati oggi. */
@@ -77,6 +79,8 @@ export interface PixApi {
   setInteractive(interactive: boolean): void
   openPanel(tab?: TabId): void
   closePanel(): void
+  /** Trascinamento della barra: sposta (senza salvare); `save` alla fine. */
+  moveBar(lift: number, save: boolean): Promise<number>
   setSettings(patch: SettingsPatch): Promise<SetSettingsResult>
   openDataDir(): void
   bubbleOutcome(bubbleId: string, outcome: BubbleOutcome): void
@@ -140,6 +144,7 @@ export const IPC = {
   setInteractive: 'ui:set-interactive',
   openPanel: 'ui:open-panel',
   closePanel: 'ui:close-panel',
+  moveBar: 'ui:move-bar',
   setSettings: 'settings:set',
   openDataDir: 'app:open-data-dir',
   bubbleOutcome: 'mascot:bubble-outcome',

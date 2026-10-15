@@ -27,15 +27,31 @@ export const LAYOUT = {
   pixSize: 60
 } as const
 
-export function windowBounds(workArea: Rect): Rect {
+export function windowBounds(workArea: Rect, shift = 0): Rect {
   const width = Math.min(LAYOUT.panelWidth + LAYOUT.pixColumn + LAYOUT.margin, workArea.width)
   const height = Math.min(LAYOUT.panelHeight + 2 * LAYOUT.margin, workArea.height)
   return {
     x: Math.round(workArea.x + workArea.width - width),
-    y: Math.round(workArea.y + workArea.height - height),
+    y: Math.round(workArea.y + workArea.height - height - shift),
     width: Math.round(width),
     height: Math.round(height)
   }
+}
+
+/** Distanza minima della cima della barra dalla cima dello schermo. */
+const BAR_TOP_GAP = 10
+
+/**
+ * Barra spostata in su di `lift` px rispetto alla posizione di base. Si alza
+ * prima la finestra (finché resta dentro lo schermo), poi si sposta Pix
+ * dentro la finestra (`inner`): così la barra arriva fino in cima.
+ */
+export function splitLift(workArea: Rect, lift: number): { lift: number; shift: number; inner: number } {
+  const height = Math.min(LAYOUT.panelHeight + 2 * LAYOUT.margin, workArea.height)
+  const maxLift = Math.max(0, workArea.height - LAYOUT.barBottom - LAYOUT.barHeight - BAR_TOP_GAP)
+  const l = Math.round(Math.min(maxLift, Math.max(0, lift)))
+  const shift = Math.min(l, Math.max(0, workArea.height - height))
+  return { lift: l, shift, inner: l - shift }
 }
 
 /** Confronto con tolleranza: con scale DPI non intere Windows arrotonda di 1 px. */

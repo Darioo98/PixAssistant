@@ -103,6 +103,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   const [swallowPhase, setSwallowPhase] = useState<'open' | 'chew' | null>(null)
   const [tired, setTired] = useState<Tired>(() => tirednessAt(new Date(), settings))
   const lastTransform = useRef<PixTransform | null>(null)
+  /** Trascinamento della barra in corso. */
+  const barDrag = useRef<{ startY: number; startLift: number; lift: number; moved: boolean; raf: number } | null>(null)
+  const draggingBar = useRef(false)
   /** Sbirciata in corso e funzione che la spaventa. */
   const peekActive = useRef(false)
   const scareRef = useRef<(() => void) | null>(null)
@@ -146,6 +149,8 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     let leave: number | undefined
     let inside = false
     const set = (now: boolean) => {
+      // Mentre trascini la barra Pix non si forma.
+      if (now && draggingBar.current) return
       // Durante la sbirciata toccare Pix lo spaventa (rientra di colpo) invece di aprirlo.
       if (now && peekActive.current) {
         scareRef.current?.()
@@ -598,7 +603,46 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     }
   }, [follow, scale])
 
-  const toggle = () => (panelOpen ? window.pix.closePanel() : window.pix.openPanel())
+  const toggle = () => {
+    // Al termine di un trascinamento della barra il clic non apre il pannello.
+    if (barDrag.current?.moved) return
+    if (panelOpen) window.pix.closePanel()
+    else window.pix.openPanel()
+  }
+
+  // ---- Barra spostabile: trascinandola su e giù lungo il bordo dello schermo ----
+  const onBarPointerDown = (e: React.PointerEvent<SVGRectElement>) => {
+    if (e.button !== 0) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    barDrag.current = { startY: e.screenY, startLift: settings.barLift, lift: settings.barLift, moved: false, raf: 0 }
+  }
+  const onBarPointerMove = (e: React.PointerEvent<SVGRectElement>) => {
+    const d = barDrag.current
+    if (!d) return
+    const dy = e.screenY - d.startY
+    if (!d.moved && Math.abs(dy) < 5) return
+    if (!d.moved) {
+      d.moved = true
+      draggingBar.current = true
+      setHovered(false)
+    }
+    d.lift = Math.max(0, d.startLift - dy)
+    if (!d.raf) {
+      d.raf = requestAnimationFrame(() => {
+        d.raf = 0
+        void window.pix.moveBar(d.lift, false)
+      })
+    }
+  }
+  const onBarPointerUp = (e: React.PointerEvent<SVGRectElement>) => {
+    const d = barDrag.current
+    if (!d) return
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    if (d.moved) void window.pix.moveBar(d.lift, true)
+    draggingBar.current = false
+    // Il clic arriva subito dopo: lo si lascia passare solo se non c'è stato trascinamento.
+    window.setTimeout(() => (barDrag.current = null), 0)
+  }
   const color = moodColor(mood, settings.pixColor)
 
   const face = faceTransform(scale, shape)
@@ -640,6 +684,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
             data-hit
             data-pix-zone
             onClick={toggle}
+            onPointerDown={onBarPointerDown}
+            onPointerMove={onBarPointerMove}
+            onPointerUp={onBarPointerUp}
+            onPointerCancel={onBarPointerUp}
           />
         )}
         <ellipse ref={shadowRef} cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx={24 * scale} ry="3" fill="#000" opacity="0" />
