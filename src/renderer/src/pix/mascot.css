@@ -499,3 +499,54 @@
     transition: none;
   }
 }
+
+/* ---------- Trascinare su Pix: bocca aperta, poi inghiotte ---------- */
+[data-hungry] .yawn-mouth {
+  opacity: 0.38;
+  transform-box: fill-box;
+  transform-origin: 50% 30%;
+  transform: scale(0.8, 0.7);
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+[data-hungry] .glance {
+  transform: translate(2.5px, -1px);
+}
+
+[data-hungry] .yawn-body {
+  transform: scale(1.05, 0.97);
+  transition: transform 0.2s ease-out;
+}
+
+[data-gulp] .yawn-body {
+  animation: pix-gulp 0.75s cubic-bezier(0.3, 0.7, 0.4, 1.2) 1;
+}
+
+[data-gulp] .lids {
+  animation: pix-gulp-eyes 0.75s ease-in-out 1;
+}
+
+@keyframes pix-gulp {
+  0% {
+    transform: scale(1.05, 0.97);
+  }
+  25% {
+    transform: scale(0.86, 1.12);
+  }
+  50% {
+    transform: scale(1.12, 0.9);
+  }
+  75% {
+    transform: scale(0.97, 1.03);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes pix-gulp-eyes {
+  20%,
+  45% {
+    transform: scaleY(0.15);
+  }
+}

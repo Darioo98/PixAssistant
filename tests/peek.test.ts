@@ -38,4 +38,17 @@ describe('sbirciata', () => {
     const height = (t: number) => { const ys = bar(t).map((p) => p[1]); return Math.max(...ys) - Math.min(...ys) }
     expect(height(2.5)).toBeLessThan(140)
   })
+
+  it('variante dal basso: la goccia pende dal fondo della barra e resta collegata', () => {
+    for (let t = 0.2; t < 3.6; t += 0.1) {
+      const f = peekFrame(t)
+      const h = headOf(f, 140, 1, 'squircle', 'bottom')
+      const ys = coords(peekBodyPath(f, 140, 1, 'squircle', 'bottom')).map((p) => p[1])
+      expect(Math.max(...ys)).toBeLessThanOrEqual(240) // resta nella finestra
+      expect(h.cx + h.a).toBeLessThanOrEqual(96) // e sullo schermo
+    }
+    // dopo il risucchio la barra torna intera
+    const end = coords(peekBodyPath(peekFrame(PEEK_DURATION_S - 0.01), 140, 1, 'squircle', 'bottom')).map((p) => p[1])
+    expect(Math.max(...end)).toBeCloseTo(230, 0)
+  })
 })

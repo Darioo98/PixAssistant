@@ -852,5 +852,18 @@
       "reminders_other": "⏰ {{time}} {{text}} (+ {{more}} more today)",
       "weather": "{{icon}} {{city}} {{temp}}° (low {{min}}° · high {{max}}°)"
     }
+  },
+  "drop": {
+    "category": "Yum!",
+    "savedFile": "I put “{{name}}” in Links: open it with one click.",
+    "savedFolder": "I put the “{{name}}” folder in Links.",
+    "savedMany": "I put {{count}} items in Links.",
+    "savedUrl": "I put {{name}} in Links.",
+    "savedNote": "I saved the text in a new note.",
+    "already": "I already had it in Links.",
+    "open": "Open",
+    "showInFolder": "Show in folder",
+    "openLinks": "Go to Links",
+    "openNotes": "Open notes"
   }
 }

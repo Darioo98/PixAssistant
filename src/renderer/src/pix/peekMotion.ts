@@ -21,6 +21,10 @@ const T_WORRY = 2.95
 const T_SUCK = 3.5
 const T_IN = 3.68
 export const PEEK_DURATION_S = 5
+/** Da quando (s) il cursore che si avvicina in fretta può spaventarlo. */
+export const PEEK_SCARE_FROM_S = 1
+/** Momento della paura a cui salta quando si spaventa (occhi sgranati, poi risucchio). */
+export const PEEK_SCARED_AT_S = T_SUCK - 0.22
 
 export interface PeekFrame {
   /** Crescita della goccia (0 = barra liscia, 1 = testa formata). */
@@ -43,6 +47,11 @@ export interface PeekFrame {
   face: number
   /** Secondi dal risucchio (onda d'urto sulla barra); negativo prima. */
   shock: number
+  /**
+   * Quanta barra ha preso Pix (0–1). Resta presa finché la goccia non è
+   * rientrata, poi la barra si riallunga di scatto (e rimbalza).
+   */
+  pull: number
 }
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
@@ -62,6 +71,13 @@ function growAt(t: number): number {
   // Spaventato si rannicchia un po', poi viene risucchiato.
   const cower = 1 - 0.12 * smooth(seg(t, T_WORRY, T_SUCK))
   return cower * (1 - suck(t))
+}
+
+function pullAt(t: number): number {
+  if (t < 1.3) return clamp01(easeOutBack(seg(t, 0, 1.3)))
+  const cower = 1 - 0.12 * smooth(seg(t, T_WORRY, T_SUCK))
+  if (t < T_IN) return cower
+  return cower * (1 - seg(t, T_IN, T_IN + 0.12)) ** 2
 }
 
 function gapAt(t: number): number {
@@ -100,7 +116,7 @@ export function peekFrame(t: number): PeekFrame {
   const sweat = worry * (1 - seg(t, T_SUCK, T_SUCK + 0.08))
   const face = smooth(seg(grow, 0.6, 0.9)) * (1 - seg(t, T_SUCK + 0.02, T_SUCK + 0.12))
   const shock = t - T_IN
-  return { grow, gap, stretch, rot, bob, eyeX, eyeY, eyeOpen, eyeScale, sweat, face, shock }
+  return { grow, gap, stretch, rot, bob, eyeX, eyeY, eyeOpen, eyeScale, sweat, face, shock, pull: pullAt(t) }
 }
 
 /**
@@ -137,13 +153,38 @@ interface Head {
   grow01: number
 }
 
-export function headOf(f: PeekFrame, y: number, scale: number, shape: PixShape): Head {
+/**
+ * Da dove sbuca: dal lato della barra (`side`, all'altezza `y`) oppure
+ * dal fondo (`bottom`), dove la barra si ritira e ne pende una goccia.
+ */
+export type PeekVariant = 'side' | 'bottom'
+export const PEEK_VARIANTS: readonly PeekVariant[] = ['side', 'bottom']
+
+/** Quanto si ritira il fondo della barra nella variante dal basso. */
+const BOTTOM_PULL = 58
+
+export function headOf(f: PeekFrame, y: number, scale: number, shape: PixShape, variant: PeekVariant = 'side'): Head {
   const s = PEEK_SCALE * scale
-  const a = 30 * s * f.grow * (1 + f.stretch)
-  const b = (33 * s * f.grow) / (1 + f.stretch)
+  // Si stira verso la barra: in orizzontale dal lato, in verticale dal basso.
+  const k = variant === 'bottom' ? 1 / (1 + f.stretch) : 1 + f.stretch
+  const a = 30 * s * f.grow * k
+  const b = (33 * s * f.grow) / k
   // Da piccola è una goccia tonda; crescendo prende la forma scelta per Pix.
   const n = 2 + (SHAPE_POWER[shape] - 2) * smooth(clamp01(f.grow))
-  return { cx: BAR.left - f.gap - a, cy: y + f.bob, a, b, rot: f.rot, n, grow01: clamp01(f.grow) }
+  const grow01 = clamp01(f.grow)
+  if (variant === 'bottom') {
+    // Appesa al fondo della barra, spostata a sinistra quanto basta per restare sullo schermo.
+    const end = barEnds(f, variant).bottom
+    return { cx: BAR.right - 1 - a, cy: end + f.gap + b + f.bob * 0.5, a, b, rot: f.rot * 0.6, n, grow01 }
+  }
+  return { cx: BAR.left - f.gap - a, cy: y + f.bob, a, b, rot: f.rot, n, grow01 }
+}
+
+/** Estremità della barra: Pix ne usa un pezzo, e dopo il risucchio rimbalzano. */
+function barEnds(f: PeekFrame, variant: PeekVariant): { top: number; bottom: number } {
+  const used = SHRINK * f.pull - endSpring(f.shock)
+  if (variant === 'bottom') return { top: BAR.top + used, bottom: BAR.bottom - BOTTOM_PULL * f.pull + endSpring(f.shock) }
+  return { top: BAR.top + used, bottom: BAR.bottom - used }
 }
 
 /** Punto della testa all'angolo `th` (y verso il basso: 0 destra, π/2 sotto). */
@@ -162,30 +203,67 @@ function unit(v: [number, number]): [number, number] {
   return [v[0] / l, v[1] / l]
 }
 
+/** Tangente della testa nel verso di percorrenza (angoli crescenti). */
+function tangent(h: Head, th: number): [number, number] {
+  const eps = 0.01
+  return unit(sub(headPoint(h, th + eps), headPoint(h, th - eps)))
+}
+
+/** Contorno della testa da `from` a `to` (angoli crescenti), escluso il primo punto. */
+function headArc(h: Head, from: number, to: number, steps = 56): string[] {
+  const out: string[] = []
+  for (let i = 1; i <= steps; i++) {
+    const p = headPoint(h, from + ((to - from) * i) / steps)
+    out.push(`L${r(p[0])} ${r(p[1])}`)
+  }
+  return out
+}
+
 /**
  * Tracciato unico barra + collo + testa. Con `grow` = 0 è la barra a riposo.
  * Il collo parte tangente alla barra e arriva tangente alla testa: nessuno
  * spigolo, come una goccia di liquido che si stira.
  */
-export function peekBodyPath(f: PeekFrame, y: number, scale: number, shape: PixShape): string {
-  const used = SHRINK * clamp01(f.grow) - endSpring(f.shock)
-  const top = BAR.top + used
-  const bottom = BAR.bottom - used
+export function peekBodyPath(f: PeekFrame, y: number, scale: number, shape: PixShape, variant: PeekVariant = 'side'): string {
+  const { top, bottom } = barEnds(f, variant)
   const rad = (BAR.right - BAR.left) / 2
   const mid = BAR.left + rad
   const k = rad * 0.5523
-  const parts = [
-    `M${r(mid)} ${r(top)}`,
-    `C${r(mid + k)} ${r(top)} ${BAR.right} ${r(top + rad - k)} ${BAR.right} ${r(top + rad)}`,
-    `L${BAR.right} ${r(bottom - rad)}`,
-    `C${BAR.right} ${r(bottom - rad + k)} ${r(mid + k)} ${r(bottom)} ${r(mid)} ${r(bottom)}`,
-    `C${r(mid - k)} ${r(bottom)} ${BAR.left} ${r(bottom - rad + k)} ${BAR.left} ${r(bottom - rad)}`
-  ]
+  const stretchK = clamp01(f.gap / GAP_OUT)
+  const parts = [`M${r(mid)} ${r(top)}`, `C${r(mid + k)} ${r(top)} ${BAR.right} ${r(top + rad - k)} ${BAR.right} ${r(top + rad)}`]
 
-  if (f.grow > 0.01) {
-    const h = headOf(f, y, scale, shape)
+  if (variant === 'bottom' && f.grow > 0.01) {
+    // La goccia pende dal fondo: il collo scende dai due bordi della barra fino alla testa.
+    const h = headOf(f, y, scale, shape, variant)
+    // Il collo si attacca alla "spalla" destra della goccia, sotto la barra; finché la
+    // goccia è più stretta della barra, la abbraccia tutta (la barra si gonfia in fondo).
+    const deg = Math.PI / 180
+    const wide = smooth(clamp01((2 * h.a - (BAR.right - BAR.left)) / 22))
+    const thR = 1.5 * Math.PI + (90 + (78 - 10 * stretchK - 90) * wide) * deg
+    const thL = 3.5 * Math.PI + (-90 + (14 + 6 * stretchK + 90) * wide) * deg
+    const pr = headPoint(h, thR)
+    const pl = headPoint(h, thL)
+    const tr = tangent(h, thR)
+    const tl = tangent(h, thL)
+    const neckTop = bottom - rad
+    const fillet = Math.max(2, (pr[1] - neckTop) * 0.5)
+    const g = Math.max(2, (pr[1] - neckTop) * 0.5)
+    // Le maniglie dei due lati del collo non si incrociano: niente strozzature.
+    const cr: [number, number] = [Math.max(pr[0] - tr[0] * g, mid + 0.5), pr[1] - tr[1] * g]
+    const cl: [number, number] = [Math.min(pl[0] + tl[0] * g, mid - 0.5), pl[1] + tl[1] * g]
+    parts.push(`L${BAR.right} ${r(neckTop)}`)
+    parts.push(`C${BAR.right} ${r(neckTop + fillet)} ${r(cr[0])} ${r(cr[1])} ${r(pr[0])} ${r(pr[1])}`)
+    parts.push(...headArc(h, thR, thL))
+    parts.push(`C${r(cl[0])} ${r(cl[1])} ${BAR.left} ${r(neckTop + fillet)} ${BAR.left} ${r(neckTop)}`)
+  } else {
+    parts.push(`L${BAR.right} ${r(bottom - rad)}`)
+    parts.push(`C${BAR.right} ${r(bottom - rad + k)} ${r(mid + k)} ${r(bottom)} ${r(mid)} ${r(bottom)}`)
+    parts.push(`C${r(mid - k)} ${r(bottom)} ${BAR.left} ${r(bottom - rad + k)} ${BAR.left} ${r(bottom - rad)}`)
+  }
+
+  if (variant === 'side' && f.grow > 0.01) {
+    const h = headOf(f, y, scale, shape, variant)
     // Più il collo è lungo, più si assottiglia e si attacca in un punto più stretto.
-    const stretchK = clamp01(f.gap / GAP_OUT)
     const th0 = ((80 - 32 * stretchK) * Math.PI) / 180
     // Sulla barra l'attacco è più largo della testa: un menisco concavo, come un liquido.
     const junction = Math.max(3, h.b * (1 - 0.4 * stretchK) + (2 + 4 * h.grow01) * (1 - 0.3 * stretchK))
@@ -196,28 +274,23 @@ export function peekBodyPath(f: PeekFrame, y: number, scale: number, shape: PixS
 
     const pb = headPoint(h, th0)
     const pt = headPoint(h, 2 * Math.PI - th0)
-    const eps = 0.01
     const g = Math.max(2, (BAR.left - pb[0]) * 0.55)
-    const tb = unit(sub(headPoint(h, th0 + eps), headPoint(h, th0 - eps)))
-    const tt = unit(sub(headPoint(h, 2 * Math.PI - th0 + eps), headPoint(h, 2 * Math.PI - th0 - eps)))
+    const tb = tangent(h, th0)
+    const tt = tangent(h, 2 * Math.PI - th0)
 
     parts.push(`L${BAR.left} ${r(y2)}`)
     // Le maniglie verso la testa restano a sinistra della barra: niente punte.
     const cb: [number, number] = [Math.min(pb[0] - tb[0] * g, BAR.left - 1), pb[1] - tb[1] * g]
     const ct: [number, number] = [Math.min(pt[0] + tt[0] * g, BAR.left - 1), pt[1] + tt[1] * g]
     parts.push(`C${BAR.left} ${r(y2 - fillet)} ${r(cb[0])} ${r(cb[1])} ${r(pb[0])} ${r(pb[1])}`)
-    const steps = 56
-    for (let i = 1; i < steps; i++) {
-      const p = headPoint(h, th0 + ((2 * Math.PI - 2 * th0) * i) / steps)
-      parts.push(`L${r(p[0])} ${r(p[1])}`)
-    }
-    parts.push(`L${r(pt[0])} ${r(pt[1])}`)
+    parts.push(...headArc(h, th0, 2 * Math.PI - th0))
     parts.push(`C${r(ct[0])} ${r(ct[1])} ${BAR.left} ${r(y1 + fillet)} ${BAR.left} ${r(y1)}`)
   }
 
   if (f.shock >= 0 && f.shock <= 1.4) {
-    // Onda d'urto: il bordo sinistro ondeggia dal basso verso l'alto.
-    for (let yy = bottom - rad - 1.5; yy > top + rad; yy -= 1.5) parts.push(`L${r(BAR.left - shockAt(f.shock, y, yy))} ${r(yy)}`)
+    // Onda d'urto: parte dal punto del risucchio (dal fondo nella variante dal basso).
+    const origin = variant === 'bottom' ? bottom : y
+    for (let yy = bottom - rad - 1.5; yy > top + rad; yy -= 1.5) parts.push(`L${r(BAR.left - shockAt(f.shock, origin, yy))} ${r(yy)}`)
   }
   parts.push(`L${BAR.left} ${r(top + rad)}`)
   parts.push(`C${BAR.left} ${r(top + rad - k)} ${r(mid - k)} ${r(top)} ${r(mid)} ${r(top)} Z`)
@@ -225,8 +298,8 @@ export function peekBodyPath(f: PeekFrame, y: number, scale: number, shape: PixS
 }
 
 /** Trasformazione del viso (coordinate delle bozze 100×100, corpo x 20–80, y 22–88). */
-export function peekFaceTransform(f: PeekFrame, y: number, scale: number, shape: PixShape): string {
-  const h = headOf(f, y, scale, shape)
+export function peekFaceTransform(f: PeekFrame, y: number, scale: number, shape: PixShape, variant: PeekVariant = 'side'): string {
+  const h = headOf(f, y, scale, shape, variant)
   return `translate(${r(h.cx)} ${r(h.cy)}) rotate(${r(h.rot)}) scale(${r(h.a / 30)} ${r(h.b / 33)}) translate(-50 -55)`
 }
 

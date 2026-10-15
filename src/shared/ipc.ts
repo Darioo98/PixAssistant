@@ -4,7 +4,7 @@ import type { BubbleOutcome, MascotState } from './mascot'
 import type { DeadlineItem, DeadlineOp } from './deadlines'
 import type { VaultData, VaultOp, VaultOpResult, VaultStatus } from './vault'
 import type { ChatOp, ChatOpResult, ChatState, ChatStreamEvent, ConversationItem } from './chat'
-import type { ClipOp, ClipState, LinkOp, LinkView, WeatherState } from './extras'
+import type { ClipOp, ClipState, DropPayload, LinkOp, LinkView, WeatherState } from './extras'
 import type { MaintenanceOp, MaintenanceResult, MaintenanceState } from './maintenance'
 import type { ShiftOp, ShiftState } from './shift'
 import type { NoteItem, NoteOp, ReminderItem, ReminderOp, TimerOp, TimerView, TodoItem, TodoOp } from './productivity'
@@ -101,6 +101,10 @@ export interface PixApi {
     apply(op: LinkOp): Promise<{ ok: boolean; value?: string }>
   }
   weather(force?: boolean): Promise<WeatherState>
+  /** Percorso sul PC di un file trascinato (vuoto se non è un file locale). */
+  pathForFile(file: File): string
+  /** File, cartelle o testo lasciati cadere su Pix. */
+  drop(payload: DropPayload): Promise<boolean>
   data: {
     list<C extends DataCollection>(collection: C): Promise<DataItems[C]>
     onChange<C extends DataCollection>(collection: C, cb: (items: DataItems[C]) => void): () => void
@@ -159,6 +163,7 @@ export const IPC = {
   linksChanged: 'links:changed',
   linksApply: 'links:apply',
   weather: 'weather:get',
+  drop: 'pix:drop',
   maintState: 'maint:state',
   maintChanged: 'maint:changed',
   maintApply: 'maint:apply',

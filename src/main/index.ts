@@ -27,6 +27,7 @@ import { SyncManager } from './sync'
 import { MaintenanceController } from './maintenance'
 import { ShiftService } from './shift'
 import { DayService } from './day'
+import { handleDrop } from './drop'
 import { loadDevice } from './storage/device'
 import { migrateLegacyFolder, resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataCollection, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
@@ -36,7 +37,7 @@ import { inTimeRange, type BubbleOutcome } from '@shared/mascot'
 import { deadlineOpSchema } from '@shared/deadlines'
 import { vaultOpSchema } from '@shared/vault'
 import { chatOpSchema } from '@shared/chat'
-import { clipOpSchema, linkOpSchema } from '@shared/extras'
+import { clipOpSchema, dropSchema, linkOpSchema } from '@shared/extras'
 import { maintenanceOpSchema } from '@shared/maintenance'
 import { formatHHMM, shiftOpSchema } from '@shared/shift'
 import { noteTitle } from '@shared/productivity'
@@ -692,6 +693,19 @@ async function main(): Promise<void> {
     return parsed.success ? links.apply(parsed.data) : { ok: false }
   })
   ipcMain.handle(IPC.weather, (e, force: unknown) => (fromOverlay(e) ? weather.get(force === true) : { status: 'off' }))
+  ipcMain.handle(IPC.drop, async (e, payload: unknown) => {
+    if (!fromOverlay(e)) return false
+    const parsed = dropSchema.safeParse(payload)
+    if (!parsed.success) return false
+    return handleDrop(parsed.data, {
+      links,
+      notes: productivity.notes,
+      t: () => i18next.t,
+      bubble: (req) => mascot.notify(req),
+      happy: () => mascot.flash('happy', 1600),
+      openPanel: (target) => openPanel(target)
+    })
+  })
 
   ipcMain.handle(IPC.maintState, (e) => (fromOverlay(e) ? maintenance.state() : null))
   ipcMain.handle(IPC.maintApply, async (e, op: unknown) => {

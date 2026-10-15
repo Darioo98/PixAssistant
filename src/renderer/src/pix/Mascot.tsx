@@ -7,6 +7,7 @@ import { PIX_ANCHOR, VIEW, faceTransform } from './geometry'
 import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
+import { PEEK_VARIANTS, type PeekVariant } from './peekMotion'
 import { useReducedMotion } from './useReducedMotion'
 import './mascot.css'
 
@@ -78,10 +79,13 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   const [pixBreath, setPixBreath] = useState(false)
   const [fadeKey, setFadeKey] = useState(0)
   const [yawning, setYawning] = useState(false)
+  /** Un file o un testo trascinato sopra Pix (bocca aperta) e il boccone appena inghiottito. */
+  const [hungry, setHungry] = useState(false)
+  const [gulp, setGulp] = useState(false)
   const [tired, setTired] = useState<Tired>(() => tirednessAt(new Date(), settings))
   const lastTransform = useRef<PixTransform | null>(null)
 
-  const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight
+  const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight || hungry || gulp
 
   // ---- Controller del morph ----
   useLayoutEffect(() => {
@@ -136,6 +140,50 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
       window.clearTimeout(leave)
       document.removeEventListener('mousemove', onMove)
       document.removeEventListener('mouseleave', onLeave)
+    }
+  }, [])
+
+  // ---- Trascinare su Pix: file e cartelle diventano link, il testo una nota ----
+  useEffect(() => {
+    let leave: number | undefined
+    const onPix = (e: DragEvent) => e.target instanceof Element && e.target.closest('[data-pix-zone]') !== null
+    const accepts = (e: DragEvent) => {
+      const types = Array.from(e.dataTransfer?.types ?? [])
+      return types.includes('Files') || types.includes('text/plain') || types.includes('text/uri-list')
+    }
+    const onOver = (e: DragEvent) => {
+      if (!accepts(e) || !onPix(e)) return
+      e.preventDefault()
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+      setHungry(true)
+      // "dragover" arriva di continuo: se smette, il trascinamento è uscito da Pix.
+      window.clearTimeout(leave)
+      leave = window.setTimeout(() => setHungry(false), 350)
+    }
+    const onDrop = (e: DragEvent) => {
+      if (!accepts(e) || !onPix(e)) return
+      e.preventDefault()
+      const dt = e.dataTransfer
+      if (!dt) return
+      const paths = Array.from(dt.files)
+        .map((f) => window.pix.pathForFile(f))
+        .filter(Boolean)
+        .slice(0, 20)
+      const uri = dt.getData('text/uri-list').split(/\r?\n/).find((l) => l && !l.startsWith('#'))
+      const text = paths.length ? '' : (uri ?? dt.getData('text/plain')).slice(0, 100_000)
+      window.clearTimeout(leave)
+      setHungry(false)
+      if (!paths.length && !text.trim()) return
+      setGulp(true)
+      window.setTimeout(() => setGulp(false), 2500) // rete di sicurezza se l'animazione non parte
+      void window.pix.drop({ paths, text })
+    }
+    document.addEventListener('dragover', onOver)
+    document.addEventListener('drop', onDrop)
+    return () => {
+      window.clearTimeout(leave)
+      document.removeEventListener('dragover', onOver)
+      document.removeEventListener('drop', onDrop)
     }
   }, [])
 
@@ -210,22 +258,24 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   }, [reducedMotion])
 
   // ---- Sbirciata: a pannello chiuso ogni tanto un piccolo Pix sbuca da dietro la barra ----
-  const [peekY, setPeekY] = useState<number | null>(null)
+  const [peek, setPeek] = useState<{ y: number; variant: PeekVariant } | null>(null)
   const [peekSoon, setPeekSoon] = useState(false)
   const canPeek = collapsed && !wantPix && anim === 'normal' && settings.pixTransforms && !reducedMotion && mood !== 'sleep'
   useEffect(() => {
     if (!canPeek) {
-      setPeekY(null)
+      setPeek(null)
       return
     }
-    if (peekY !== null) return
+    if (peek !== null) return
     const delay = peekSoon ? 900 : PEEK_MIN_MS + Math.random() * (PEEK_MAX_MS - PEEK_MIN_MS)
     const id = window.setTimeout(() => {
       setPeekSoon(false)
-      setPeekY(95 + Math.random() * 95)
+      // Ogni volta una sbirciata diversa: dal lato (a un'altezza a caso) o dal fondo della barra.
+      const variant = PEEK_VARIANTS[Math.floor(Math.random() * PEEK_VARIANTS.length)] ?? 'side'
+      setPeek({ y: 95 + Math.random() * 95, variant })
     }, delay)
     return () => window.clearTimeout(id)
-  }, [canPeek, peekY, peekSoon])
+  }, [canPeek, peek, peekSoon])
 
   // Prova dalle impostazioni: chiude il pannello e sbircia appena torna barra.
   useEffect(() => {
@@ -302,7 +352,14 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   const face = faceTransform(scale, shape)
 
   return (
-    <div className="mascot" style={{ ['--pix-color' as string]: color }} data-anim={anim} data-yawn={yawning && formed && !reducedMotion ? '' : undefined}>
+    <div
+      className="mascot"
+      style={{ ['--pix-color' as string]: color }}
+      data-anim={anim}
+      data-yawn={yawning && formed && !reducedMotion ? '' : undefined}
+      data-hungry={hungry && formed ? '' : undefined}
+      data-gulp={gulp && formed ? '' : undefined}
+    >
       {bubble && <BubbleCard key={bubble.id} bubble={bubble} panelOpen={panelOpen} />}
       <svg
         ref={svgRef}
@@ -334,7 +391,13 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
             onAnimationEnd={(e) => e.animationName === 'pix-breathe' && setPixBreath(false)}
           >
-            <g className="yawn-body" onAnimationEnd={(e) => e.animationName === 'pix-yawn-body' && setYawning(false)}>
+            <g
+              className="yawn-body"
+              onAnimationEnd={(e) => {
+                if (e.animationName === 'pix-yawn-body') setYawning(false)
+                if (e.animationName === 'pix-gulp') setGulp(false)
+              }}
+            >
               <path
                 ref={bodyRef}
                 className={`body ${breathing && collapsed ? 'breathe' : ''}`}
@@ -378,15 +441,16 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
           </g>
         </g>
         {/* Occhi della sbirciata: il corpo è la barra stessa (setBar). */}
-        {peekY !== null && canPeek && (
+        {peek !== null && canPeek && (
           <Peek
-            y={peekY}
+            y={peek.y}
+            variant={peek.variant}
             scale={scale}
             shape={shape}
             eyes={settings.pixEyes}
             shine={settings.pixShine}
             setBar={(d) => morph.current?.setBar(d)}
-            onDone={() => setPeekY(null)}
+            onDone={() => setPeek(null)}
           />
         )}
         {formed && (

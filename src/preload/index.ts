@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
+import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import { IPC, type PixApi, type UiState } from '@shared/ipc'
 import type { DeadlineItem } from '@shared/deadlines'
 import type { VaultData } from '@shared/vault'
@@ -51,6 +51,14 @@ const api: PixApi = {
     apply: (op) => ipcRenderer.invoke(IPC.linksApply, op)
   },
   weather: (force) => ipcRenderer.invoke(IPC.weather, Boolean(force)),
+  pathForFile: (file) => {
+    try {
+      return webUtils.getPathForFile(file)
+    } catch {
+      return ''
+    }
+  },
+  drop: (payload) => ipcRenderer.invoke(IPC.drop, payload),
   data: {
     list: (collection) => ipcRenderer.invoke(IPC.dataList, collection),
     onChange: (collection, cb) =>

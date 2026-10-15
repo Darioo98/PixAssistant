@@ -107,6 +107,20 @@ export const linkOpSchema = z.discriminatedUnion('op', [
 ])
 export type LinkOp = z.infer<typeof linkOpSchema>
 
+// ======================= Trascinare su Pix =======================
+
+/** Cosa è stato lasciato cadere su Pix: percorsi di file/cartelle o testo (anche un indirizzo web). */
+export const dropSchema = z.object({
+  paths: z.array(z.string().min(3).max(1024)).max(20),
+  text: z.string().max(100_000)
+})
+export type DropPayload = z.infer<typeof dropSchema>
+
+/** Percorso assoluto di Windows (C:\… o \\server\…). */
+export function isAbsoluteWinPath(p: string): boolean {
+  return /^[a-zA-Z]:[\\/]/.test(p) || /^\\\\[^\\]+\\/.test(p)
+}
+
 // ======================= Meteo (Open-Meteo) =======================
 
 export interface WeatherView {

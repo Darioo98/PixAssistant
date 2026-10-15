@@ -852,5 +852,18 @@
       "reminders_other": "⏰ {{time}} {{text}} (+ altri {{more}} oggi)",
       "weather": "{{icon}} {{city}} {{temp}}° (min {{min}}° · max {{max}}°)"
     }
+  },
+  "drop": {
+    "category": "Gnam!",
+    "savedFile": "Ho messo «{{name}}» nei Link: lo apri con un clic.",
+    "savedFolder": "Ho messo la cartella «{{name}}» nei Link.",
+    "savedMany": "Ho messo {{count}} elementi nei Link.",
+    "savedUrl": "Ho messo {{name}} nei Link.",
+    "savedNote": "Ho salvato il testo in una nuova nota.",
+    "already": "Ce l'avevo già nei Link.",
+    "open": "Apri",
+    "showInFolder": "Mostra nella cartella",
+    "openLinks": "Vai ai Link",
+    "openNotes": "Apri le note"
   }
 }
