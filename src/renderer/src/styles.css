@@ -765,15 +765,10 @@ input {
   }
 }
 
-/* ---------- Icone di sistema (Segoe Fluent Icons / Segoe MDL2 Assets) ---------- */
+/* ---------- Icone (morbide, nel colore del testo) ---------- */
 .glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Segoe Fluent Icons', 'Segoe MDL2 Assets';
-  font-style: normal;
-  font-weight: normal;
-  line-height: 1;
-  vertical-align: -0.15em;
-  -webkit-font-smoothing: antialiased;
+  flex: none;
+  display: inline-block;
+  vertical-align: -0.2em;
+  overflow: visible;
 }

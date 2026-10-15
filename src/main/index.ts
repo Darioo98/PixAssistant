@@ -43,7 +43,7 @@ import { formatHHMM, shiftOpSchema } from '@shared/shift'
 import { noteTitle } from '@shared/productivity'
 import { buildSummary, hasTension, todosLeftToday } from '@shared/day'
 import { toISODate } from '@shared/dates'
-import { weatherKind } from '@shared/extras'
+import { WEATHER_ICONS, weatherKind } from '@shared/extras'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Pix, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Pix')
@@ -464,7 +464,14 @@ async function main(): Promise<void> {
         shiftEndsAt: shift.state().endsAt,
         weather:
           w?.status === 'ok' && today
-            ? { city: w.weather.city, temperature: w.weather.temperature, min: today.min, max: today.max, kind: i18next.t(`weather.kinds.${weatherKind(w.weather.code)}`) }
+            ? {
+                city: w.weather.city,
+                temperature: w.weather.temperature,
+                min: today.min,
+                max: today.max,
+                kind: i18next.t(`weather.kinds.${weatherKind(w.weather.code)}`),
+                icon: WEATHER_ICONS[weatherKind(w.weather.code)][w.weather.isDay ? 'day' : 'night']
+              }
             : null
       },
       toISODate(now),

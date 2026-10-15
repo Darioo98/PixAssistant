@@ -43,7 +43,7 @@ describe('giornata di Pix', () => {
         todos: [todo('a', { today: true }), todo('b')],
         reminders: [rem('Chiamare Marco', '2026-10-14T15:30'), rem('Ieri', '2026-10-13T10:00')],
         shiftEndsAt: new Date(2026, 9, 14, 17, 47).getTime(),
-        weather: { city: 'Bari', temperature: 18.4, min: 12, max: 21, kind: 'Sereno' }
+        weather: { city: 'Bari', temperature: 18.4, min: 12, max: 21, kind: 'Sereno', icon: '☀️' }
       },
       today,
       t

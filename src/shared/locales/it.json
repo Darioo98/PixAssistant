@@ -852,7 +852,7 @@
       "todos_other": "{{count}} to-do per oggi",
       "reminders_one": "Promemoria alle {{time}}: {{text}}",
       "reminders_other": "Promemoria alle {{time}}: {{text}} (+ altri {{more}} oggi)",
-      "weather": "Meteo a {{city}}: {{kind}}, {{temp}}° (min {{min}}° · max {{max}}°)"
+      "weather": "{{icon}} {{city}}: {{kind}}, {{temp}}° (min {{min}}° · max {{max}}°)"
     }
   },
   "drop": {

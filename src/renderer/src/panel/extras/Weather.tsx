@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { weatherKind, type WeatherState } from '@shared/extras'
+import { WEATHER_ICONS, weatherKind, type WeatherState } from '@shared/extras'
 import { formatDate } from '../../format'
 import './extras.css'
-import { Glyph } from '../Glyph'
 
 /** Meteo compatto per la Home (Open-Meteo, solo la città). */
 export function WeatherWidget({ city }: { city: string }) {
@@ -22,7 +21,7 @@ export function WeatherWidget({ city }: { city: string }) {
   if (state.status === 'off') {
     return (
       <button className="weather weather-empty" onClick={() => window.pix.openPanel('settings')}>
-        <Glyph name="mapPin" /> {t('weather.setCity')}
+        ⛅ {t('weather.setCity')}
       </button>
     )
   }
@@ -35,6 +34,9 @@ export function WeatherWidget({ city }: { city: string }) {
   const kind = weatherKind(w.code)
   return (
     <div className="weather" title={`${w.city}${w.country ? `, ${w.country}` : ''}`}>
+      <span className="weather-icon" aria-hidden="true">
+        {WEATHER_ICONS[kind][w.isDay ? 'day' : 'night']}
+      </span>
       <span className="weather-now">
         <strong>{Math.round(w.temperature)}°</strong>
         <span className="dl-meta">
@@ -43,8 +45,9 @@ export function WeatherWidget({ city }: { city: string }) {
       </span>
       <span className="weather-days">
         {w.days.map((d) => (
-          <span key={d.date} className="weather-day" title={t(`weather.kinds.${weatherKind(d.code)}`)}>
+          <span key={d.date} className="weather-day">
             <span className="dl-meta">{formatDate(d.date, i18n.language, { weekday: 'short' })}</span>
+            <span aria-hidden="true">{WEATHER_ICONS[weatherKind(d.code)].day}</span>
             <span className="dl-meta">
               {Math.round(d.min)}°/{Math.round(d.max)}°
             </span>
