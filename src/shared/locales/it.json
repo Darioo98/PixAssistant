@@ -349,7 +349,13 @@
       "dueSince_one": "Da cambiare da {{count}} giorno",
       "dueSince_other": "Da cambiare da {{count}} giorni",
       "left_one": "Cambio tra {{count}} giorno",
-      "left_other": "Cambio tra {{count}} giorni"
+      "left_other": "Cambio tra {{count}} giorni",
+      "short": {
+        "days": "{{count}} g",
+        "today": "oggi",
+        "overdue": "−{{count}} g",
+        "never": "∞"
+      }
     },
     "actions": {
       "copyUser": "Copia utente",

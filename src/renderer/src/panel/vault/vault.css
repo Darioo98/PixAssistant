@@ -388,3 +388,107 @@
   max-height: 340px;
   overflow-y: auto;
 }
+
+/* ---------- Righe compatte ---------- */
+.vault-row.compact {
+  gap: 2px;
+  min-height: 30px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.vault-row.compact .vault-main {
+  gap: 8px;
+}
+
+.vault-row.compact .vault-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.vault-line {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.vault-name {
+  flex: none;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.vault-sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cd-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 38px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.cd-badge i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lv);
+}
+
+.cd-badge.lv-due {
+  background: color-mix(in srgb, var(--lv) 14%, transparent);
+  color: var(--lv);
+  font-weight: 600;
+}
+
+.cd-badge.lv-warn {
+  color: var(--text);
+}
+
+.vault-row.compact .icon-btn.small {
+  width: 26px;
+  height: 26px;
+}
+
+.vault-row.compact .row-menu .icon-btn {
+  width: 26px;
+  height: 26px;
+}
+
+/* "Copia utente" solo al passaggio del mouse (o con la tastiera). */
+.vault-row .hover-only {
+  opacity: 0;
+}
+
+.vault-row:hover .hover-only,
+.vault-row .hover-only:focus-visible {
+  opacity: 1;
+}
+
+.vault-row.compact.locked {
+  gap: 8px;
+}
+
+.folder-toggle {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}

@@ -178,14 +178,22 @@ export class KeyService {
   }
 
   /** Chiude la cassaforte: salva le modifiche pendenti e dimentica la data key. */
-  async lock(reason: string): Promise<void> {
-    if (!this.dataKey) return
+  lock(reason: string): Promise<void> {
+    if (!this.dataKey) return Promise.resolve()
+    // Blocco di Windows e sospensione possono arrivare insieme: una sola chiusura alla volta.
+    this.locking ??= this.doLock(reason).finally(() => (this.locking = null))
+    return this.locking
+  }
+
+  private locking: Promise<void> | null = null
+
+  private async doLock(reason: string): Promise<void> {
     try {
       await this.opts.beforeLock()
     } catch (err) {
       log.error('Salvataggio prima della chiusura non riuscito', err)
     }
-    this.dataKey.fill(0)
+    this.dataKey?.fill(0)
     this.dataKey = null
     this.until = null
     if (this.timer) clearTimeout(this.timer)

@@ -5,11 +5,14 @@ import { countdown, type VaultEntryView, type VaultGroupView } from '@shared/vau
 import { DeleteButton, RowMenu } from '../RowMenu'
 import { FolderMoveItems, entryDragProps } from './VaultGroups'
 
-/** Barra colorata (verde, giallo, rosso) con i giorni al prossimo cambio. */
-export function CountdownBar({ entry, today, lead }: { entry: VaultEntryView; today: ISODate; lead: number }) {
+/**
+ * Countdown compatto: pallino colorato (verde, giallo, rosso) e giorni al
+ * prossimo cambio; la descrizione completa è nel tooltip.
+ */
+export function CountdownBadge({ entry, today, lead }: { entry: VaultEntryView; today: ISODate; lead: number }) {
   const { t } = useTranslation()
   const c = countdown(entry, today, lead)
-  const label =
+  const full =
     c.daysLeft === null
       ? t('vault.countdown.never')
       : c.daysLeft < 0
@@ -17,13 +20,19 @@ export function CountdownBar({ entry, today, lead }: { entry: VaultEntryView; to
         : c.daysLeft === 0
           ? t('vault.countdown.today')
           : t('vault.countdown.left', { count: c.daysLeft })
+  const short =
+    c.daysLeft === null
+      ? t('vault.countdown.short.never')
+      : c.daysLeft < 0
+        ? t('vault.countdown.short.overdue', { count: -c.daysLeft })
+        : c.daysLeft === 0
+          ? t('vault.countdown.short.today')
+          : t('vault.countdown.short.days', { count: c.daysLeft })
   return (
-    <div className={`countdown lv-${c.level}`}>
-      <div className="countdown-track">
-        <div className="countdown-fill" style={{ width: `${Math.max(4, c.ratio * 100)}%` }} />
-      </div>
-      <span className="countdown-label">{label}</span>
-    </div>
+    <span className={`cd-badge lv-${c.level}`} title={full} aria-label={full}>
+      <i aria-hidden="true" />
+      {short}
+    </span>
   )
 }
 
@@ -40,6 +49,7 @@ interface RowProps {
   onNewPassword: (e: VaultEntryView) => void
 }
 
+/** Riga compatta su una sola linea: iniziale, nome, utente, countdown e copia. */
 export function VaultRow({ entry, groups, depth = 0, path, today, lead, onEdit, onNewPassword }: RowProps) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState<'username' | 'password' | null>(null)
@@ -53,27 +63,34 @@ export function VaultRow({ entry, groups, depth = 0, path, today, lead, onEdit, 
     }
   }
 
+  const sub = [path, entry.username].filter(Boolean).join(' · ')
+
   return (
-    <li className="vault-row" style={{ paddingLeft: 4 + depth * 16 }} {...entryDragProps(entry.id, true)}>
-      <button className="vault-main" onClick={() => onEdit(entry)}>
+    <li className="vault-row compact" style={{ paddingLeft: 4 + depth * 16 }} {...entryDragProps(entry.id, true)}>
+      <button className="vault-main" onClick={() => onEdit(entry)} title={sub ? `${entry.name} — ${sub}` : entry.name}>
         <span className="vault-avatar" aria-hidden="true">
           {entry.name.slice(0, 1).toUpperCase()}
         </span>
-        <span className="vault-text">
-          <span className="dl-title">{entry.name}</span>
-          {(entry.username || path) && <span className="dl-meta">{[path, entry.username].filter(Boolean).join(' · ')}</span>}
-          <CountdownBar entry={entry} today={today} lead={lead} />
+        <span className="vault-line">
+          <span className="vault-name">{entry.name}</span>
+          {sub && <span className="vault-sub">{sub}</span>}
         </span>
       </button>
+      <CountdownBadge entry={entry} today={today} lead={lead} />
       <div className="vault-actions">
         {entry.username && (
-          <button className="icon-btn" title={t('vault.actions.copyUser')} aria-label={t('vault.actions.copyUser')} onClick={() => void copy('username')}>
+          <button
+            className="icon-btn small hover-only"
+            title={t('vault.actions.copyUser')}
+            aria-label={t('vault.actions.copyUser')}
+            onClick={() => void copy('username')}
+          >
             {copied === 'username' ? <CheckIcon /> : <UserIcon />}
           </button>
         )}
         {entry.hasPassword && (
           <button
-            className="icon-btn"
+            className="icon-btn small"
             title={t('vault.actions.copyPassword')}
             aria-label={t('vault.actions.copyPassword')}
             onClick={() => void copy('password')}
@@ -111,21 +128,21 @@ export function VaultRowLocked({
   onClick?: () => void
 }) {
   return (
-    <li className={`vault-row locked ${onClick ? 'home-link' : ''}`} style={{ paddingLeft: 8 + depth * 16 }} onClick={onClick}>
+    <li className={`vault-row compact locked ${onClick ? 'home-link' : ''}`} style={{ paddingLeft: 8 + depth * 16 }} onClick={onClick}>
       <span className="vault-avatar" aria-hidden="true">
         {entry.name.slice(0, 1).toUpperCase()}
       </span>
-      <span className="vault-text">
-        <span className="dl-title">{entry.name}</span>
-        <CountdownBar entry={entry} today={today} lead={lead} />
+      <span className="vault-line">
+        <span className="vault-name">{entry.name}</span>
       </span>
+      <CountdownBadge entry={entry} today={today} lead={lead} />
     </li>
   )
 }
 
 const icon = (d: string) => (
-  <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-    <path d={d} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
+    <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
 const UserIcon = () => icon('M10 10a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM4 16.5c.8-2.8 3.2-4.2 6-4.2s5.2 1.4 6 4.2')

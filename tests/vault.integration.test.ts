@@ -193,3 +193,19 @@ describe('cartelle e sottocartelle', () => {
     expect(a.vault.groupList().find((x) => x.id === db)).toMatchObject({ name: 'DB', parentId: clienti })
   })
 })
+
+describe('chiusura della cassaforte', () => {
+  it('due richieste di chiusura insieme (blocco + sospensione) salvano e chiudono una volta sola', async () => {
+    const a = await pc('pc1')
+    await a.keys.create()
+    await a.vault.opened()
+    a.vault.save({ name: 'Wifi', username: '', password: 'w1f1!Pass', url: '', notes: '', intervalDays: 0, groupId: null })
+    await Promise.all([a.keys.lock('Windows bloccato'), a.keys.lock('sospensione')])
+    expect(a.keys.unlocked).toBe(false)
+    // la modifica è stata salvata prima di dimenticare la chiave
+    const recovery = (a.keys as unknown as { file: unknown }).file
+    expect(recovery).toBeTruthy()
+    const files = await readdir(join(a.dataDir, 'vault'))
+    expect(files).toHaveLength(1)
+  })
+})
