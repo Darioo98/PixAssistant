@@ -816,3 +816,16 @@
     animation-duration: 0.01s;
   }
 }
+
+/* Il riquadro dell'SVG di Pix non deve coprire il fumetto: cliccabili solo le parti disegnate. */
+.mascot-svg {
+  pointer-events: none;
+}
+
+.mascot-svg [data-hit] {
+  pointer-events: auto;
+}
+
+.bubble {
+  z-index: 2;
+}
