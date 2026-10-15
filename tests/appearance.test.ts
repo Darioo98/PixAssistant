@@ -64,3 +64,32 @@ describe('trasformazioni', () => {
     expect(moodTransform('normal')).toBeNull()
   })
 })
+
+describe('trasformazioni del corpo (un unico fluido)', () => {
+  it('ogni forma ha gli stessi punti della base: il morph è continuo', async () => {
+    const { shapePoints, lerpPoints, SAMPLES } = await import('../src/renderer/src/pix/shapes')
+    const { PIX_TRANSFORMS } = await import('@shared/mascot')
+    const base = shapePoints(1, 'squircle', null)
+    expect(base).toHaveLength(SAMPLES)
+    const maxY = (pts: number[][]) => Math.max(...pts.map((p) => p[1]!))
+    const minY = (pts: number[][]) => Math.min(...pts.map((p) => p[1]!))
+    for (const k of PIX_TRANSFORMS) {
+      const pts = shapePoints(1, 'squircle', k)
+      expect(pts).toHaveLength(SAMPLES)
+      expect(pts.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true)
+    }
+    // Le corna crescono verso l'alto senza toccare il fondo del corpo
+    const horns = shapePoints(1, 'squircle', 'horns')
+    expect(minY(horns)).toBeLessThan(minY(base) - 15)
+    expect(maxY(horns)).toBeCloseTo(maxY(base), 0)
+    // Le gocce colano sotto la base
+    expect(maxY(shapePoints(1, 'squircle', 'melt'))).toBeGreaterThan(maxY(base) + 10)
+    // Il cuore è allineato: i punti non "girano" attorno al corpo durante il morph
+    const heart = shapePoints(1, 'squircle', 'heart')
+    const avgShift = heart.reduce((s, [x, y], i) => s + Math.hypot(x - base[i]![0], y - base[i]![1]), 0) / SAMPLES
+    expect(avgShift).toBeLessThan(15)
+    // Oltre t = 1 la forma va un po' oltre (effetto gelatina)
+    const over = lerpPoints(base, horns, 1.1)
+    expect(minY(over)).toBeLessThan(minY(horns))
+  })
+})

@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": { "types": ["node"], "lib": ["ES2022"], "outDir": "out/.tsc-node" },
-  "include": ["src/main/**/*", "src/preload/**/*", "src/shared/**/*", "src/shared/locales/*.json", "tests/**/*", "src/renderer/src/pix/geometry.ts", "electron.vite.config.ts", "vitest.config.ts"]
+  "include": ["src/main/**/*", "src/preload/**/*", "src/shared/**/*", "src/shared/locales/*.json", "tests/**/*", "src/renderer/src/pix/geometry.ts", "src/renderer/src/pix/shapes.ts", "electron.vite.config.ts", "vitest.config.ts"]
 }

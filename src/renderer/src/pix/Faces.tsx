@@ -1,4 +1,4 @@
-import { lighten, type Mood, type PixEyes, type PixFinish, type PixTransform } from '@shared/mascot'
+import { lighten, type Mood, type PixEyes, type PixFinish } from '@shared/mascot'
 
 /**
  * Occhi ed espressioni di Pix, nelle coordinate delle bozze (viewBox 100×100,
@@ -122,68 +122,3 @@ export function Badge({ mood }: { mood: Mood }) {
   }
 }
 
-/**
- * Appendici del fluido (coordinate delle bozze, sommità del corpo a y ≈ 22).
- * Stanno DIETRO al corpo: la base resta nascosta e sembrano crescere da Pix.
- * `fill` è lo stesso riempimento del corpo (colore e finitura).
- */
-export function Appendage({ kind, fill, state }: { kind: PixTransform; fill: string; state: 'in' | 'out' | 'still' }) {
-  const cls = `acc acc-${kind} ${state === 'in' ? 'sprout' : state === 'out' ? 'retract' : ''}`
-  switch (kind) {
-    case 'horns':
-      return (
-        <g className={cls}>
-          <path className="acc-part left" d="M31 31 C26 23 23.5 14 26 5.5 C31 13 36.5 19 42 25 Z" fill={fill} />
-          <path className="acc-part right" d="M69 31 C74 23 76.5 14 74 5.5 C69 13 63.5 19 58 25 Z" fill={fill} />
-        </g>
-      )
-    case 'ears':
-      return (
-        <g className={cls}>
-          <path className="acc-part left" d="M24 34 L28.5 9 L46 25 Z" fill={fill} strokeLinejoin="round" />
-          <path className="acc-part right" d="M76 34 L71.5 9 L54 25 Z" fill={fill} strokeLinejoin="round" />
-          <path d="M30 27 L31 16 L39.5 24 Z" fill="#fff" opacity=".28" />
-          <path d="M70 27 L69 16 L60.5 24 Z" fill="#fff" opacity=".28" />
-        </g>
-      )
-    case 'antennae':
-      return (
-        <g className={cls}>
-          <g className="acc-part left">
-            <path d="M41 26 Q38 16 33 9" stroke={fill} strokeWidth="2.6" fill="none" strokeLinecap="round" />
-            <circle cx="33" cy="8" r="3.6" fill={fill} />
-            <circle cx="32" cy="7" r="1.1" fill="#fff" opacity=".6" />
-          </g>
-          <g className="acc-part right">
-            <path d="M59 26 Q62 16 67 9" stroke={fill} strokeWidth="2.6" fill="none" strokeLinecap="round" />
-            <circle cx="67" cy="8" r="3.6" fill={fill} />
-            <circle cx="66" cy="7" r="1.1" fill="#fff" opacity=".6" />
-          </g>
-        </g>
-      )
-    case 'tuft':
-      return (
-        <g className={cls}>
-          <path className="acc-part" d="M44 27 C40 17 46 7 57 7.5 C51 11 49.5 15 51 19 C53 14 58 12 62 14 C56 16 54 21 54 27 Z" fill={fill} />
-        </g>
-      )
-    case 'leaf':
-      return (
-        <g className={cls}>
-          <g className="acc-part">
-            <path d="M50 26 L50 13" stroke="#3FAE5C" strokeWidth="2.4" strokeLinecap="round" />
-            <path d="M50 14 C53 6 62 4 67 7 C62 13 56 15 50 14 Z" fill="#4ADE80" />
-            <path d="M50 17 C47 11 40 10 36 12 C40 17 45 18 50 17 Z" fill="#22C55E" />
-          </g>
-        </g>
-      )
-    case 'drips':
-      return (
-        <g className={cls}>
-          <path className="acc-part drip d1" d="M30 80 C30 90 31.5 95 34 95 C36.5 95 38 90 38 80 Z" fill={fill} />
-          <path className="acc-part drip d2" d="M50 84 C50 95 51.5 101 53.5 101 C55.5 101 57 95 57 84 Z" fill={fill} />
-          <path className="acc-part drip d3" d="M64 82 C64 89 65 92 67 92 C69 92 70 89 70 82 Z" fill={fill} />
-        </g>
-      )
-  }
-}

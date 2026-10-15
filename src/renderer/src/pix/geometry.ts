@@ -91,10 +91,14 @@ const cache = new Map<string, MorphInterpolators>()
 
 /** Interpolatori calcolati una sola volta per forma e dimensione (operazione costosa). */
 export function morphFor(scale: number, shape: PixShape = 'squircle'): MorphInterpolators {
-  const key = `${shape}:${scale}`
+  return morphTo(pixPath(scale, shape))
+}
+
+/** Interpolatori barra → goccia → `pix` (una forma qualsiasi: anche Pix trasformato). */
+export function morphTo(pix: string): MorphInterpolators {
+  const key = pix
   let m = cache.get(key)
   if (!m) {
-    const pix = pixPath(scale, shape)
     const opts = { maxSegmentLength: 4 }
     m = {
       toBlob: interpolate(SHAPES.bar, SHAPES.blob, opts),

@@ -1,7 +1,8 @@
 import { useId } from 'react'
 import { eyeColorFor, moodColor, type Mood, type PixAccessory, type PixEyes, type PixFinish, type PixShape } from '@shared/mascot'
 import { PIX_ANCHOR, faceTransform, pixPath } from './geometry'
-import { Appendage, Badge, Eyes, PixFill, Shine } from './Faces'
+import { Badge, Eyes, PixFill, Shine } from './Faces'
+import { shapePoints, toPath } from './shapes'
 
 interface Props {
   shape: PixShape
@@ -30,12 +31,7 @@ export function PixFigure({ shape, color, eyes, finish, shine, mood = 'normal', 
     >
       <PixFill id={id} color={body} finish={finish} />
       <ellipse cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx="24" ry="3" fill="#000" opacity=".12" />
-      {accessory !== 'none' && (
-        <g transform={face}>
-          <Appendage kind={accessory} fill={`url(#${id})`} state="still" />
-        </g>
-      )}
-      <path d={pixPath(1, shape)} fill={`url(#${id})`} />
+      <path d={accessory === 'none' ? pixPath(1, shape) : toPath(shapePoints(1, shape, accessory))} fill={`url(#${id})`} />
       <g transform={face}>
         {shine && <Shine />}
         <Eyes mood={mood} style={eyes} />

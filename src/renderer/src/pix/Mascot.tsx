@@ -4,7 +4,7 @@ import { MASCOT_SCALE, eyeColorFor, moodColor, moodTransform, pickTransform, typ
 import type { Settings } from '@shared/settings'
 import { MorphController } from './morph'
 import { PIX_ANCHOR, VIEW, faceTransform } from './geometry'
-import { Appendage, Badge, Eyes, PixFill, Shine } from './Faces'
+import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { useReducedMotion } from './useReducedMotion'
 import './mascot.css'
@@ -15,7 +15,7 @@ const HIDE_DELAY_MS = 400
 const BREATH_EVERY_MS = 25_000
 const PIX_BREATH_EVERY_MS = 10_000
 const TRANSFORM_MS = 4000
-const RETRACT_MS = 380
+const RETRACT_MS = 700
 /** Evento con cui le impostazioni chiedono a Pix di provare una trasformazione. */
 export const TRANSFORM_EVENT = 'dock:pix-transform'
 const EYE_RANGE = 2
@@ -66,7 +66,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
   // ---- Controller del morph ----
   useLayoutEffect(() => {
     const els = { body: bodyRef.current!, face: faceRef.current!, shadow: shadowRef.current! }
-    morph.current = new MorphController(els, scale, shape, (isFormed) => {
+    morph.current = new MorphController(els, scale, shape, settings.pixAccessory, (isFormed) => {
       setFormed(isFormed)
       setCollapsed(!isFormed)
       if (isFormed) setBlink(true) // battito di palpebre di saluto
@@ -74,7 +74,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
     return () => morph.current?.dispose()
   }, [])
 
-  useEffect(() => morph.current?.setShape(scale, shape), [scale, shape])
+  useEffect(() => morph.current?.setShape(scale, shape, settings.pixAccessory), [scale, shape, settings.pixAccessory])
 
   useEffect(() => {
     const m = morph.current
@@ -172,6 +172,12 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
     return () => window.clearTimeout(id)
   }, [formed, anim, settings.pixTransforms, settings.pixAccessory, mood, reducedMotion, temp])
 
+  // Il corpo prende la forma richiesta: prova/spontanea, altrimenti quella legata allo stato.
+  const desiredShape: PixTransform | null = temp ? (temp.phase === 'in' ? temp.kind : null) : formed ? moodTransform(mood) : null
+  useEffect(() => {
+    morph.current?.transform(desiredShape, instant)
+  }, [desiredShape, formed, instant])
+
   // Prova dalle impostazioni ("Prova le trasformazioni").
   useEffect(() => {
     const onPreview = (e: Event) => showTransform((e as CustomEvent<PixTransform>).detail)
@@ -219,8 +225,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
 
   const toggle = () => (panelOpen ? window.dock.closePanel() : window.dock.openPanel())
   const color = moodColor(mood, settings.pixColor)
-  const fixedAccessory = settings.pixAccessory === 'none' ? null : settings.pixAccessory
-  const moodExtra = moodTransform(mood)
+
   const face = faceTransform(scale, shape)
 
   return (
@@ -256,13 +261,6 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
             onAnimationEnd={(e) => e.animationName === 'pix-breathe' && setPixBreath(false)}
           >
-            {formed && (
-              <g transform={face} pointerEvents="none">
-                {fixedAccessory && <Appendage kind={fixedAccessory} fill={`url(#${fillId})`} state="in" />}
-                {temp && temp.kind !== fixedAccessory && <Appendage key={`t-${temp.kind}`} kind={temp.kind} fill={`url(#${fillId})`} state={temp.phase} />}
-                {!temp && moodExtra && moodExtra !== fixedAccessory && <Appendage key="mood" kind={moodExtra} fill={`url(#${fillId})`} state="in" />}
-              </g>
-            )}
             <path
               ref={bodyRef}
               className={`body ${breathing && collapsed ? 'breathe' : ''}`}

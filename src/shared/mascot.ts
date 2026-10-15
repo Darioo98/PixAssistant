@@ -134,17 +134,19 @@ export function eyeColorFor(body: string): string {
 
 // ---- Trasformazioni del fluido ----
 
-/** Appendici che "spuntano" dal corpo di Pix. */
-export const PIX_TRANSFORMS = ['horns', 'ears', 'antennae', 'tuft', 'leaf', 'drips'] as const
+/** Forme in cui il corpo di Pix (un unico fluido) può trasformarsi. */
+export const PIX_TRANSFORMS = ['horns', 'ears', 'antennae', 'tuft', 'melt', 'heart', 'cloud', 'spiky'] as const
 export type PixTransform = (typeof PIX_TRANSFORMS)[number]
 
-/** Accessori che si possono tenere fissi (le gocce sono solo una trasformazione momentanea). */
-export const PIX_ACCESSORIES = ['none', 'horns', 'ears', 'antennae', 'tuft', 'leaf'] as const
+/** Forme che si possono tenere fisse (lo scioglimento è solo momentaneo). */
+export const PIX_ACCESSORIES = ['none', 'horns', 'ears', 'antennae', 'tuft', 'heart', 'cloud', 'spiky'] as const
 export type PixAccessory = (typeof PIX_ACCESSORIES)[number]
 
-/** Trasformazione legata allo stato: mentre pensa, Pix tira fuori le antenne. */
+/** Trasformazioni legate allo stato: antenne mentre pensa, cuore quando festeggia. */
 export function moodTransform(mood: Mood): PixTransform | null {
-  return mood === 'think' ? 'antennae' : null
+  if (mood === 'think') return 'antennae'
+  if (mood === 'happy') return 'heart'
+  return null
 }
 
 /** Sceglie una trasformazione spontanea diversa dall'accessorio fisso e dall'ultima fatta. */
