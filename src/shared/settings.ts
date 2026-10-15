@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { HEX_COLOR, PIX_EYES, PIX_FINISHES, PIX_SHAPES } from './mascot'
+import { HEX_COLOR, PIX_ACCESSORIES, PIX_EYES, PIX_FINISHES, PIX_SHAPES } from './mascot'
 
 /**
  * Impostazioni dell'app. Alcune valgono per tutti i PC e si sincronizzano,
@@ -18,6 +18,8 @@ export const settingsSchema = z.object({
   pixEyes: z.enum(PIX_EYES),
   pixFinish: z.enum(PIX_FINISHES),
   pixShine: z.boolean(),
+  pixAccessory: z.enum(PIX_ACCESSORIES),
+  pixTransforms: z.boolean(),
   eyesFollowCursor: z.boolean(),
   bubbleSeconds: z.number().int().min(3).max(120),
   defaultLeadDays: z.number().int().min(0).max(365),
@@ -88,6 +90,8 @@ export const DEFAULT_SETTINGS: Settings = {
   pixEyes: 'pill',
   pixFinish: 'flat',
   pixShine: true,
+  pixAccessory: 'none',
+  pixTransforms: true,
   eyesFollowCursor: true,
   bubbleSeconds: 12,
   defaultLeadDays: 3,

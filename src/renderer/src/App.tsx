@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { eyeColorFor, lighten } from '@shared/mascot'
 import { useDockState } from './useDockState'
 import { isTyping, useHitTest } from './useHitTest'
 import { Mascot } from './pix/Mascot'
@@ -10,6 +11,18 @@ const LEAVE_CLOSE_MS = 800
 export function App() {
   const state = useDockState()
   useHitTest()
+
+  // Il colore del pannello segue quello di Pix (più chiaro nel tema scuro, testo sempre leggibile).
+  const pixColor = state?.settings.pixColor
+  useEffect(() => {
+    if (!pixColor) return
+    const root = document.documentElement.style
+    const dark = lighten(pixColor, 0.3)
+    root.setProperty('--accent-light', pixColor)
+    root.setProperty('--accent-dark', dark)
+    root.setProperty('--accent-text-light', eyeColorFor(pixColor))
+    root.setProperty('--accent-text-dark', eyeColorFor(dark))
+  }, [pixColor])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

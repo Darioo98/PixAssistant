@@ -2,8 +2,8 @@
 :root {
   color-scheme: light dark;
   --pix-color: #6366f1;
-  --accent: #6366f1;
-  --accent-text: #ffffff;
+  --accent: var(--accent-light, #6366f1);
+  --accent-text: var(--accent-text-light, #ffffff);
   --panel-bg: #f9f9fb;
   --panel-border: rgba(0, 0, 0, 0.08);
   --rail-bg: #f1f1f5;
@@ -21,8 +21,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --accent: #8b8ef7;
-    --accent-text: #11112a;
+    --accent: var(--accent-dark, #8b8ef7);
+    --accent-text: var(--accent-text-dark, #11112a);
     --panel-bg: #202024;
     --panel-border: rgba(255, 255, 255, 0.08);
     --rail-bg: #1a1a1e;

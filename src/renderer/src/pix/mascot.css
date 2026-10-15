@@ -416,3 +416,99 @@
   width: 24px;
   height: 24px;
 }
+
+/* ---------- Trasformazioni del fluido (corna, orecchie, antenne…) ---------- */
+.acc-part {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+/* Le gocce crescono dall'alto verso il basso. */
+.acc-drips .acc-part {
+  transform-origin: 50% 0%;
+}
+
+/* Spuntano con un rimbalzo elastico, come un fluido che si allunga. */
+.acc.sprout .acc-part {
+  animation: acc-grow 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.acc.sprout .acc-part.right {
+  animation-delay: 0.08s;
+}
+
+.acc.sprout.acc-antennae .acc-part {
+  animation:
+    acc-grow 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    acc-bob 1.1s ease-in-out 0.75s 2 alternate;
+}
+
+.acc.sprout.acc-drips .acc-part {
+  animation: acc-drip 1.3s cubic-bezier(0.3, 0.8, 0.4, 1.3) both;
+}
+
+.acc.sprout.acc-drips .d2 {
+  animation-delay: 0.25s;
+}
+
+.acc.sprout.acc-drips .d3 {
+  animation-delay: 0.45s;
+}
+
+/* Si riassorbono nel corpo. */
+.acc.retract .acc-part {
+  animation: acc-shrink 0.35s ease-in forwards;
+}
+
+@keyframes acc-grow {
+  0% {
+    transform: scale(0.15, 0);
+  }
+  55% {
+    transform: scale(1.12, 1.18);
+  }
+  78% {
+    transform: scale(0.95, 0.92);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes acc-bob {
+  from {
+    transform: rotate(-7deg);
+  }
+  to {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes acc-drip {
+  0% {
+    transform: scale(0.6, 0);
+  }
+  70% {
+    transform: scale(0.95, 1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes acc-shrink {
+  to {
+    transform: scale(0.2, 0);
+    opacity: 0;
+  }
+}
+
+[data-anim='off'] .acc .acc-part {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acc .acc-part {
+    animation: none !important;
+  }
+}

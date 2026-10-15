@@ -1,16 +1,17 @@
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PIX_EYES, PIX_FINISHES, PIX_PALETTE, PIX_SHAPES, type Mood } from '@shared/mascot'
+import { PIX_ACCESSORIES, PIX_TRANSFORMS, PIX_EYES, PIX_FINISHES, PIX_PALETTE, PIX_SHAPES, type Mood } from '@shared/mascot'
 import { DEFAULT_SETTINGS, type Settings, type SettingsPatch } from '@shared/settings'
 import { PixFigure } from '../pix/PixFigure'
 import { ColorPicker } from './ColorPicker'
+import { TRANSFORM_EVENT } from '../pix/Mascot'
 
 const PREVIEW_MOODS: Mood[] = ['alert', 'happy', 'sleep']
 
 /** Personalizzazione dell'aspetto di Pix, con anteprima dal vivo. */
 export function AppearanceSection({ s, save }: { s: Settings; save: (p: SettingsPatch) => Promise<boolean> }) {
   const { t } = useTranslation()
-  const look = { shape: s.pixShape, color: s.pixColor, eyes: s.pixEyes, finish: s.pixFinish, shine: s.pixShine }
+  const look = { shape: s.pixShape, color: s.pixColor, eyes: s.pixEyes, finish: s.pixFinish, shine: s.pixShine, accessory: s.pixAccessory }
   const isPalette = (PIX_PALETTE as readonly string[]).includes(s.pixColor.toUpperCase())
   const [pickerOpen, setPickerOpen] = useState(false)
   const closePicker = useCallback(() => setPickerOpen(false), [])
@@ -90,6 +91,38 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
         </div>
       </div>
 
+      <div className="field">
+        <span className="label">{t('settings.accessory')}</span>
+        <div className="choices">
+          {PIX_ACCESSORIES.map((a) => (
+            <button
+              key={a}
+              className={`choice ${s.pixAccessory === a ? 'selected' : ''}`}
+              aria-pressed={s.pixAccessory === a}
+              onClick={() => void save({ pixAccessory: a })}
+            >
+              <PixFigure {...look} accessory={a} size={34} />
+              <span>{t(`settings.accessoryOptions.${a}`)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label className="row toggle">
+        <span>{t('settings.transforms')}</span>
+        <input type="checkbox" role="switch" checked={s.pixTransforms} onChange={(e) => void save({ pixTransforms: e.target.checked })} />
+      </label>
+      <div className="field">
+        <span className="label">{t('settings.tryTransforms')}</span>
+        <div className="preview-buttons">
+          {PIX_TRANSFORMS.map((x) => (
+            <button key={x} className="pill" onClick={() => window.dispatchEvent(new CustomEvent(TRANSFORM_EVENT, { detail: x }))}>
+              {t(`settings.transformOptions.${x}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <label className="row">
         <span>{t('settings.finish')}</span>
         <select value={s.pixFinish} onChange={(e) => void save({ pixFinish: e.target.value as Settings['pixFinish'] })}>
@@ -115,7 +148,8 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
             pixColor: DEFAULT_SETTINGS.pixColor,
             pixEyes: DEFAULT_SETTINGS.pixEyes,
             pixFinish: DEFAULT_SETTINGS.pixFinish,
-            pixShine: DEFAULT_SETTINGS.pixShine
+            pixShine: DEFAULT_SETTINGS.pixShine,
+            pixAccessory: DEFAULT_SETTINGS.pixAccessory
           })
         }
       >

@@ -176,7 +176,26 @@
     "shift": "Office workday",
     "shiftWork": "Workday length (hours:minutes)",
     "shiftBreak": "Break (minutes)",
-    "shiftRemind": "Remind me before the end (minutes)"
+    "shiftRemind": "Remind me before the end (minutes)",
+    "accessory": "Permanent accessory",
+    "accessoryOptions": {
+      "none": "None",
+      "horns": "Horns",
+      "ears": "Ears",
+      "antennae": "Antennae",
+      "tuft": "Tuft",
+      "leaf": "Sprout"
+    },
+    "transforms": "Spontaneous transformations (something sprouts now and then)",
+    "tryTransforms": "Try the transformations",
+    "transformOptions": {
+      "horns": "Horns",
+      "ears": "Ears",
+      "antennae": "Antennae",
+      "tuft": "Tuft",
+      "leaf": "Sprout",
+      "drips": "Melts"
+    }
   },
   "mascot": {
     "preview": {

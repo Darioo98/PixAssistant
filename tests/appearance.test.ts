@@ -51,3 +51,16 @@ describe('selettore di colore', () => {
     expect(hsvToHex({ h: 0, s: 1, v: 1 })).toBe('#FF0000')
   })
 })
+
+describe('trasformazioni', () => {
+  it('sceglie una trasformazione diversa dall’accessorio fisso e dall’ultima', async () => {
+    const { pickTransform, moodTransform } = await import('@shared/mascot')
+    for (let i = 0; i < 50; i++) {
+      const x = pickTransform('horns', 'ears', Math.random)
+      expect(x).not.toBe('horns')
+      expect(x).not.toBe('ears')
+    }
+    expect(moodTransform('think')).toBe('antennae')
+    expect(moodTransform('normal')).toBeNull()
+  })
+})

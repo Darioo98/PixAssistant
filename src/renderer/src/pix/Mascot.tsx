@@ -1,10 +1,10 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MASCOT_SCALE, eyeColorFor, moodColor, type MascotState } from '@shared/mascot'
+import { MASCOT_SCALE, eyeColorFor, moodColor, moodTransform, pickTransform, type MascotState, type PixTransform } from '@shared/mascot'
 import type { Settings } from '@shared/settings'
 import { MorphController } from './morph'
 import { PIX_ANCHOR, VIEW, faceTransform } from './geometry'
-import { Badge, Eyes, PixFill, Shine } from './Faces'
+import { Appendage, Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { useReducedMotion } from './useReducedMotion'
 import './mascot.css'
@@ -14,6 +14,10 @@ const LEAVE_DELAY_MS = 1500
 const HIDE_DELAY_MS = 400
 const BREATH_EVERY_MS = 25_000
 const PIX_BREATH_EVERY_MS = 10_000
+const TRANSFORM_MS = 4000
+const RETRACT_MS = 380
+/** Evento con cui le impostazioni chiedono a Pix di provare una trasformazione. */
+export const TRANSFORM_EVENT = 'dock:pix-transform'
 const EYE_RANGE = 2
 
 interface Props {
@@ -53,6 +57,9 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
   const [lookAround, setLookAround] = useState(false)
   const [pixBreath, setPixBreath] = useState(false)
   const [fadeKey, setFadeKey] = useState(0)
+  /** Trasformazione momentanea (spontanea o di prova) e sua fase. */
+  const [temp, setTemp] = useState<{ kind: PixTransform; phase: 'in' | 'out' } | null>(null)
+  const lastTransform = useRef<PixTransform | null>(null)
 
   const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight
 
@@ -141,6 +148,37 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
     return () => window.clearTimeout(id)
   }, [formed, anim, mood])
 
+  // ---- Trasformazioni del fluido: spuntano appendici e poi si riassorbono ----
+  const showTransform = (kind: PixTransform) => {
+    lastTransform.current = kind
+    setTemp({ kind, phase: 'in' })
+  }
+  useEffect(() => {
+    if (!temp) return
+    const id =
+      temp.phase === 'in'
+        ? window.setTimeout(() => setTemp({ kind: temp.kind, phase: 'out' }), TRANSFORM_MS)
+        : window.setTimeout(() => setTemp(null), RETRACT_MS)
+    return () => window.clearTimeout(id)
+  }, [temp])
+
+  // Trasformazioni spontanee, ogni tanto, solo se Pix è visibile e sveglio.
+  useEffect(() => {
+    if (!formed || anim !== 'normal' || !settings.pixTransforms || mood !== 'normal' || reducedMotion) return
+    const id = window.setTimeout(
+      () => showTransform(pickTransform(settings.pixAccessory, lastTransform.current, Math.random)),
+      35_000 + Math.random() * 35_000
+    )
+    return () => window.clearTimeout(id)
+  }, [formed, anim, settings.pixTransforms, settings.pixAccessory, mood, reducedMotion, temp])
+
+  // Prova dalle impostazioni ("Prova le trasformazioni").
+  useEffect(() => {
+    const onPreview = (e: Event) => showTransform((e as CustomEvent<PixTransform>).detail)
+    window.addEventListener(TRANSFORM_EVENT, onPreview)
+    return () => window.removeEventListener(TRANSFORM_EVENT, onPreview)
+  }, [])
+
   // ---- Respiro di Pix: un ciclo ogni 10 s invece di un'animazione continua.
   // La finestra è trasparente: ogni fotogramma animato la ridisegna tutta. ----
   useEffect(() => {
@@ -181,6 +219,8 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
 
   const toggle = () => (panelOpen ? window.dock.closePanel() : window.dock.openPanel())
   const color = moodColor(mood, settings.pixColor)
+  const fixedAccessory = settings.pixAccessory === 'none' ? null : settings.pixAccessory
+  const moodExtra = moodTransform(mood)
   const face = faceTransform(scale, shape)
 
   return (
@@ -216,6 +256,13 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
             onAnimationEnd={(e) => e.animationName === 'pix-breathe' && setPixBreath(false)}
           >
+            {formed && (
+              <g transform={face} pointerEvents="none">
+                {fixedAccessory && <Appendage kind={fixedAccessory} fill={`url(#${fillId})`} state="in" />}
+                {temp && temp.kind !== fixedAccessory && <Appendage key={`t-${temp.kind}`} kind={temp.kind} fill={`url(#${fillId})`} state={temp.phase} />}
+                {!temp && moodExtra && moodExtra !== fixedAccessory && <Appendage key="mood" kind={moodExtra} fill={`url(#${fillId})`} state="in" />}
+              </g>
+            )}
             <path
               ref={bodyRef}
               className={`body ${breathing && collapsed ? 'breathe' : ''}`}

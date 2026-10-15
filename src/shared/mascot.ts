@@ -131,3 +131,24 @@ export function luminance(hex: string): number {
 export function eyeColorFor(body: string): string {
   return luminance(body) > 0.45 ? '#1F2033' : '#FFFFFF'
 }
+
+// ---- Trasformazioni del fluido ----
+
+/** Appendici che "spuntano" dal corpo di Pix. */
+export const PIX_TRANSFORMS = ['horns', 'ears', 'antennae', 'tuft', 'leaf', 'drips'] as const
+export type PixTransform = (typeof PIX_TRANSFORMS)[number]
+
+/** Accessori che si possono tenere fissi (le gocce sono solo una trasformazione momentanea). */
+export const PIX_ACCESSORIES = ['none', 'horns', 'ears', 'antennae', 'tuft', 'leaf'] as const
+export type PixAccessory = (typeof PIX_ACCESSORIES)[number]
+
+/** Trasformazione legata allo stato: mentre pensa, Pix tira fuori le antenne. */
+export function moodTransform(mood: Mood): PixTransform | null {
+  return mood === 'think' ? 'antennae' : null
+}
+
+/** Sceglie una trasformazione spontanea diversa dall'accessorio fisso e dall'ultima fatta. */
+export function pickTransform(fixed: PixAccessory, last: PixTransform | null, random: () => number): PixTransform {
+  const options = PIX_TRANSFORMS.filter((x) => x !== fixed && x !== last)
+  return options[Math.floor(random() * options.length) % options.length]!
+}

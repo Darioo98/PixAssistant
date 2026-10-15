@@ -176,7 +176,26 @@
     "shift": "Turno in sede",
     "shiftWork": "Durata del turno (ore:minuti)",
     "shiftBreak": "Pausa (minuti)",
-    "shiftRemind": "Avvisami prima della fine (minuti)"
+    "shiftRemind": "Avvisami prima della fine (minuti)",
+    "accessory": "Accessorio fisso",
+    "accessoryOptions": {
+      "none": "Nessuno",
+      "horns": "Corna",
+      "ears": "Orecchie",
+      "antennae": "Antenne",
+      "tuft": "Ciuffo",
+      "leaf": "Germoglio"
+    },
+    "transforms": "Trasformazioni spontanee (ogni tanto gli spunta qualcosa)",
+    "tryTransforms": "Prova le trasformazioni",
+    "transformOptions": {
+      "horns": "Corna",
+      "ears": "Orecchie",
+      "antennae": "Antenne",
+      "tuft": "Ciuffo",
+      "leaf": "Germoglio",
+      "drips": "Si scioglie"
+    }
   },
   "mascot": {
     "preview": {
