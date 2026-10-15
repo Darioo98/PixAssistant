@@ -189,7 +189,13 @@
       "bubble": "Speech bubble",
       "hourglass": "Hourglass"
     },
-    "transformsHint": "Pix greets each section with its own animation and, with the panel closed, peeks out of the bar now and then."
+    "transformsHint": "Pix greets each section of the panel with its own animation.",
+    "categories": {
+      "general": "General",
+      "pix": "Pix",
+      "features": "Features",
+      "data": "Data"
+    }
   },
   "mascot": {
     "preview": {

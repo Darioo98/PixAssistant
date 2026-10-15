@@ -45,7 +45,6 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   const bodyRef = useRef<SVGPathElement>(null)
   const faceRef = useRef<SVGGElement>(null)
   const shadowRef = useRef<SVGEllipseElement>(null)
-  const peekEyesRef = useRef<SVGGElement>(null)
   const lookRef = useRef<SVGGElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const morph = useRef<MorphController | null>(null)
@@ -64,7 +63,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
 
   // ---- Controller del morph ----
   useLayoutEffect(() => {
-    const els = { body: bodyRef.current!, face: faceRef.current!, shadow: shadowRef.current!, peekEyes: peekEyesRef.current }
+    const els = { body: bodyRef.current!, face: faceRef.current!, shadow: shadowRef.current! }
     morph.current = new MorphController(els, scale, shape, (isFormed) => {
       setFormed(isFormed)
       setCollapsed(!isFormed)
@@ -181,17 +180,6 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     if (kind) play(kind)
   }, [tab, panelOpen, anim])
 
-  // A pannello chiuso, ogni tanto Pix spia dalla barra.
-  const [peekTick, setPeekTick] = useState(0)
-  useEffect(() => {
-    if (!collapsed || panelOpen || bubble || anim !== 'normal' || !settings.pixTransforms || reducedMotion) return
-    const id = window.setTimeout(() => {
-      morph.current?.peek()
-      setPeekTick((n) => n + 1)
-    }, 45_000 + Math.random() * 45_000)
-    return () => window.clearTimeout(id)
-  }, [collapsed, panelOpen, bubble, anim, settings.pixTransforms, reducedMotion, peekTick])
-
   // Prova dalle impostazioni ("Prova le animazioni").
   useEffect(() => {
     const onPreview = (e: Event) => play((e as CustomEvent<PixTransform>).detail)
@@ -304,11 +292,6 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
               </g>
             </g>
           </g>
-        </g>
-        {/* Occhietti di Pix quando spia dalla barra */}
-        <g ref={peekEyesRef} opacity="0" pointerEvents="none" fill="currentColor">
-          <rect x="-4.6" y="-4" width="3" height="8" rx="1.5" />
-          <rect x="1.6" y="-4" width="3" height="8" rx="1.5" />
         </g>
         {formed && (
           <g transform={face} pointerEvents="none">

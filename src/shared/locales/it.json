@@ -189,7 +189,13 @@
       "bubble": "Fumetto",
       "hourglass": "Clessidra"
     },
-    "transformsHint": "Pix accoglie ogni sezione con la sua animazione e, a pannello chiuso, ogni tanto spia dalla barra."
+    "transformsHint": "Pix accoglie ogni sezione del pannello con la sua animazione.",
+    "categories": {
+      "general": "Generale",
+      "pix": "Pix",
+      "features": "Funzioni",
+      "data": "Dati"
+    }
   },
   "mascot": {
     "preview": {

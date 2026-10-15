@@ -267,34 +267,3 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
     return [x + dx, y + dy] as Pt
   })
 }
-
-// ---- "Spiare" dalla barra ----
-
-const BAR_PTS = new Map<string, Body>()
-
-/** Contorno della barra (per farla gonfiare quando Pix spia). */
-export function barBody(barPath: string): Body {
-  let b = BAR_PTS.get(barPath)
-  if (!b) {
-    b = prepare(samplePath(barPath))
-    BAR_PTS.set(barPath, b)
-  }
-  return b
-}
-
-/** Raggio della bolla che spunta dalla barra (in unità SVG). */
-export const PEEK_RADIUS = 15
-
-/**
- * Pix che spia: dal bordo sinistro della barra, all'altezza `y0`, si gonfia
- * una bolla di fluido (una piccola testa) con ampiezza `a`.
- */
-export function peekShape(b: Body, y0: number, a: number): Pt[] {
-  return b.pts.map(([x, y], i) => {
-    const left = Math.max(0, -b.nx[i]!) // solo il bordo che guarda fuori dallo schermo
-    const d = (y - y0) / PEEK_RADIUS
-    const round = Math.max(0, 1 - d * d) ** 0.55 // profilo da semicerchio, ammorbidito
-    const soft = Math.exp(-((d / 1.25) ** 2)) * 0.25 // raccordo fluido con la barra
-    return [x - left * (round + soft) * PEEK_RADIUS * 1.25 * a, y] as Pt
-  })
-}
