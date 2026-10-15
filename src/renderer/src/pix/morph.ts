@@ -1,5 +1,5 @@
 import type { PixShape, PixTransform } from '@shared/mascot'
-import { bodyAt, faceOpacity, morphFor, remapOnReverse, shadowOpacity, type MorphInterpolators } from './geometry'
+import { SHAPES, bodyAt, faceOpacity, morphFor, remapOnReverse, shadowOpacity, type MorphInterpolators } from './geometry'
 import { liveShape, restBody, toPath, type Body } from './shapes'
 
 export interface MorphElements {
@@ -152,6 +152,16 @@ export class MorphController {
     pl.outAt = now
     pl.outDur = duration
     pl.then = then
+  }
+
+  /**
+   * Forma della barra a riposo modificata dall'esterno (la sbirciata le
+   * "consuma" un po' di fluido). Ignorata se il corpo non è barra ferma;
+   * null rimette la barra normale.
+   */
+  setBar(d: string | null): void {
+    if (this.p !== 0 || this.target !== 0 || this.raf || this.play) return
+    this.els.body.setAttribute('d', d ?? SHAPES.bar)
   }
 
   dispose(): void {

@@ -2,7 +2,7 @@ import { useEffect, useId, useRef } from 'react'
 import type { PixEyes, PixShape } from '@shared/mascot'
 import { faceTransform, pixPath } from './geometry'
 import { Eyes, Shine } from './Faces'
-import { PEEK_DURATION_S, PEEK_SCALE, peekEyesTransform, peekFrame, peekTransform } from './peekMotion'
+import { PEEK_DURATION_S, PEEK_SCALE, consumedBarPath, peekEyesTransform, peekFrame, peekTransform } from './peekMotion'
 
 interface Props {
   /** Altezza (coordinate dell'SVG) a cui sbuca. */
@@ -12,6 +12,8 @@ interface Props {
   eyes: PixEyes
   shine: boolean
   fill: string
+  /** Disegna la barra con un po' di fluido in meno (null = barra normale). */
+  setBar: (d: string | null) => void
   onDone: () => void
 }
 
@@ -21,7 +23,7 @@ interface Props {
  * attaccato alla barra, come una goccia che si stacca. Animato con
  * requestAnimationFrame solo per la durata della sbirciata.
  */
-export function Peek({ y, scale, shape, eyes, shine, fill, onDone }: Props) {
+export function Peek({ y, scale, shape, eyes, shine, fill, setBar, onDone }: Props) {
   const uid = useId().replace(/:/g, '')
   const bodyRef = useRef<SVGGElement>(null)
   const faceRef = useRef<SVGGElement>(null)
@@ -29,6 +31,8 @@ export function Peek({ y, scale, shape, eyes, shine, fill, onDone }: Props) {
   const neckRef = useRef<SVGEllipseElement>(null)
   const done = useRef(onDone)
   done.current = onDone
+  const bar = useRef(setBar)
+  bar.current = setBar
 
   useEffect(() => {
     let raf = 0
@@ -36,6 +40,7 @@ export function Peek({ y, scale, shape, eyes, shine, fill, onDone }: Props) {
     const frame = (now: number) => {
       const t = (now - start) / 1000
       if (t >= PEEK_DURATION_S) {
+        bar.current(null)
         done.current()
         return
       }
@@ -46,10 +51,14 @@ export function Peek({ y, scale, shape, eyes, shine, fill, onDone }: Props) {
       eyesRef.current?.setAttribute('transform', peekEyesTransform(f))
       neckRef.current?.setAttribute('rx', String(6 * f.neck))
       neckRef.current?.setAttribute('ry', String(12 * PEEK_SCALE * scale * f.neck))
+      bar.current(consumedBarPath(f.consumed, y))
       raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
-    return () => cancelAnimationFrame(raf)
+    return () => {
+      cancelAnimationFrame(raf)
+      bar.current(null)
+    }
   }, [y, scale])
 
   const hidden = peekTransform(peekFrame(0), y, scale)
@@ -57,8 +66,8 @@ export function Peek({ y, scale, shape, eyes, shine, fill, onDone }: Props) {
     <g className="peek" pointerEvents="none" aria-hidden="true" clipPath={`url(#peek-clip-${uid})`}>
       <defs>
         <clipPath id={`peek-clip-${uid}`}>
-          {/* Niente a destra del centro della barra: sbuca da dietro. */}
-          <rect x="0" y="0" width="92" height="240" />
+          {/* Niente oltre il bordo destro della barra: sbuca da dietro. */}
+          <rect x="0" y="0" width="95" height="240" />
         </clipPath>
         <filter id={`peek-goo-${uid}`} x="0" y="0" width="120" height="240" filterUnits="userSpaceOnUse">
           <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="blur" />

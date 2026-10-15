@@ -299,6 +299,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
             eyes={settings.pixEyes}
             shine={settings.pixShine}
             fill={`url(#${fillId})`}
+            setBar={(d) => morph.current?.setBar(d)}
             onDone={() => setPeekY(null)}
           />
         )}

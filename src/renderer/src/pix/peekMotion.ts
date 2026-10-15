@@ -31,6 +31,11 @@ export interface PeekFrame {
   eyeOpen: number
   /** Ampiezza del "collo" che lo unisce alla barra (0–1). */
   neck: number
+  /**
+   * Quanta barra Pix ha preso per uscire (0–1): la barra si assottiglia dove
+   * sbuca e si accorcia un poco. Negativo = si gonfia mentre il fluido rientra.
+   */
+  consumed: number
 }
 
 const HIDDEN = 1.08
@@ -93,7 +98,10 @@ export function peekFrame(t: number): PeekFrame {
   const eyeOpen = 1 - 0.88 * blink
 
   const neck = clamp01((HIDDEN - d) / 0.35)
-  return { d, rot, sx, sy, bob, eyeX, eyeY, eyeOpen, neck }
+  // La barra cede fluido mentre Pix esce e lo riprende quando rientra,
+  // con un piccolo rigonfiamento finale prima di tornare com'era.
+  const consumed = clamp01((HIDDEN - d) / (HIDDEN - OUT)) - 0.35 * bump(t, 4.62, 5)
+  return { d, rot, sx, sy, bob, eyeX, eyeY, eyeOpen, neck, consumed }
 }
 
 /** Trasformazione SVG del corpo (tracciato `pixPath(1, …)`) per un fotogramma. */
@@ -106,6 +114,40 @@ export function peekTransform(f: PeekFrame, y: number, scale: number): string {
 /** Trasformazione degli occhi (coordinate delle bozze, centro occhi 50,52). */
 export function peekEyesTransform(f: PeekFrame): string {
   return `translate(${r(f.eyeX)} ${r(f.eyeY)}) translate(50 52) scale(1 ${r(f.eyeOpen)}) translate(-50 -52)`
+}
+
+/** Barra a riposo (coordinate dell'SVG): x 88–96, y 50–230, estremità arrotondate. */
+const BAR = { left: 88, right: 96, top: 50, bottom: 230 } as const
+/** Assottigliamento massimo (px su 8 di larghezza) e accorciamento di ogni estremità. */
+const DENT_DEPTH = 4.6
+const DENT_SPREAD = 15
+const SHRINK = 5
+
+/**
+ * Tracciato della barra a cui Pix ha "preso" un po' di fluido all'altezza `y`:
+ * il bordo sinistro rientra con un incavo morbido e la barra si accorcia un poco.
+ */
+export function consumedBarPath(consumed: number, y: number): string {
+  const top = BAR.top + SHRINK * consumed
+  const bottom = BAR.bottom - SHRINK * consumed
+  const rad = (BAR.right - BAR.left) / 2
+  const mid = BAR.left + rad
+  const leftAt = (yy: number) => BAR.left + DENT_DEPTH * consumed * Math.exp(-(((yy - y) / DENT_SPREAD) ** 2))
+  const k = rad * 0.5523
+  const parts = [
+    `M${r(mid)} ${r(top)}`,
+    `C${r(mid + k)} ${r(top)} ${BAR.right} ${r(top + rad - k)} ${BAR.right} ${r(top + rad)}`,
+    `L${BAR.right} ${r(bottom - rad)}`,
+    `C${BAR.right} ${r(bottom - rad + k)} ${r(mid + k)} ${r(bottom)} ${r(mid)} ${r(bottom)}`,
+    `C${r(mid - k)} ${r(bottom)} ${r(leftAt(bottom - rad))} ${r(bottom - rad + k)} ${r(leftAt(bottom - rad))} ${r(bottom - rad)}`
+  ]
+  // Bordo sinistro dal basso verso l'alto, fitto vicino all'incavo.
+  for (let yy = bottom - rad - 2; yy > top + rad; yy -= Math.abs(yy - y) < DENT_SPREAD * 2.5 ? 1.5 : 12) {
+    parts.push(`L${r(leftAt(yy))} ${r(yy)}`)
+  }
+  parts.push(`L${r(leftAt(top + rad))} ${r(top + rad)}`)
+  parts.push(`C${r(leftAt(top + rad))} ${r(top + rad - k)} ${r(mid - k)} ${r(top)} ${r(mid)} ${r(top)} Z`)
+  return parts.join(' ')
 }
 
 const r = (n: number) => Math.round(n * 1000) / 1000
