@@ -9,7 +9,7 @@ import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
 import { SWALLOW_S } from './shapes'
-import { SweepDrop, DELETED_EVENT, SWEEP_MS } from './SweepDrop'
+import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
 import { useSlosh } from './useSlosh'
 import { weatherKind } from '@shared/extras'
@@ -451,22 +451,28 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [])
   const fx = formed && mood === 'normal' && anim !== 'off' && !reducedMotion ? (weatherPreview ?? weatherFx) : null
   const [rainKey, setRainKey] = useState(0)
-  const [shiver, setShiver] = useState(false)
+  /** Freddo: nuvolette di vapore dal respiro. Sole: occhiali da sole che scendono sugli occhi. */
+  const [puffKey, setPuffKey] = useState(0)
+  const [shades, setShades] = useState(false)
   useEffect(() => {
-    if (fx !== 'rain' && fx !== 'cold') return
+    if (!fx) {
+      setShades(false)
+      return
+    }
     let id: number
     let end: number
     const schedule = (first: boolean) => {
       id = window.setTimeout(
         () => {
           if (fx === 'rain') setRainKey((k) => k + 1)
+          else if (fx === 'cold') setPuffKey((k) => k + 1)
           else {
-            setShiver(true)
-            end = window.setTimeout(() => setShiver(false), 800)
+            setShades(true)
+            end = window.setTimeout(() => setShades(false), 4500)
           }
           schedule(false)
         },
-        first ? 900 : fx === 'rain' ? 6000 + Math.random() * 6000 : 14_000 + Math.random() * 10_000
+        first ? 900 : fx === 'rain' ? 6000 + Math.random() * 6000 : fx === 'cold' ? 4500 + Math.random() * 3500 : 12_000 + Math.random() * 8000
       )
     }
     schedule(true)
@@ -495,26 +501,17 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     return () => window.clearTimeout(id)
   }, [gestureAt])
 
-  // ---- Eliminazione: una goccia si stacca dalla riga e Pix la spazza via ----
-  const [sweep, setSweep] = useState<{ id: number; from: { x: number; y: number } } | null>(null)
-  const [swat, setSwat] = useState(false)
+  // ---- Eliminazione: Pix si mangia ciò che hai eliminato (come quando gli trascini un file) ----
   useEffect(() => {
-    const timers: number[] = []
     const onDeleted = (e: Event) => {
-      const at = (e as CustomEvent<{ x: number; y: number } | null>).detail
+      const at = (e as CustomEvent<DeletedDetail | null>).detail
       const r = svgRef.current?.getBoundingClientRect()
       if (!at || !r || reducedMotion || anim === 'off') return
       const from = { x: ((at.x - r.left) / r.width) * VIEW.width, y: ((at.y - r.top) / r.height) * VIEW.height }
-      setSweep({ id: performance.now(), from })
-      timers.push(window.setTimeout(() => setSwat(true), SWEEP_MS * 0.36))
-      timers.push(window.setTimeout(() => setSwat(false), SWEEP_MS * 0.36 + 450))
-      timers.push(window.setTimeout(() => setSweep(null), SWEEP_MS + 50))
+      setSwallow((cur) => cur ?? { id: performance.now(), look: { text: at.text || '…' }, from, payload: null })
     }
     window.addEventListener(DELETED_EVENT, onDeleted)
-    return () => {
-      timers.forEach((t) => window.clearTimeout(t))
-      window.removeEventListener(DELETED_EVENT, onDeleted)
-    }
+    return () => window.removeEventListener(DELETED_EVENT, onDeleted)
   }, [reducedMotion, anim])
 
   // ---- Avvio con Windows: la barra si riempie dal basso come un tubo, poi Pix si sveglia ----
@@ -615,10 +612,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-hungry={hungry && formed ? '' : undefined}
       data-swallow={formed && swallowPhase ? swallowPhase : undefined}
       data-weather={fx ?? undefined}
-      data-shiver={shiver && fx === 'cold' ? '' : undefined}
+      data-shades={shades && fx === 'sun' ? '' : undefined}
       data-pop={pop && formed ? '' : undefined}
       data-farewell={farewell && formed ? '' : undefined}
-      data-swat={swat && formed ? '' : undefined}
       data-turning={turning && sleeping ? '' : undefined}
     >
       {bubble && <BubbleCard key={bubble.id} bubble={bubble} panelOpen={panelOpen} />}
@@ -701,6 +697,23 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 <ellipse className="yawn-mouth" cx="50" cy="69" rx="5.5" ry="7" fill="#000" opacity="0" />
                 {/* Sole: un luccichio sul riflesso */}
                 {fx === 'sun' && settings.pixShine && <path className="sparkle" d="M27 20l1.4 3.6 3.6 1.4-3.6 1.4L27 30l-1.4-3.6-3.6-1.4 3.6-1.4z" fill="#fff" />}
+                {/* Sole: occhiali scuri che ogni tanto scendono sugli occhi */}
+                {fx === 'sun' && (
+                  <g className="shades">
+                    <path d="M31 45h15a3 3 0 0 1 3 3v2.5a7.5 7.5 0 0 1-7.5 7.5h-3A7.5 7.5 0 0 1 31 50.5V48a3 3 0 0 1 3-3z" fill="#1f2033" />
+                    <path d="M54 45h15a3 3 0 0 1 3 3v2.5a7.5 7.5 0 0 1-7.5 7.5h-3A7.5 7.5 0 0 1 54 50.5V48a3 3 0 0 1 3-3z" transform="translate(-3 0)" fill="#1f2033" />
+                    <path d="M49 48.5q2.5-2 5 0" stroke="#1f2033" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                    <path d="M35 48.5l4-0.5M58 48.5l4-0.5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" opacity=".55" />
+                  </g>
+                )}
+                {/* Freddo: nuvoletta di vapore dal respiro */}
+                {fx === 'cold' && puffKey > 0 && (
+                  <g key={puffKey} className="puff" fill="#fff">
+                    <circle cx="47" cy="70" r="2.4" />
+                    <circle cx="42" cy="68.5" r="3.2" />
+                    <circle cx="37" cy="69.5" r="2.7" />
+                  </g>
+                )}
               </g>
             </g>
           </g>
@@ -717,8 +730,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
             </g>
           </g>
         )}
-        {/* Eliminazione: la goccia spazzata via */}
-        {sweep && <SweepDrop key={sweep.id} from={sweep.from} pix={{ x: PIX_ANCHOR.x, y: PIX_ANCHOR.y - 33 * scale }} color={color} />}
+
         {/* Ciò che hai trascinato vola nella bocca di Pix */}
         {swallow && formed && swallowPhase === 'open' && <SwallowItem key={swallow.id} look={swallow.look} from={swallow.from} to={mouthPoint(scale, shape)} />}
         {/* Occhi della sbirciata: il corpo è la barra stessa (setBar). */}

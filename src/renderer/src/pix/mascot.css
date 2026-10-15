@@ -661,29 +661,6 @@
   }
 }
 
-[data-shiver] .yawn-body {
-  animation: pix-shiver 0.8s linear 1;
-}
-
-@keyframes pix-shiver {
-  0%,
-  100% {
-    transform: none;
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-0.9px) scale(0.98, 1.01);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(0.9px) scale(0.98, 1.01);
-  }
-}
 
 .rain-drop {
   transform-box: fill-box;
@@ -777,20 +754,6 @@
   }
 }
 
-/* ---------- Eliminazione: colpetto per spazzare via la goccia ---------- */
-[data-swat] .yawn-body {
-  animation: pix-swat 0.45s cubic-bezier(0.3, 0.7, 0.4, 1.3) 1;
-}
-
-@keyframes pix-swat {
-  35% {
-    transform: rotate(-12deg) scale(1.05, 0.95);
-  }
-  70% {
-    transform: rotate(4deg);
-  }
-}
-
 /* ---------- Avvio: il tubo che si riempie ---------- */
 .boot-tube {
   opacity: 0.35;
@@ -828,4 +791,40 @@
 
 .bubble {
   z-index: 2;
+}
+
+/* ---------- Sole: occhiali scuri che scendono sugli occhi ---------- */
+.shades {
+  opacity: 0;
+  transform: translateY(-34px) rotate(-8deg);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.2s;
+}
+
+[data-shades] .shades {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Freddo: nuvoletta di vapore dal respiro ---------- */
+.puff {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+  animation: pix-puff 1.9s ease-out 1;
+}
+
+@keyframes pix-puff {
+  0% {
+    opacity: 0;
+    transform: translateX(4px) scale(0.2);
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-38px, -8px) scale(1.7);
+  }
 }
