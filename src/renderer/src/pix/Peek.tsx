@@ -38,14 +38,26 @@ export function Peek({ y, scale, shape, eyes, shine, setBar, onDone }: Props) {
         done.current()
         return
       }
-      const f = peekFrame(t)
-      bar.current(peekBodyPath(f, y, scale, shape))
-      const face = faceRef.current
-      if (face) {
-        face.setAttribute('transform', peekFaceTransform(f, y, scale, shape))
-        face.setAttribute('opacity', f.face.toFixed(3))
+      try {
+        const f = peekFrame(t)
+        bar.current(peekBodyPath(f, y, scale, shape))
+        const face = faceRef.current
+        if (face) {
+          face.setAttribute('transform', peekFaceTransform(f, y, scale, shape))
+          face.setAttribute('opacity', f.face.toFixed(3))
+        }
+        eyesRef.current?.setAttribute('transform', peekEyesTransform(f))
+      } catch (err) {
+        // Una sbirciata andata storta non deve mai far sparire Pix: si chiude e basta.
+        console.error('Sbirciata interrotta', err)
+        try {
+          bar.current(null)
+        } catch {
+          // barra già a posto
+        }
+        done.current()
+        return
       }
-      eyesRef.current?.setAttribute('transform', peekEyesTransform(f))
       raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
