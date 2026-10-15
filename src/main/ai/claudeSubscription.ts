@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import type { ModelOption, ProviderStatus } from '@shared/chat'
 import { DEFAULT_MODELS } from '@shared/chat'
 import { AIError, type AIProvider, type AIRequest } from './provider'
+import type { Attachment } from '../attachments'
 import { log } from '../log'
 
 type Sdk = typeof import('@anthropic-ai/claude-agent-sdk')
@@ -150,7 +151,7 @@ export class ClaudeSubscriptionProvider implements AIProvider {
     let text = ''
     try {
       const q = sdk.query({
-        prompt: req.prompt,
+        prompt: req.attachments?.length ? withAttachments(req.prompt, req.attachments) : req.prompt,
         options: {
           ...this.baseOptions(abort),
           systemPrompt: req.systemPrompt,
@@ -199,5 +200,28 @@ export class ClaudeSubscriptionProvider implements AIProvider {
     } finally {
       signal.removeEventListener('abort', onAbort)
     }
+  }
+}
+
+/**
+ * Messaggio con allegati: i documenti viaggiano come blocchi del messaggio
+ * (come quando alleghi un file su claude.ai). Claude li legge, ma non ha
+ * strumenti né accesso ai file del PC.
+ */
+async function* withAttachments(prompt: string, attachments: Attachment[]) {
+  const blocks = attachments.map((a) => {
+    switch (a.kind) {
+      case 'pdf':
+        return { type: 'document' as const, title: a.name, source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: a.data } }
+      case 'image':
+        return { type: 'image' as const, source: { type: 'base64' as const, media_type: a.mediaType, data: a.data } }
+      case 'text':
+        return { type: 'document' as const, title: a.name, source: { type: 'text' as const, media_type: 'text/plain' as const, data: a.text } }
+    }
+  })
+  yield {
+    type: 'user' as const,
+    parent_tool_use_id: null,
+    message: { role: 'user' as const, content: [...blocks, { type: 'text' as const, text: prompt }] }
   }
 }

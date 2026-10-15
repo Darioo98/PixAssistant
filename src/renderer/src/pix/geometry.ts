@@ -75,6 +75,12 @@ export function pixPath(scale: number, shape: PixShape = 'squircle'): string {
  * Trasformazione SVG che porta le bozze di Pix (viewBox 100×100, corpo x 20–80,
  * y 22–88) sullo squircle del morph, per disegnare occhi, riflesso e badge.
  */
+/** Punto della bocca (coordinate dell'SVG), dove finisce ciò che Pix inghiotte. */
+export function mouthPoint(scale: number, shape: PixShape = 'squircle'): { x: number; y: number } {
+  const dy = BODY_SHAPES[shape].faceDy * scale
+  return { x: PIX_ANCHOR.x, y: PIX_ANCHOR.y - (88 - 69) * scale + dy }
+}
+
 export function faceTransform(scale: number, shape: PixShape = 'squircle'): string {
   const dy = BODY_SHAPES[shape].faceDy * scale
   return `translate(${round(PIX_ANCHOR.x - 50 * scale)} ${round(PIX_ANCHOR.y - 88 * scale + dy)}) scale(${scale})`

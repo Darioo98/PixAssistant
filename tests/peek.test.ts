@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PEEK_DURATION_S, headOf, peekBodyPath, peekFrame } from '../src/renderer/src/pix/peekMotion'
+import { PEEK_DURATION_S, SCARE_DURATION_S, headOf, peekBodyPath, peekFrame, scaredFrame } from '../src/renderer/src/pix/peekMotion'
 
 const coords = (d: string) => [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])] as const)
 
@@ -39,16 +39,16 @@ describe('sbirciata', () => {
     expect(height(2.5)).toBeLessThan(140)
   })
 
-  it('variante dal basso: la goccia pende dal fondo della barra e resta collegata', () => {
-    for (let t = 0.2; t < 3.6; t += 0.1) {
-      const f = peekFrame(t)
-      const h = headOf(f, 140, 1, 'squircle', 'bottom')
-      const ys = coords(peekBodyPath(f, 140, 1, 'squircle', 'bottom')).map((p) => p[1])
-      expect(Math.max(...ys)).toBeLessThanOrEqual(240) // resta nella finestra
-      expect(h.cx + h.a).toBeLessThanOrEqual(96) // e sullo schermo
-    }
-    // dopo il risucchio la barra torna intera
-    const end = coords(peekBodyPath(peekFrame(PEEK_DURATION_S - 0.01), 140, 1, 'squircle', 'bottom')).map((p) => p[1])
-    expect(Math.max(...end)).toBeCloseTo(230, 0)
+  it('spaventato: sobbalza con gli occhi tondi, rientra di colpo e la barra trema di più', () => {
+    const from = peekFrame(2)
+    expect(scaredFrame(from, 0.1).startle).toBe(1)
+    expect(scaredFrame(from, 0.1).grow).toBeGreaterThan(0.9)
+    expect(scaredFrame(from, SCARE_DURATION_S - 1.3).grow).toBe(0) // risucchiato in un decimo di secondo
+    const bar = (f: ReturnType<typeof peekFrame>) => Math.min(...coords(peekBodyPath(f, 140, 1, 'squircle')).map((p) => p[0]))
+    const calm = bar(peekFrame(3.68 + 0.04))
+    const scared = bar(scaredFrame(from, 0.33 + 0.04))
+    expect(scared).toBeLessThan(calm) // onda d'urto più forte
+    expect(bar(scaredFrame(from, SCARE_DURATION_S - 0.01))).toBeCloseTo(88, 0)
   })
+
 })

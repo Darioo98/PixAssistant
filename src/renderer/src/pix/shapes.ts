@@ -267,3 +267,44 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
     return [x + dx, y + dy] as Pt
   })
 }
+
+// ======================= Inghiottire =======================
+
+/** Tempi dell'inghiottire: il boccone entra in bocca a `bite`, tutto finisce a `total`. */
+export const SWALLOW_S = { bite: 0.52, chewEnd: 2.15, total: 2.45 } as const
+
+const sseg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a))
+const ssmooth = (x: number) => x * x * (3 - 2 * x)
+const sbump = (t: number, a: number, b: number) => (t <= a || t >= b ? 0 : Math.sin(Math.PI * sseg(t, a, b)))
+
+/**
+ * Pix inghiotte un boccone: prima aspira (si allunga verso l'alto), poi la
+ * bocca si chiude e il corpo si schiaccia di colpo, il boccone scende come un
+ * rigonfiamento lungo i fianchi, la pancia si gonfia, mastica e si assesta.
+ */
+export function swallowShape(b: Body, t: number): Pt[] {
+  const bottom = b.cy + b.h / 2
+  const inhale = ssmooth(sseg(t, 0, 0.45)) * (1 - sseg(t, 0.45, SWALLOW_S.bite + 0.04))
+  const gulp = sbump(t, SWALLOW_S.bite - 0.02, SWALLOW_S.bite + 0.26)
+  // Il boccone scende da sotto la bocca fino in fondo.
+  const lumpY = b.cy - 0.02 * b.h + 0.4 * b.h * ssmooth(sseg(t, 0.62, 1.45))
+  const lumpAmp = 0.11 * b.w * sbump(t, 0.6, 1.62)
+  const belly = 0.06 * b.w * sbump(t, 1.2, 2.25)
+  const chew = t > 1.5 && t < SWALLOW_S.chewEnd ? Math.abs(Math.sin((Math.PI * (t - 1.5)) / 0.32)) : 0
+  const settleT = t - SWALLOW_S.chewEnd
+  const settle = settleT > 0 ? 0.03 * Math.sin(settleT * 22) * Math.exp(-settleT * 7) : 0
+  const sy = 1 + 0.08 * inhale - 0.13 * gulp - 0.045 * chew + settle
+  const sx = 1 - 0.035 * inhale + 0.11 * gulp + 0.035 * chew - settle * 0.6
+  return b.pts.map(([x, y], i) => {
+    const nx = b.nx[i]!
+    const ny = b.ny[i]!
+    let px = b.cx + (x - b.cx) * sx
+    let py = bottom + (y - bottom) * sy
+    const g = Math.exp(-(((y - lumpY) / (0.15 * b.h)) ** 2)) * Math.abs(nx)
+    px += nx * lumpAmp * g
+    py += ny * lumpAmp * g * 0.3
+    px += nx * belly * b.low[i]!
+    py += ny * belly * b.low[i]!
+    return [px, py] as Pt
+  })
+}

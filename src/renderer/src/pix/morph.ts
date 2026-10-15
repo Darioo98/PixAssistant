@@ -1,6 +1,6 @@
 import type { PixShape, PixTransform } from '@shared/mascot'
 import { SHAPES, bodyAt, faceOpacity, morphFor, remapOnReverse, shadowOpacity, type MorphInterpolators } from './geometry'
-import { liveShape, restBody, toPath, type Body } from './shapes'
+import { SWALLOW_S, liveShape, restBody, swallowShape, toPath, type Body } from './shapes'
 
 export interface MorphElements {
   body: SVGPathElement
@@ -54,6 +54,8 @@ export class MorphController {
   private play: Play | null = null
   private playRaf = 0
   private pending: { kind: PixTransform; loop: boolean } | null = null
+  private swallowRaf = 0
+  private swallowStart = 0
 
   constructor(
     private readonly els: MorphElements,
@@ -82,8 +84,40 @@ export class MorphController {
     if (!this.play) this.render()
   }
 
+  /** Pix inghiotte un boccone (vedi swallowShape). Solo se è formato e fermo. */
+  swallow(): boolean {
+    if (!this.formed || this.raf) return false
+    this.cancelPlay()
+    this.cancelSwallow()
+    this.swallowStart = 0
+    this.swallowRaf = requestAnimationFrame(this.swallowFrame)
+    return true
+  }
+
+  private cancelSwallow(): void {
+    if (this.swallowRaf) cancelAnimationFrame(this.swallowRaf)
+    this.swallowRaf = 0
+  }
+
+  private swallowFrame = (ts: number): void => {
+    if (!this.swallowStart) this.swallowStart = ts
+    const t = (ts - this.swallowStart) / 1000
+    if (t >= SWALLOW_S.total) {
+      this.swallowRaf = 0
+      this.render()
+      // Un'animazione arrivata nel frattempo (es. festeggia) parte adesso.
+      const next = this.pending
+      this.pending = null
+      if (next) this.start(next.kind, next.loop)
+      return
+    }
+    this.els.body.setAttribute('d', toPath(swallowShape(this.body, t)))
+    this.swallowRaf = requestAnimationFrame(this.swallowFrame)
+  }
+
   /** Va verso Pix (1) o verso la barra (0). `instant` salta l'animazione (movimento ridotto). */
   go(target: 0 | 1, instant = false): void {
+    if (target === 0) this.cancelSwallow()
     // Prima di tornare barra, il corpo smette di giocare e riprende la sua forma.
     if (target === 0 && this.play && !instant) {
       this.target = 0
@@ -117,7 +151,7 @@ export class MorphController {
    * formato, parte appena lo è.
    */
   start(kind: PixTransform, loop = false): void {
-    if (!this.formed || this.raf || this.target === 0) {
+    if (!this.formed || this.raf || this.target === 0 || this.swallowRaf) {
       this.pending = { kind, loop }
       return
     }
@@ -160,13 +194,14 @@ export class MorphController {
    * null rimette la barra normale.
    */
   setBar(d: string | null): void {
-    if (this.p !== 0 || this.target !== 0 || this.raf || this.play) return
+    if (this.p !== 0 || this.target !== 0 || this.raf || this.play || this.swallowRaf) return
     this.els.body.setAttribute('d', d ?? SHAPES.bar)
   }
 
   dispose(): void {
     this.stop()
     this.cancelPlay()
+    this.cancelSwallow()
   }
 
   private stop(): void {

@@ -17,6 +17,7 @@ import {
 } from '@shared/chat'
 import { AIError, type AIProvider } from './provider'
 import { log } from '../log'
+import type { Attachment } from '../attachments'
 
 const STREAM_THROTTLE_MS = 50
 
@@ -43,6 +44,8 @@ export class ChatService {
   readonly store: CollectionStore<Conversation>
   private status: ProviderStatus
   private running = new Map<string, AbortController>()
+  /** Documenti allegati alle conversazioni (solo in memoria, mai salvati né sincronizzati). */
+  private files = new Map<string, Attachment[]>()
 
   constructor(private readonly deps: ChatDeps) {
     this.status = { provider: deps.provider.id, state: 'checking' }
@@ -88,6 +91,7 @@ export class ChatService {
         return this.update(op.id, (c) => ({ ...c, model: op.model }))
       case 'remove':
         this.running.get(op.id)?.abort()
+        this.files.delete(op.id)
         return this.store.remove(op.id) ? { ok: true } : { ok: false, error: 'not-found' }
       case 'stop':
         this.running.get(op.id)?.abort()
@@ -108,13 +112,27 @@ export class ChatService {
     }
   }
 
+  /**
+   * Nuova conversazione su uno o più documenti (trascinati su Pix): i file
+   * restano in memoria per le domande successive finché l'app è aperta.
+   */
+  async startWithAttachments(files: Attachment[], text: string, title: string): Promise<string | null> {
+    const item = this.store.put({ title, model: this.deps.defaultModel(), messages: [] })
+    this.files.set(item.id, files)
+    const r = await this.send(item.id, text)
+    return r.ok ? item.id : null
+  }
+
   private async send(id: string, text: string): Promise<ChatOpResult> {
     const conv = this.store.get(id)
     if (!conv) return { ok: false, error: 'not-found' }
     if (this.running.has(id)) return { ok: false, error: 'busy' }
 
     const history = conv.messages
-    const user: ChatMessage = { role: 'user', text, at: Date.now() }
+    const files = this.files.get(id)
+    // I nomi dei file compaiono sul primo messaggio che li accompagna.
+    const attached = files && !history.some((m) => m.attachments?.length) ? files.map((f) => ({ name: f.name, kind: f.kind })) : undefined
+    const user: ChatMessage = { role: 'user', text, at: Date.now(), ...(attached ? { attachments: attached } : {}) }
     const title = history.length === 0 ? titleFrom(text) || conv.title : conv.title
     this.store.put({ ...strip(conv), title, messages: [...history, user], id })
 
@@ -136,7 +154,8 @@ export class ChatService {
           {
             prompt: buildPrompt(history, text, this.deps.labels()),
             systemPrompt: this.deps.systemPrompt(),
-            model: conv.model
+            model: conv.model,
+            ...(files ? { attachments: files } : {})
           },
           (t) => {
             latest = t

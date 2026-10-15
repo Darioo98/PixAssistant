@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { MASCOT_SCALE, NIGHT, SECTION_ANIMATIONS, eyeColorFor, moodColor, moodTransform, pickTransform, type MascotState, type PixTransform } from '@shared/mascot'
 import type { Settings } from '@shared/settings'
 import { MorphController } from './morph'
-import { PIX_ANCHOR, VIEW, faceTransform } from './geometry'
+import { PIX_ANCHOR, VIEW, faceTransform, mouthPoint } from './geometry'
 import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
-import { PEEK_VARIANTS, type PeekVariant } from './peekMotion'
+import { SwallowItem, swallowKindOf, type SwallowKind } from './SwallowItem'
+import { SWALLOW_S } from './shapes'
+import type { DropPayload } from '@shared/extras'
 import { useReducedMotion } from './useReducedMotion'
 import './mascot.css'
 
@@ -22,6 +24,8 @@ export const TRANSFORM_EVENT = 'pix:transform'
 export const PEEK_EVENT = 'pix:peek'
 /** Evento con cui le impostazioni chiedono di provare lo sbadiglio. */
 export const YAWN_EVENT = 'pix:yawn'
+/** Evento con cui le impostazioni chiedono di provare l'inghiottire (senza file vero). */
+export const SWALLOW_EVENT = 'pix:swallow'
 
 type Tired = 'none' | 'evening' | 'late'
 
@@ -81,11 +85,17 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   const [yawning, setYawning] = useState(false)
   /** Un file o un testo trascinato sopra Pix (bocca aperta) e il boccone appena inghiottito. */
   const [hungry, setHungry] = useState(false)
-  const [gulp, setGulp] = useState(false)
+  /** `payload` assente = prova dalle impostazioni: nessun file da gestire. */
+  const [swallow, setSwallow] = useState<{ id: number; kind: SwallowKind; from: { x: number; y: number }; payload: DropPayload | null } | null>(null)
+  /** Fasi dell'inghiottire: bocca spalancata mentre arriva il boccone, poi mastica. */
+  const [swallowPhase, setSwallowPhase] = useState<'open' | 'chew' | null>(null)
   const [tired, setTired] = useState<Tired>(() => tirednessAt(new Date(), settings))
   const lastTransform = useRef<PixTransform | null>(null)
+  /** Sbirciata in corso e funzione che la spaventa. */
+  const peekActive = useRef(false)
+  const scareRef = useRef<(() => void) | null>(null)
 
-  const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight || hungry || gulp
+  const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight || hungry || swallow !== null
 
   // ---- Controller del morph ----
   useLayoutEffect(() => {
@@ -124,6 +134,11 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     let leave: number | undefined
     let inside = false
     const set = (now: boolean) => {
+      // Durante la sbirciata toccare Pix lo spaventa (rientra di colpo) invece di aprirlo.
+      if (now && peekActive.current) {
+        scareRef.current?.()
+        return
+      }
       if (now === inside) return
       inside = now
       window.clearTimeout(enter)
@@ -174,9 +189,11 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
       window.clearTimeout(leave)
       setHungry(false)
       if (!paths.length && !text.trim()) return
-      setGulp(true)
-      window.setTimeout(() => setGulp(false), 2500) // rete di sicurezza se l'animazione non parte
-      void window.pix.drop({ paths, text })
+      // Punto da cui parte il boccone (coordinate dell'SVG).
+      const r = svgRef.current?.getBoundingClientRect()
+      const from = r ? { x: ((e.clientX - r.left) / r.width) * VIEW.width, y: ((e.clientY - r.top) / r.height) * VIEW.height } : { x: 90, y: 150 }
+      const kind = swallowKindOf(Array.from(dt.files).map((f) => f.name), text)
+      setSwallow({ id: performance.now(), kind, from, payload: { paths, text } })
     }
     document.addEventListener('dragover', onOver)
     document.addEventListener('drop', onDrop)
@@ -186,6 +203,42 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
       document.removeEventListener('drop', onDrop)
     }
   }, [])
+
+  // ---- Inghiottire: il boccone vola in bocca, poi scende; alla fine Pix chiede cosa farne ----
+  const swallowSent = useRef<number | null>(null)
+  const sendDrop = (s: NonNullable<typeof swallow>) => {
+    if (swallowSent.current === s.id) return
+    swallowSent.current = s.id
+    if (s.payload) void window.pix.drop(s.payload)
+    setSwallowPhase(null)
+    setSwallow(null)
+  }
+  useEffect(() => {
+    const onTry = () => setSwallow({ id: performance.now(), kind: 'pdf', from: { x: 92, y: 110 }, payload: null })
+    window.addEventListener(SWALLOW_EVENT, onTry)
+    return () => window.removeEventListener(SWALLOW_EVENT, onTry)
+  }, [])
+  useEffect(() => {
+    if (!swallow) return
+    // Rete di sicurezza: se Pix non si forma, chiede comunque cosa fare.
+    const id = window.setTimeout(() => sendDrop(swallow), 4000)
+    return () => window.clearTimeout(id)
+  }, [swallow?.id])
+  useEffect(() => {
+    if (!swallow || !formed) return
+    if (reducedMotion) {
+      sendDrop(swallow)
+      return
+    }
+    setSwallowPhase('open')
+    const started = morph.current?.swallow() ?? false
+    const timers = [
+      window.setTimeout(() => setSwallowPhase('chew'), SWALLOW_S.bite * 1000),
+      window.setTimeout(() => setSwallowPhase(null), SWALLOW_S.chewEnd * 1000),
+      window.setTimeout(() => sendDrop(swallow), (started ? SWALLOW_S.total : SWALLOW_S.bite + 0.3) * 1000)
+    ]
+    return () => timers.forEach((t) => window.clearTimeout(t))
+  }, [swallow?.id, formed])
 
   // ---- Battito di palpebre casuale (4–8 s; più raro con animazioni ridotte) ----
   useEffect(() => {
@@ -258,9 +311,10 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   }, [reducedMotion])
 
   // ---- Sbirciata: a pannello chiuso ogni tanto un piccolo Pix sbuca da dietro la barra ----
-  const [peek, setPeek] = useState<{ y: number; variant: PeekVariant } | null>(null)
+  const [peek, setPeek] = useState<{ y: number } | null>(null)
   const [peekSoon, setPeekSoon] = useState(false)
   const canPeek = collapsed && !wantPix && anim === 'normal' && settings.pixTransforms && !reducedMotion && mood !== 'sleep'
+  peekActive.current = peek !== null && canPeek
   useEffect(() => {
     if (!canPeek) {
       setPeek(null)
@@ -270,9 +324,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     const delay = peekSoon ? 900 : PEEK_MIN_MS + Math.random() * (PEEK_MAX_MS - PEEK_MIN_MS)
     const id = window.setTimeout(() => {
       setPeekSoon(false)
-      // Ogni volta una sbirciata diversa: dal lato (a un'altezza a caso) o dal fondo della barra.
-      const variant = PEEK_VARIANTS[Math.floor(Math.random() * PEEK_VARIANTS.length)] ?? 'side'
-      setPeek({ y: 95 + Math.random() * 95, variant })
+      setPeek({ y: 95 + Math.random() * 95 })
     }, delay)
     return () => window.clearTimeout(id)
   }, [canPeek, peek, peekSoon])
@@ -358,7 +410,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
       data-anim={anim}
       data-yawn={yawning && formed && !reducedMotion ? '' : undefined}
       data-hungry={hungry && formed ? '' : undefined}
-      data-gulp={gulp && formed ? '' : undefined}
+      data-swallow={formed && swallowPhase ? swallowPhase : undefined}
     >
       {bubble && <BubbleCard key={bubble.id} bubble={bubble} panelOpen={panelOpen} />}
       <svg
@@ -395,7 +447,6 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
               className="yawn-body"
               onAnimationEnd={(e) => {
                 if (e.animationName === 'pix-yawn-body') setYawning(false)
-                if (e.animationName === 'pix-gulp') setGulp(false)
               }}
             >
               <path
@@ -422,7 +473,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
                   <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
                     <g className={`lids ${formed && mood === 'normal' && tired !== 'none' ? `lids-${tired}` : ''}`}>
                       <g className={`eyes ${blink ? 'blink' : ''}`}>
-                        <Eyes mood={formed ? mood : 'normal'} style={settings.pixEyes} />
+                        <Eyes mood={formed ? (swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
                       </g>
                     </g>
                   </g>
@@ -440,11 +491,13 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
             </g>
           </g>
         </g>
+        {/* Ciò che hai trascinato vola nella bocca di Pix */}
+        {swallow && formed && swallowPhase === 'open' && <SwallowItem key={swallow.id} kind={swallow.kind} from={swallow.from} to={mouthPoint(scale, shape)} />}
         {/* Occhi della sbirciata: il corpo è la barra stessa (setBar). */}
         {peek !== null && canPeek && (
           <Peek
             y={peek.y}
-            variant={peek.variant}
+            scareRef={scareRef}
             scale={scale}
             shape={shape}
             eyes={settings.pixEyes}

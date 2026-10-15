@@ -703,7 +703,14 @@ async function main(): Promise<void> {
       t: () => i18next.t,
       bubble: (req) => mascot.notify(req),
       happy: () => mascot.flash('happy', 1600),
-      openPanel: (target) => openPanel(target)
+      openPanel: (target) => openPanel(target),
+      analyze: async (files, prompt, title) => {
+        const id = await chat.startWithAttachments(files, prompt, title)
+        if (!id) return false
+        intent = { kind: 'chat', id }
+        openPanel('chat')
+        return true
+      }
     })
   })
 

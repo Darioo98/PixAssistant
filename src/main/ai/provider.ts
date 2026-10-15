@@ -1,4 +1,5 @@
 import type { ModelOption, ProviderStatus } from '@shared/chat'
+import type { Attachment } from '../attachments'
 
 /**
  * Interfaccia comune dei fornitori di AI. Oggi c'è solo l'abbonamento Claude
@@ -10,6 +11,8 @@ export interface AIRequest {
   prompt: string
   systemPrompt: string
   model: string
+  /** Documenti da far leggere a Claude insieme al messaggio (PDF, immagini, testo). */
+  attachments?: Attachment[]
 }
 
 export interface AIProvider {

@@ -8,7 +8,12 @@ export const chatMessageSchema = z.object({
   text: z.string().max(200_000),
   at: z.number(),
   /** Codice d'errore se la risposta non è arrivata. */
-  error: z.string().max(100).optional()
+  error: z.string().max(100).optional(),
+  /** File allegati al messaggio (solo i nomi: il contenuto non viene salvato). */
+  attachments: z
+    .array(z.object({ name: z.string().max(260), kind: z.enum(['pdf', 'image', 'text']) }))
+    .max(10)
+    .optional()
 })
 export type ChatMessage = z.infer<typeof chatMessageSchema>
 

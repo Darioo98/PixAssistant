@@ -200,7 +200,8 @@
     },
     "searchShortcut": "Scorciatoia della ricerca globale",
     "morningSummary": "Riepilogo della giornata al primo utilizzo",
-    "tryYawn": "🥱 Sbadiglio"
+    "tryYawn": "🥱 Sbadiglio",
+    "trySwallow": "📄 Inghiotte un file"
   },
   "mascot": {
     "preview": {
@@ -864,6 +865,27 @@
     "open": "Apri",
     "showInFolder": "Mostra nella cartella",
     "openLinks": "Vai ai Link",
-    "openNotes": "Apri le note"
+    "openNotes": "Apri le note",
+    "gotFile": "Ho preso «{{name}}». Cosa ne faccio?",
+    "gotFolder": "Ho preso la cartella «{{name}}». La salvo nei Link?",
+    "gotMany": "Ho preso {{count}} elementi. Cosa ne faccio?",
+    "gotUrl": "Ho preso il link a {{name}}. Lo salvo?",
+    "gotText": "Ho preso questo testo. Cosa ne faccio?",
+    "privacy": "Se scegli «Analizza», il contenuto viene inviato a Claude.",
+    "cantRead": "Questo tipo di file posso solo salvarlo: la chat legge PDF, immagini, Word e file di testo.",
+    "saveLinks": "Salva nei Link",
+    "saveNote": "Salva come nota",
+    "analyze": "Analizza in chat",
+    "savedOne": "Ho messo «{{name}}» nei Link.",
+    "textName": "Testo",
+    "analyzeDoc": "Analizza questo documento: riassumi i punti principali e segnala date, scadenze, importi o cose a cui fare attenzione.",
+    "analyzeImage": "Descrivi questa immagine e dimmi cosa contiene di importante.",
+    "analyzeMany": "Analizza questi documenti: riassumi ciascuno e dimmi cosa hanno in comune e cosa richiede attenzione.",
+    "analyzeText": "Analizza questo testo: riassumilo e segnala le cose importanti.",
+    "readError": {
+      "unsupported": "Non so leggere «{{name}}».",
+      "too-large": "«{{name}}» è troppo grande da analizzare.",
+      "unreadable": "Non riesco ad aprire «{{name}}»."
+    }
   }
 }

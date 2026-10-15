@@ -518,35 +518,36 @@
   transition: transform 0.2s ease-out;
 }
 
-[data-gulp] .yawn-body {
-  animation: pix-gulp 0.75s cubic-bezier(0.3, 0.7, 0.4, 1.2) 1;
+/* Inghiottire: bocca spalancata e occhi sgranati mentre arriva il boccone, poi la bocca si chiude di scatto. */
+[data-swallow='open'] .yawn-mouth {
+  opacity: 0.5;
+  transform-box: fill-box;
+  transform-origin: 50% 25%;
+  transform: scale(1.35, 1.25);
+  transition: opacity 0.12s ease-out, transform 0.18s cubic-bezier(0.2, 1.6, 0.4, 1);
 }
 
-[data-gulp] .lids {
-  animation: pix-gulp-eyes 0.75s ease-in-out 1;
+[data-swallow='open'] .lids {
+  transform: scale(1.18);
+  transition: transform 0.15s ease-out;
 }
 
-@keyframes pix-gulp {
-  0% {
-    transform: scale(1.05, 0.97);
-  }
-  25% {
-    transform: scale(0.86, 1.12);
-  }
+[data-swallow='open'] .glance {
+  transform: translate(2.5px, -1.5px);
+}
+
+[data-swallow='chew'] .yawn-mouth {
+  opacity: 0;
+  transform: scale(0.2, 0.1);
+  transition: opacity 0.05s, transform 0.06s;
+}
+
+[data-swallow='chew'] .lids {
+  animation: pix-chew-eyes 0.32s ease-in-out 0.98s 2;
+}
+
+@keyframes pix-chew-eyes {
   50% {
-    transform: scale(1.12, 0.9);
-  }
-  75% {
-    transform: scale(0.97, 1.03);
-  }
-  100% {
-    transform: none;
-  }
-}
-
-@keyframes pix-gulp-eyes {
-  20%,
-  45% {
-    transform: scaleY(0.15);
+    transform: scaleY(0.75) translateY(1px);
   }
 }

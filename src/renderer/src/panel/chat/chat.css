@@ -329,3 +329,22 @@
   display: flex;
   flex-direction: column;
 }
+
+/* ---------- Documenti allegati (trascinati su Pix) ---------- */
+.msg-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.msg-file {
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: var(--hover);
+  font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

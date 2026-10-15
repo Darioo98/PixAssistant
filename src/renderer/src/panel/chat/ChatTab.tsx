@@ -158,6 +158,15 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
         {conv.messages.length === 0 && !busy && <p className="chat-hint">{t('ai.chat.empty')}</p>}
         {conv.messages.map((m, i) => (
           <div key={`${m.at}-${i}`} className={`msg ${m.role}`}>
+            {m.attachments && m.attachments.length > 0 && (
+              <div className="msg-files">
+                {m.attachments.map((a) => (
+                  <span key={a.name} className="msg-file" title={a.name}>
+                    {a.kind === 'pdf' ? '📕' : a.kind === 'image' ? '🖼️' : '📄'} {a.name}
+                  </span>
+                ))}
+              </div>
+            )}
             {m.role === 'user' ? <p className="msg-user-text">{m.text}</p> : m.text && <Markdown text={m.text} />}
             {m.error && <p className="msg-error">{errorText(m.error)}</p>}
             {m.role === 'assistant' && m.text && <CopyAnswer text={m.text} />}

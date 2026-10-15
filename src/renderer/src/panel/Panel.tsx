@@ -13,6 +13,7 @@ import { ClipboardTab } from './extras/ClipboardTab'
 import { LinksTab } from './extras/LinksTab'
 import { SearchOverlay } from './search/SearchOverlay'
 import { FOCUS_EVENT, SEARCH_EVENT } from './focus'
+import { saveSelected } from './chat/useChat'
 
 export function Panel({ state }: { state: UiState }) {
   const { t } = useTranslation()
@@ -43,9 +44,16 @@ export function Panel({ state }: { state: UiState }) {
 
   // Scorciatoia globale della ricerca: arriva come richiesta dal processo principale.
   useEffect(() => {
-    if (state.intent?.kind !== 'search') return
-    setSearching(state.intent.query ?? '')
-    window.pix.clearIntent()
+    const intent = state.intent
+    if (intent?.kind === 'search') {
+      setSearching(intent.query ?? '')
+      window.pix.clearIntent()
+    } else if (intent?.kind === 'chat') {
+      // Chat aperta da Pix (es. documento da analizzare): mostra quella conversazione.
+      saveSelected(intent.id)
+      setFocusSeq((n) => n + 1)
+      window.pix.clearIntent()
+    }
   }, [state.intent])
 
   return (

@@ -200,7 +200,8 @@
     },
     "searchShortcut": "Global search shortcut",
     "morningSummary": "Daily summary on first use",
-    "tryYawn": "🥱 Yawn"
+    "tryYawn": "🥱 Yawn",
+    "trySwallow": "📄 Swallows a file"
   },
   "mascot": {
     "preview": {
@@ -864,6 +865,27 @@
     "open": "Open",
     "showInFolder": "Show in folder",
     "openLinks": "Go to Links",
-    "openNotes": "Open notes"
+    "openNotes": "Open notes",
+    "gotFile": "I grabbed “{{name}}”. What should I do with it?",
+    "gotFolder": "I grabbed the “{{name}}” folder. Save it to Links?",
+    "gotMany": "I grabbed {{count}} items. What should I do with them?",
+    "gotUrl": "I grabbed the link to {{name}}. Save it?",
+    "gotText": "I grabbed this text. What should I do with it?",
+    "privacy": "If you choose “Analyze”, the content is sent to Claude.",
+    "cantRead": "I can only save this kind of file: chat reads PDFs, images, Word and text files.",
+    "saveLinks": "Save to Links",
+    "saveNote": "Save as note",
+    "analyze": "Analyze in chat",
+    "savedOne": "I put “{{name}}” in Links.",
+    "textName": "Text",
+    "analyzeDoc": "Analyze this document: summarize the key points and flag dates, deadlines, amounts or anything to watch out for.",
+    "analyzeImage": "Describe this image and tell me what's important in it.",
+    "analyzeMany": "Analyze these documents: summarize each one and tell me what they have in common and what needs attention.",
+    "analyzeText": "Analyze this text: summarize it and flag the important points.",
+    "readError": {
+      "unsupported": "I can't read “{{name}}”.",
+      "too-large": "“{{name}}” is too large to analyze.",
+      "unreadable": "I can't open “{{name}}”."
+    }
   }
 }

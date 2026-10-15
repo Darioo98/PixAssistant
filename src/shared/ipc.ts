@@ -61,7 +61,7 @@ export interface DataOps {
 }
 export type DataResult = { ok: boolean; id?: string }
 
-export type UiIntent = { kind: 'vault-generate'; id: string } | { kind: 'search'; query?: string }
+export type UiIntent = { kind: 'vault-generate'; id: string } | { kind: 'search'; query?: string } | { kind: 'chat'; id: string }
 
 export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet', 'summary'] as const
 export type MascotPreview = (typeof PREVIEWS)[number]
