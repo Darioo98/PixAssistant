@@ -1,153 +1,193 @@
-/**
- * Sbirciata a pannello chiuso: un piccolo Pix esce da dietro la barra come una
- * goccia che si stacca, guarda fuori con un occhio solo, poi si sporge, si
- * guarda intorno, sbatte le palpebre e rientra. Funzioni pure, così i
- * fotogrammi si possono verificare nei test.
- *
- * `d` è quanto Pix è nascosto dietro la barra, in larghezze del corpo:
- * 0 = fuori (solo il bordo destro dietro la barra), 1 = nascosto del tutto.
- */
-export const PEEK_DURATION_S = 5
+import type { PixShape } from '@shared/mascot'
 
-/** Dimensione del piccolo Pix rispetto a quello normale. */
+/**
+ * Sbirciata a pannello chiuso. Pix e la barra sono un unico fluido: la barra
+ * si gonfia in un punto, la goccia cresce e diventa la testa di Pix, che resta
+ * sempre attaccata alla barra con un collo che si allunga e si assottiglia.
+ * Poi la goccia viene riassorbita. Tutto è un solo tracciato (la barra stessa),
+ * calcolato da funzioni pure così i fotogrammi si possono verificare nei test.
+ */
+export const PEEK_DURATION_S = 5.2
+
+/** Dimensione della testa rispetto a Pix normale. */
 export const PEEK_SCALE = 0.62
 
-/** Perno della sbirciata nel tracciato del corpo: bordo destro, a metà altezza. */
-export const PEEK_PIVOT = { x: 81, y: 193 } as const
-const BODY_WIDTH = 60
-/** Bordo destro della finestra (dietro la barra). */
-const EDGE_X = 96
+/** Barra a riposo (coordinate dell'SVG): x 88–96, y 50–230, estremità arrotondate. */
+const BAR = { left: 88, right: 96, top: 50, bottom: 230 } as const
+/** Accorciamento di ogni estremità della barra quando la testa è formata. */
+const SHRINK = 5
+/** Distanza massima fra barra e testa (lunghezza del collo). */
+const GAP_OUT = 8.5
 
 export interface PeekFrame {
-  /** Quanto è nascosto (0 fuori, 1 nascosto). */
-  d: number
+  /** Crescita della goccia (0 = barra liscia, 1 = testa formata). */
+  grow: number
+  /** Lunghezza del collo in px. */
+  gap: number
+  /** Allungamento orizzontale della testa (a volume costante). */
+  stretch: number
   rot: number
-  sx: number
-  sy: number
   bob: number
   eyeX: number
   eyeY: number
   /** Apertura degli occhi (1 aperti, ~0.1 chiusi). */
   eyeOpen: number
-  /** Ampiezza del "collo" che lo unisce alla barra (0–1). */
-  neck: number
-  /**
-   * Quanta barra Pix ha preso per uscire (0–1): la barra si assottiglia dove
-   * sbuca e si accorcia un poco. Negativo = si gonfia mentre il fluido rientra.
-   */
-  consumed: number
+  /** Visibilità del viso (gli occhi compaiono quando la testa è formata). */
+  face: number
 }
-
-const HIDDEN = 1.08
-const ONE_EYE = 0.38
-const OUT = 0.06
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
+const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a))
+const smooth = (x: number) => x * x * (3 - 2 * x)
 const easeOutBack = (x: number) => {
-  const c = 1.9
+  const c = 1.15
   return 1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2
 }
-const easeInBack = (x: number) => {
-  const c = 0.6
-  return (c + 1) * x ** 3 - c * x ** 2
-}
-const smooth = (x: number) => x * x * (3 - 2 * x)
-const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a))
-const lerp = (a: number, b: number, k: number) => a + (b - a) * k
-
-/** Posizione nel tempo, senza deformazioni. */
-function hideAt(t: number): number {
-  if (t < 1) return lerp(HIDDEN, ONE_EYE, easeOutBack(smooth(seg(t, 0, 1))))
-  if (t < 1.6) return ONE_EYE
-  if (t < 2.15) return lerp(ONE_EYE, OUT, easeOutBack(seg(t, 1.6, 2.15)))
-  if (t < 4.2) return OUT
-  return lerp(OUT, HIDDEN, easeInBack(seg(t, 4.2, 4.75)))
-}
-
 /** Picco "a campana" fra a e b (0 ai bordi, 1 al centro). */
 const bump = (t: number, a: number, b: number) => (t <= a || t >= b ? 0 : Math.sin(Math.PI * seg(t, a, b)))
 
+function growAt(t: number): number {
+  if (t < 1.3) return easeOutBack(seg(t, 0, 1.3))
+  if (t < 4.0) return 1
+  return 1 - smooth(seg(t, 4.0, 4.9))
+}
+
+function gapAt(t: number): number {
+  const out = t < 3.85 ? easeOutBack(seg(t, 0.5, 1.8)) : 1 - smooth(seg(t, 3.85, 4.6))
+  return 0.6 + (GAP_OUT - 0.6) * out
+}
+
 export function peekFrame(t: number): PeekFrame {
-  const d = hideAt(t)
-  // Allungamento proporzionale alla velocità, a volume costante: è un fluido.
+  const grow = growAt(t)
+  const gap = gapAt(t)
+  // Si allunga quando il collo si muove, poi tremola come una gelatina.
   const dt = 1 / 120
-  const v = Math.abs(hideAt(t + dt) - hideAt(t - dt)) / (2 * dt)
-  const stretch = Math.min(0.32, v * 0.11)
-  // Prima di rientrare si raccoglie (anticipo) e appena uscito ondeggia.
-  const squash = 0.12 * bump(t, 3.95, 4.3)
-  const jiggle = 0.05 * Math.sin((t - 2.15) * 14) * Math.exp(-(t - 2.15) * 4) * (t > 2.15 && t < 3.2 ? 1 : 0)
-  const sx = 1 + stretch + squash + jiggle
-  const sy = 1 / sx
+  const v = (gapAt(t + dt) - gapAt(t - dt)) / (2 * dt)
+  const jiggle = 0.06 * Math.sin((t - 1.3) * 13) * Math.exp(-(t - 1.3) * 3.5) * (t > 1.3 && t < 2.6 ? 1 : 0)
+  const stretch = Math.min(0.15, Math.abs(v) * 0.012) + jiggle
 
-  // Si sporge inclinandosi verso l'esterno, poi si raddrizza per rientrare.
-  const lean = smooth(seg(t, 1.6, 2.1)) * (1 - smooth(seg(t, 3.9, 4.3)))
-  const rot = -11 * lean - 4 * bump(t, 0.35, 1.3) + 2.5 * Math.sin(t * 2.4) * lean
-  const bob = -1.2 * Math.sin(t * 3.1) * lean
+  const out = smooth(seg(t, 1.0, 1.8)) * (1 - smooth(seg(t, 3.8, 4.3)))
+  const rot = -8 * out + 3 * Math.sin(t * 2.3) * out
+  const bob = -1.5 * Math.sin(t * 2.9) * out
 
-  // Sguardo: con un occhio guarda a sinistra, poi si guarda intorno.
   let eyeX = 0
   let eyeY = 0
-  eyeX -= 3 * bump(t, 0.6, 1.65)
-  eyeX -= 3 * bump(t, 2.2, 3.0)
-  eyeY += 1.5 * bump(t, 2.2, 3.0)
-  eyeX += 1.5 * bump(t, 3.0, 3.7)
-  eyeY -= 1.2 * bump(t, 3.0, 3.7)
-
-  // Doppio battito di palpebre mentre è fuori.
-  const blink = Math.max(bump(t, 3.2, 3.36), bump(t, 3.48, 3.64))
+  eyeX -= 3 * bump(t, 1.4, 2.4)
+  eyeY += 1 * bump(t, 1.4, 2.4)
+  eyeX += 1.8 * bump(t, 2.5, 3.2)
+  eyeY -= 1.4 * bump(t, 2.5, 3.2)
+  const blink = Math.max(bump(t, 3.3, 3.46), bump(t, 3.56, 3.72))
   const eyeOpen = 1 - 0.88 * blink
-
-  const neck = clamp01((HIDDEN - d) / 0.35)
-  // La barra cede fluido mentre Pix esce e lo riprende quando rientra,
-  // con un piccolo rigonfiamento finale prima di tornare com'era.
-  const consumed = clamp01((HIDDEN - d) / (HIDDEN - OUT)) - 0.35 * bump(t, 4.62, 5)
-  return { d, rot, sx, sy, bob, eyeX, eyeY, eyeOpen, neck, consumed }
+  const face = smooth(seg(grow, 0.6, 0.9)) * (1 - smooth(seg(t, 3.95, 4.35)))
+  return { grow, gap, stretch, rot, bob, eyeX, eyeY, eyeOpen, face }
 }
 
-/** Trasformazione SVG del corpo (tracciato `pixPath(1, …)`) per un fotogramma. */
-export function peekTransform(f: PeekFrame, y: number, scale: number): string {
+/** Esponente del superellisse della testa, secondo la forma scelta per Pix. */
+const SHAPE_POWER: Record<PixShape, number> = { squircle: 4, round: 2, tile: 6, egg: 2.4, soft: 3 }
+
+interface Head {
+  cx: number
+  cy: number
+  a: number
+  b: number
+  rot: number
+  n: number
+  /** Crescita limitata a 0–1. */
+  grow01: number
+}
+
+export function headOf(f: PeekFrame, y: number, scale: number, shape: PixShape): Head {
   const s = PEEK_SCALE * scale
-  const px = EDGE_X + f.d * BODY_WIDTH * s
-  return `translate(${r(px)} ${r(y + f.bob)}) rotate(${r(f.rot)}) scale(${r(s * f.sx)} ${r(s * f.sy)}) translate(${-PEEK_PIVOT.x} ${-PEEK_PIVOT.y})`
+  const a = 30 * s * f.grow * (1 + f.stretch)
+  const b = (33 * s * f.grow) / (1 + f.stretch)
+  // Da piccola è una goccia tonda; crescendo prende la forma scelta per Pix.
+  const n = 2 + (SHAPE_POWER[shape] - 2) * smooth(clamp01(f.grow))
+  return { cx: BAR.left - f.gap - a, cy: y + f.bob, a, b, rot: f.rot, n, grow01: clamp01(f.grow) }
 }
 
-/** Trasformazione degli occhi (coordinate delle bozze, centro occhi 50,52). */
-export function peekEyesTransform(f: PeekFrame): string {
-  return `translate(${r(f.eyeX)} ${r(f.eyeY)}) translate(50 52) scale(1 ${r(f.eyeOpen)}) translate(-50 -52)`
+/** Punto della testa all'angolo `th` (y verso il basso: 0 destra, π/2 sotto). */
+function headPoint(h: Head, th: number): [number, number] {
+  const c = Math.cos(th)
+  const s = Math.sin(th)
+  const e = 2 / h.n
+  const x = h.a * Math.sign(c) * Math.abs(c) ** e
+  const y = h.b * Math.sign(s) * Math.abs(s) ** e
+  const r = (h.rot * Math.PI) / 180
+  return [h.cx + x * Math.cos(r) - y * Math.sin(r), h.cy + x * Math.sin(r) + y * Math.cos(r)]
 }
 
-/** Barra a riposo (coordinate dell'SVG): x 88–96, y 50–230, estremità arrotondate. */
-const BAR = { left: 88, right: 96, top: 50, bottom: 230 } as const
-/** Assottigliamento massimo (px su 8 di larghezza) e accorciamento di ogni estremità. */
-const DENT_DEPTH = 4.6
-const DENT_SPREAD = 15
-const SHRINK = 5
+function unit(v: [number, number]): [number, number] {
+  const l = Math.hypot(v[0], v[1]) || 1
+  return [v[0] / l, v[1] / l]
+}
 
 /**
- * Tracciato della barra a cui Pix ha "preso" un po' di fluido all'altezza `y`:
- * il bordo sinistro rientra con un incavo morbido e la barra si accorcia un poco.
+ * Tracciato unico barra + collo + testa. Con `grow` = 0 è la barra a riposo.
+ * Il collo parte tangente alla barra e arriva tangente alla testa: nessuno
+ * spigolo, come una goccia di liquido che si stira.
  */
-export function consumedBarPath(consumed: number, y: number): string {
-  const top = BAR.top + SHRINK * consumed
-  const bottom = BAR.bottom - SHRINK * consumed
+export function peekBodyPath(f: PeekFrame, y: number, scale: number, shape: PixShape): string {
+  const top = BAR.top + SHRINK * f.grow
+  const bottom = BAR.bottom - SHRINK * f.grow
   const rad = (BAR.right - BAR.left) / 2
   const mid = BAR.left + rad
-  const leftAt = (yy: number) => BAR.left + DENT_DEPTH * consumed * Math.exp(-(((yy - y) / DENT_SPREAD) ** 2))
   const k = rad * 0.5523
   const parts = [
     `M${r(mid)} ${r(top)}`,
     `C${r(mid + k)} ${r(top)} ${BAR.right} ${r(top + rad - k)} ${BAR.right} ${r(top + rad)}`,
     `L${BAR.right} ${r(bottom - rad)}`,
     `C${BAR.right} ${r(bottom - rad + k)} ${r(mid + k)} ${r(bottom)} ${r(mid)} ${r(bottom)}`,
-    `C${r(mid - k)} ${r(bottom)} ${r(leftAt(bottom - rad))} ${r(bottom - rad + k)} ${r(leftAt(bottom - rad))} ${r(bottom - rad)}`
+    `C${r(mid - k)} ${r(bottom)} ${BAR.left} ${r(bottom - rad + k)} ${BAR.left} ${r(bottom - rad)}`
   ]
-  // Bordo sinistro dal basso verso l'alto, fitto vicino all'incavo.
-  for (let yy = bottom - rad - 2; yy > top + rad; yy -= Math.abs(yy - y) < DENT_SPREAD * 2.5 ? 1.5 : 12) {
-    parts.push(`L${r(leftAt(yy))} ${r(yy)}`)
+
+  if (f.grow > 0.01) {
+    const h = headOf(f, y, scale, shape)
+    // Più il collo è lungo, più si assottiglia e si attacca in un punto più stretto.
+    const stretchK = clamp01(f.gap / GAP_OUT)
+    const th0 = ((80 - 32 * stretchK) * Math.PI) / 180
+    // Sulla barra l'attacco è più largo della testa: un menisco concavo, come un liquido.
+    const junction = Math.max(3, h.b * (1 - 0.4 * stretchK) + (2 + 4 * h.grow01) * (1 - 0.3 * stretchK))
+    const y1 = h.cy - junction
+    const y2 = h.cy + junction
+    // Il raccordo sulla barra non supera metà attacco, altrimenti il collo si strozza.
+    const fillet = junction * 0.5
+
+    const pb = headPoint(h, th0)
+    const pt = headPoint(h, 2 * Math.PI - th0)
+    const eps = 0.01
+    const g = Math.max(2, (BAR.left - pb[0]) * 0.55)
+    const tb = unit(sub(headPoint(h, th0 + eps), headPoint(h, th0 - eps)))
+    const tt = unit(sub(headPoint(h, 2 * Math.PI - th0 + eps), headPoint(h, 2 * Math.PI - th0 - eps)))
+
+    parts.push(`L${BAR.left} ${r(y2)}`)
+    // Le maniglie verso la testa restano a sinistra della barra: niente punte.
+    const cb: [number, number] = [Math.min(pb[0] - tb[0] * g, BAR.left - 1), pb[1] - tb[1] * g]
+    const ct: [number, number] = [Math.min(pt[0] + tt[0] * g, BAR.left - 1), pt[1] + tt[1] * g]
+    parts.push(`C${BAR.left} ${r(y2 - fillet)} ${r(cb[0])} ${r(cb[1])} ${r(pb[0])} ${r(pb[1])}`)
+    const steps = 56
+    for (let i = 1; i < steps; i++) {
+      const p = headPoint(h, th0 + ((2 * Math.PI - 2 * th0) * i) / steps)
+      parts.push(`L${r(p[0])} ${r(p[1])}`)
+    }
+    parts.push(`L${r(pt[0])} ${r(pt[1])}`)
+    parts.push(`C${r(ct[0])} ${r(ct[1])} ${BAR.left} ${r(y1 + fillet)} ${BAR.left} ${r(y1)}`)
   }
-  parts.push(`L${r(leftAt(top + rad))} ${r(top + rad)}`)
-  parts.push(`C${r(leftAt(top + rad))} ${r(top + rad - k)} ${r(mid - k)} ${r(top)} ${r(mid)} ${r(top)} Z`)
+
+  parts.push(`L${BAR.left} ${r(top + rad)}`)
+  parts.push(`C${BAR.left} ${r(top + rad - k)} ${r(mid - k)} ${r(top)} ${r(mid)} ${r(top)} Z`)
   return parts.join(' ')
 }
 
-const r = (n: number) => Math.round(n * 1000) / 1000
+/** Trasformazione del viso (coordinate delle bozze 100×100, corpo x 20–80, y 22–88). */
+export function peekFaceTransform(f: PeekFrame, y: number, scale: number, shape: PixShape): string {
+  const h = headOf(f, y, scale, shape)
+  return `translate(${r(h.cx)} ${r(h.cy)}) rotate(${r(h.rot)}) scale(${r(h.a / 30)} ${r(h.b / 33)}) translate(-50 -55)`
+}
+
+/** Trasformazione degli occhi (centro occhi 50,52). */
+export function peekEyesTransform(f: PeekFrame): string {
+  return `translate(${r(f.eyeX)} ${r(f.eyeY)}) translate(50 52) scale(1 ${r(f.eyeOpen)}) translate(-50 -52)`
+}
+
+const sub = (p: [number, number], q: [number, number]): [number, number] => [p[0] - q[0], p[1] - q[1]]
+const r = (n: number) => Math.round(n * 100) / 100

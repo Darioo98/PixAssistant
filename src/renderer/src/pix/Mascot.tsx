@@ -291,18 +291,6 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
             onClick={toggle}
           />
         )}
-        {peekY !== null && canPeek && (
-          <Peek
-            y={peekY}
-            scale={scale}
-            shape={shape}
-            eyes={settings.pixEyes}
-            shine={settings.pixShine}
-            fill={`url(#${fillId})`}
-            setBar={(d) => morph.current?.setBar(d)}
-            onDone={() => setPeekY(null)}
-          />
-        )}
         <ellipse ref={shadowRef} cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx={24 * scale} ry="3" fill="#000" opacity="0" />
         <g className={`pose ${formed ? `pose-${mood}` : ''}`}>
           <g
@@ -339,6 +327,18 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
             </g>
           </g>
         </g>
+        {/* Occhi della sbirciata: il corpo è la barra stessa (setBar). */}
+        {peekY !== null && canPeek && (
+          <Peek
+            y={peekY}
+            scale={scale}
+            shape={shape}
+            eyes={settings.pixEyes}
+            shine={settings.pixShine}
+            setBar={(d) => morph.current?.setBar(d)}
+            onDone={() => setPeekY(null)}
+          />
+        )}
         {formed && (
           <g transform={face} pointerEvents="none">
             <Badge mood={mood} />
