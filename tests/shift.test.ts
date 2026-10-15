@@ -31,7 +31,7 @@ describe('calcolo del turno', () => {
 describe('ShiftService', () => {
   let dir: string
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'dock-shift-'))
+    dir = await mkdtemp(join(tmpdir(), 'pix-shift-'))
     vi.useFakeTimers()
   })
   afterEach(async () => {

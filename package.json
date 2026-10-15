@@ -1,6 +1,6 @@
 {
-  "name": "dock",
-  "productName": "Dock",
+  "name": "pix",
+  "productName": "Pix",
   "version": "0.1.0",
   "description": "Barra multifunzione per Windows con la mascotte Pix",
   "private": true,

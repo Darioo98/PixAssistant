@@ -13,10 +13,10 @@ export function BubbleCard({ bubble, panelOpen }: { bubble: Bubble; panelOpen: b
   const remaining = useRef(bubble.timeoutMs)
   const sent = useRef(false)
 
-  const finish = (outcome: Parameters<typeof window.dock.bubbleOutcome>[1]) => {
+  const finish = (outcome: Parameters<typeof window.pix.bubbleOutcome>[1]) => {
     if (sent.current) return
     sent.current = true
-    window.dock.bubbleOutcome(bubble.id, outcome)
+    window.pix.bubbleOutcome(bubble.id, outcome)
   }
 
   useEffect(() => {

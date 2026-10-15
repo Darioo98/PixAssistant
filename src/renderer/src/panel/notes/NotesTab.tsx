@@ -12,10 +12,10 @@ type Segment = 'notes' | 'todos'
 
 export function NotesTab() {
   const { t } = useTranslation()
-  const [segment, setSegment] = useState<Segment>(() => (sessionStorageGet('dock.notes.segment') === 'todos' ? 'todos' : 'notes'))
+  const [segment, setSegment] = useState<Segment>(() => (sessionStorageGet('pix.notes.segment') === 'todos' ? 'todos' : 'notes'))
   const pick = (s: Segment) => {
     setSegment(s)
-    sessionStorageSet('dock.notes.segment', s)
+    sessionStorageSet('pix.notes.segment', s)
   }
   return (
     <div className="productivity">
@@ -95,7 +95,7 @@ function NoteEditor({ note, onClose, onCreated }: { note?: NoteItem; onClose: ()
 
   const save = async (next = { title, body, pinned }) => {
     if (!idRef.current && !next.title.trim() && !next.body.trim()) return
-    const r = await window.dock.data.apply('notes', { op: 'save', id: idRef.current, note: next })
+    const r = await window.pix.data.apply('notes', { op: 'save', id: idRef.current, note: next })
     if (r.ok && r.id && !idRef.current) {
       idRef.current = r.id
       onCreated(r.id)
@@ -148,7 +148,7 @@ function NoteEditor({ note, onClose, onCreated }: { note?: NoteItem; onClose: ()
                 window.clearTimeout(timer.current)
                 latest.current.saved = true
                 setSaved(true)
-                void window.dock.data.apply('notes', { op: 'remove', id: idRef.current! }).then(onClose)
+                void window.pix.data.apply('notes', { op: 'remove', id: idRef.current! }).then(onClose)
               }}
             />
           </RowMenu>
@@ -200,7 +200,7 @@ function Todos() {
 
   const add = () => {
     if (!text.trim()) return
-    void window.dock.data.apply('todos', { op: 'save', todo: { text: text.trim(), due: due || null, priority, today: forToday } })
+    void window.pix.data.apply('todos', { op: 'save', todo: { text: text.trim(), due: due || null, priority, today: forToday } })
     setText('')
     setDue('')
     setPriority('normal')
@@ -263,7 +263,7 @@ function Todos() {
               {showDone ? '▾' : '▸'} {t('todos.groups.done')} ({done.length})
             </button>
             {showDone && (
-              <button className="btn subtle" onClick={() => void window.dock.data.apply('todos', { op: 'clearDone' })}>
+              <button className="btn subtle" onClick={() => void window.pix.data.apply('todos', { op: 'clearDone' })}>
                 {t('todos.clearDone')}
               </button>
             )}
@@ -290,7 +290,7 @@ export function TodoRow({ todo, today, lang, compact = false }: { todo: TodoItem
         type="checkbox"
         checked={todo.done}
         aria-label={todo.text}
-        onChange={() => void window.dock.data.apply('todos', { op: 'toggle', id: todo.id })}
+        onChange={() => void window.pix.data.apply('todos', { op: 'toggle', id: todo.id })}
       />
       <span className="todo-text">
         {todo.text}
@@ -301,7 +301,7 @@ export function TodoRow({ todo, today, lang, compact = false }: { todo: TodoItem
           {!todo.done && (
             <button
               onClick={() =>
-                void window.dock.data.apply('todos', {
+                void window.pix.data.apply('todos', {
                   op: 'save',
                   id: todo.id,
                   todo: { text: todo.text, due: todo.due, priority: todo.priority, today: !todo.today }
@@ -311,7 +311,7 @@ export function TodoRow({ todo, today, lang, compact = false }: { todo: TodoItem
               {t('todos.today')}: {todo.today ? '✓' : '—'}
             </button>
           )}
-          <DeleteButton onConfirm={() => void window.dock.data.apply('todos', { op: 'remove', id: todo.id })} />
+          <DeleteButton onConfirm={() => void window.pix.data.apply('todos', { op: 'remove', id: todo.id })} />
         </RowMenu>
       )}
     </li>

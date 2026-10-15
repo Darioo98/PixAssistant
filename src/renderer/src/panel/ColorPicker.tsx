@@ -5,7 +5,7 @@ import { hexToHsv, hsvToHex, type HSV } from '@shared/color'
 
 /**
  * Selettore di colore interno al pannello. Il selettore nativo di Electron su
- * Windows apre una finestra di sistema: la finestra di Dock perderebbe il
+ * Windows apre una finestra di sistema: la finestra di Pix perderebbe il
  * focus e il pannello si chiuderebbe mentre scegli il colore.
  */
 

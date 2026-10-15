@@ -11,7 +11,7 @@ import { formatHHMM, minutesOf } from '@shared/shift'
 const CATEGORIES = ['general', 'pix', 'features', 'data'] as const
 type Category = (typeof CATEGORIES)[number]
 const CATEGORY_ICONS: Record<Category, string> = { general: '⚙️', pix: '🫧', features: '🧩', data: '💾' }
-const CATEGORY_KEY = 'dock.settings.category'
+const CATEGORY_KEY = 'pix.settings.category'
 
 function loadCategory(): Category {
   try {
@@ -37,7 +37,7 @@ export function SettingsTab({ state }: { state: UiState }) {
   }
 
   const save = async (patch: SettingsPatch) => {
-    const res = await window.dock.setSettings(patch)
+    const res = await window.pix.setSettings(patch)
     setError(res.ok ? null : res.error === 'shortcutTaken' ? t('settings.shortcutTaken') : t('settings.saveError'))
     return res.ok
   }
@@ -157,7 +157,7 @@ export function SettingsTab({ state }: { state: UiState }) {
             </div>
             <div className="preview-buttons">
               {PREVIEWS.map((p) => (
-                <button key={p} className="pill" onClick={() => window.dock.previewMascot(p)}>
+                <button key={p} className="pill" onClick={() => window.pix.previewMascot(p)}>
                   {t(`settings.previewOptions.${p}`)}
                 </button>
               ))}
@@ -235,12 +235,12 @@ export function SettingsTab({ state }: { state: UiState }) {
                   {t('settings.hello')}: {state.vault.helloEnrolled ? t('settings.helloOn') : t('settings.helloOff')}
                 </span>
                 {state.vault.helloEnrolled ? (
-                  <button className="btn subtle" onClick={() => void window.dock.vault.apply({ op: 'removeHello' })}>
+                  <button className="btn subtle" onClick={() => void window.pix.vault.apply({ op: 'removeHello' })}>
                     {t('settings.helloRemove')}
                   </button>
                 ) : (
                   state.vault.unlocked && (
-                    <button className="btn" onClick={() => void window.dock.vault.apply({ op: 'enrollHello' })}>
+                    <button className="btn" onClick={() => void window.pix.vault.apply({ op: 'enrollHello' })}>
                       {t('settings.helloEnable')}
                     </button>
                   )
@@ -388,7 +388,7 @@ export function SettingsTab({ state }: { state: UiState }) {
               <code title={state.dataDir.path}>{state.dataDir.path}</code>
               <span className="hint">{t(`settings.dataKind.${state.dataDir.kind}`)}</span>
               {state.dataDir.kind === 'business' && <p className="warning">{t('settings.businessWarning')}</p>}
-              <button className="btn" onClick={() => window.dock.openDataDir()}>
+              <button className="btn" onClick={() => window.pix.openDataDir()}>
                 {t('settings.openDataDir')}
               </button>
             </div>

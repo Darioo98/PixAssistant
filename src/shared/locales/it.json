@@ -1,9 +1,9 @@
 {
   "app": {
-    "name": "Dock"
+    "name": "Pix"
   },
   "tray": {
-    "tooltip": "Dock",
+    "tooltip": "Pix",
     "open": "Apri",
     "hideMascot": "Nascondi la mascotte",
     "showMascot": "Mostra la mascotte",
@@ -13,7 +13,7 @@
     "pauseClipboard": "Pausa cronologia appunti"
   },
   "pix": {
-    "label": "Pix: apri Dock"
+    "label": "Pix: apri Pix"
   },
   "panel": {
     "close": "Chiudi"
@@ -179,6 +179,7 @@
     "shiftRemind": "Avvisami prima della fine (minuti)",
     "transforms": "Animazioni spontanee (ogni tanto il corpo si trasforma e si muove)",
     "tryTransforms": "Prova le animazioni",
+    "tryPeek": "👀 Sbirciata",
     "transformOptions": {
       "wobble": "Budino",
       "waves": "Onda",
@@ -189,7 +190,7 @@
       "bubble": "Fumetto",
       "hourglass": "Clessidra"
     },
-    "transformsHint": "Pix accoglie ogni sezione del pannello con la sua animazione.",
+    "transformsHint": "A pannello chiuso, ogni tanto Pix sbircia da dietro la barra. Pix accoglie ogni sezione del pannello con la sua animazione.",
     "categories": {
       "general": "Generale",
       "pix": "Pix",
@@ -470,10 +471,10 @@
     "copied": "Copiato"
   },
   "ai": {
-    "systemPrompt": "Sei l'assistente di Dock, un'app personale per Windows. Rispondi in italiano, a meno che l'utente non scriva in un'altra lingua. Sii chiaro e conciso e usa il Markdown quando aiuta (elenchi, tabelle, blocchi di codice). Non hai accesso a file, comandi, Internet o altri strumenti: se servono, spiega all'utente come procedere.",
+    "systemPrompt": "Sei Pix, la mascotte fluida e l'assistente di un'app personale per Windows che porta il tuo stesso nome. Se ti chiedono chi sei, rispondi che sei Pix. Rispondi in italiano, a meno che l'utente non scriva in un'altra lingua. Sii chiaro e conciso e usa il Markdown quando aiuta (elenchi, tabelle, blocchi di codice). Non hai accesso a file, comandi, Internet o altri strumenti: se servono, spiega all'utente come procedere.",
     "labels": {
       "user": "Utente",
-      "assistant": "Assistente"
+      "assistant": "Pix"
     },
     "newChat": "Nuova chat",
     "chat": {
@@ -517,7 +518,7 @@
     "connect": {
       "checking": "Verifico il collegamento con Claude…",
       "notLoggedInTitle": "Collega il tuo abbonamento Claude",
-      "notLoggedInText": "Dock usa Claude Code con il tuo account claude.ai (Pro o Max), senza API key. Apri Claude Code, digita /login e segui le istruzioni nel browser; poi torna qui e premi «Verifica di nuovo».",
+      "notLoggedInText": "Pix usa Claude Code con il tuo account claude.ai (Pro o Max), senza API key. Apri Claude Code, digita /login e segui le istruzioni nel browser; poi torna qui e premi «Verifica di nuovo».",
       "openLogin": "Apri Claude Code",
       "recheck": "Verifica di nuovo",
       "unavailableTitle": "Claude Code non trovato",
@@ -632,7 +633,7 @@
     "clear": "Svuota (tranne le fissate)",
     "empty": "Niente ancora. Copia qualcosa e lo ritrovi qui.",
     "noResults": "Nessun risultato.",
-    "unavailable": "La cronologia richiede l'helper nativo di Dock, che non è disponibile.",
+    "unavailable": "La cronologia richiede l'helper nativo di Pix, che non è disponibile.",
     "pin": "Fissa",
     "unpin": "Togli",
     "copied": "Copiato",
@@ -706,11 +707,11 @@
     "restore": "Ripristina",
     "dismiss": "Ignora",
     "changeDataDir": "Cambia cartella dati…",
-    "changeDataDirHint": "Se la nuova cartella è vuota ci copio i dati attuali; poi Dock si riavvia.",
+    "changeDataDirHint": "Se la nuova cartella è vuota ci copio i dati attuali; poi Pix si riavvia.",
     "restarting": "Riavvio…",
     "errors": {
       "wrong-key": "Chiave di recupero non corretta.",
-      "invalid-backup": "Il file non è un backup di Dock valido.",
+      "invalid-backup": "Il file non è un backup di Pix valido.",
       "unlock-first": "Il backup viene da un’altra cassaforte: apri prima la cassaforte per poter unire anche le password.",
       "not-configured": "Configura prima la cassaforte.",
       "generic": "Operazione non riuscita."

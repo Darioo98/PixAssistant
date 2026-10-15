@@ -20,7 +20,7 @@ function csp(): Plugin {
     "object-src 'none'"
   ]
   return {
-    name: 'dock-csp',
+    name: 'pix-csp',
     transformIndexHtml: {
       order: 'pre',
       handler(html, ctx) {
@@ -30,7 +30,7 @@ function csp(): Plugin {
           dev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'",
           dev ? "connect-src 'self' ws://localhost:* http://localhost:*" : "connect-src 'self'"
         ].join('; ')
-        return html.replace('%DOCK_CSP%', policy)
+        return html.replace('%PIX_CSP%', policy)
       }
     }
   }

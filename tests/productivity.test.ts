@@ -74,7 +74,7 @@ describe('to-do e Pomodoro', () => {
 describe('servizi', () => {
   let dir: string
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'dock-prod-'))
+    dir = await mkdtemp(join(tmpdir(), 'pix-prod-'))
   })
   afterEach(async () => {
     vi.useRealTimers()

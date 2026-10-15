@@ -66,8 +66,8 @@ export type MascotPreview = (typeof PREVIEWS)[number]
 
 export type SetSettingsResult = { ok: true } | { ok: false; error: 'invalid' | 'shortcutTaken' }
 
-/** API esposta al renderer dal preload (window.dock). */
-export interface DockApi {
+/** API esposta al renderer dal preload (window.pix). */
+export interface PixApi {
   getState(): Promise<UiState>
   onState(cb: (state: UiState) => void): () => void
   setInteractive(interactive: boolean): void

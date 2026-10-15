@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 /**
  * Markdown delle risposte. react-markdown non interpreta HTML grezzo (niente
- * script o tag pericolosi); i link non si aprono dentro Dock.
+ * script o tag pericolosi); i link non si aprono dentro Pix.
  */
 export const Markdown = memo(function Markdown({ text }: { text: string }) {
   return (
@@ -43,7 +43,7 @@ function CodeBlock({ children }: { children: ReactNode }) {
       <button
         className="code-copy"
         onClick={() =>
-          void window.dock.chat.apply({ op: 'copy', text: textOf(children).replace(/\n$/, '') }).then(() => {
+          void window.pix.chat.apply({ op: 'copy', text: textOf(children).replace(/\n$/, '') }).then(() => {
             setCopied(true)
             window.setTimeout(() => setCopied(false), 1500)
           })

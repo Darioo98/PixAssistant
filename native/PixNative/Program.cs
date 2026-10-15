@@ -34,7 +34,7 @@ internal static class Program
             pending.Add(Task.Run(() => Handle(copy)));
             pending.RemoveAll(t => t.IsCompleted);
         }
-        // Input chiuso (Dock è uscito): completa le risposte in corso e termina.
+        // Input chiuso (Pix è uscito): completa le risposte in corso e termina.
         Task.WaitAll(pending.ToArray(), TimeSpan.FromSeconds(5));
         ClipboardWatcher.Stop();
         return 0;
@@ -216,7 +216,7 @@ internal static class Win32
 /// <summary>
 /// Copia di una password: il testo va negli appunti insieme ai formati che
 /// Windows e i gestori di cronologia rispettano per i contenuti sensibili,
-/// così non finisce nella cronologia appunti (né di Windows né di Dock) né nel cloud.
+/// così non finisce nella cronologia appunti (né di Windows né di Pix) né nel cloud.
 /// </summary>
 internal static class SecureClipboard
 {

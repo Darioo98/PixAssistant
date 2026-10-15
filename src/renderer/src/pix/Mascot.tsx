@@ -6,6 +6,7 @@ import { MorphController } from './morph'
 import { PIX_ANCHOR, VIEW, faceTransform } from './geometry'
 import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
+import { Peek } from './Peek'
 import { useReducedMotion } from './useReducedMotion'
 import './mascot.css'
 
@@ -15,8 +16,13 @@ const HIDE_DELAY_MS = 400
 const BREATH_EVERY_MS = 25_000
 const PIX_BREATH_EVERY_MS = 10_000
 /** Evento con cui le impostazioni chiedono a Pix di provare una trasformazione. */
-export const TRANSFORM_EVENT = 'dock:pix-transform'
+export const TRANSFORM_EVENT = 'pix:transform'
+/** Evento con cui le impostazioni chiedono di provare la sbirciata (chiude il pannello). */
+export const PEEK_EVENT = 'pix:peek'
 const EYE_RANGE = 2
+/** Ogni quanto, a pannello chiuso, Pix sbircia da dietro la barra. */
+const PEEK_MIN_MS = 45_000
+const PEEK_MAX_MS = 90_000
 
 interface Props {
   mascot: MascotState
@@ -187,6 +193,34 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     return () => window.removeEventListener(TRANSFORM_EVENT, onPreview)
   }, [reducedMotion])
 
+  // ---- Sbirciata: a pannello chiuso ogni tanto un piccolo Pix sbuca da dietro la barra ----
+  const [peekY, setPeekY] = useState<number | null>(null)
+  const [peekSoon, setPeekSoon] = useState(false)
+  const canPeek = collapsed && !wantPix && anim === 'normal' && settings.pixTransforms && !reducedMotion && mood !== 'sleep'
+  useEffect(() => {
+    if (!canPeek) {
+      setPeekY(null)
+      return
+    }
+    if (peekY !== null) return
+    const delay = peekSoon ? 900 : PEEK_MIN_MS + Math.random() * (PEEK_MAX_MS - PEEK_MIN_MS)
+    const id = window.setTimeout(() => {
+      setPeekSoon(false)
+      setPeekY(95 + Math.random() * 95)
+    }, delay)
+    return () => window.clearTimeout(id)
+  }, [canPeek, peekY, peekSoon])
+
+  // Prova dalle impostazioni: chiude il pannello e sbircia appena torna barra.
+  useEffect(() => {
+    const onPeek = () => {
+      setPeekSoon(true)
+      window.pix.closePanel()
+    }
+    window.addEventListener(PEEK_EVENT, onPeek)
+    return () => window.removeEventListener(PEEK_EVENT, onPeek)
+  }, [])
+
   // ---- Respiro di Pix: un ciclo ogni 10 s invece di un'animazione continua.
   // La finestra è trasparente: ogni fotogramma animato la ridisegna tutta. ----
   useEffect(() => {
@@ -225,7 +259,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     }
   }, [follow, scale])
 
-  const toggle = () => (panelOpen ? window.dock.closePanel() : window.dock.openPanel())
+  const toggle = () => (panelOpen ? window.pix.closePanel() : window.pix.openPanel())
   const color = moodColor(mood, settings.pixColor)
 
   const face = faceTransform(scale, shape)
@@ -255,6 +289,17 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
             data-hit
             data-pix-zone
             onClick={toggle}
+          />
+        )}
+        {peekY !== null && canPeek && (
+          <Peek
+            y={peekY}
+            scale={scale}
+            shape={shape}
+            eyes={settings.pixEyes}
+            shine={settings.pixShine}
+            fill={`url(#${fillId})`}
+            onDone={() => setPeekY(null)}
           />
         )}
         <ellipse ref={shadowRef} cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx={24 * scale} ry="3" fill="#000" opacity="0" />

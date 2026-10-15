@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import { IPC, type DockApi, type UiState } from '@shared/ipc'
+import { IPC, type PixApi, type UiState } from '@shared/ipc'
 import type { DeadlineItem } from '@shared/deadlines'
 import type { VaultData } from '@shared/vault'
 import type { ChatState, ChatStreamEvent, ConversationItem } from '@shared/chat'
@@ -15,7 +15,7 @@ function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
 }
 
 /** API minima esposta al renderer: nessun accesso diretto a Node o a ipcRenderer. */
-const api: DockApi = {
+const api: PixApi = {
   getState: () => ipcRenderer.invoke(IPC.getState),
   onState: (cb) => {
     const listener = (_e: IpcRendererEvent, state: UiState) => cb(state)
@@ -87,4 +87,4 @@ const api: DockApi = {
   }
 }
 
-contextBridge.exposeInMainWorld('dock', api)
+contextBridge.exposeInMainWorld('pix', api)

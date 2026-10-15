@@ -11,7 +11,7 @@ export function useHitTest(): void {
     const send = (value: boolean) => {
       if (value === last) return
       last = value
-      window.dock.setInteractive(value)
+      window.pix.setInteractive(value)
     }
     const onMove = (e: MouseEvent) => {
       const el = e.target instanceof Element ? e.target : null

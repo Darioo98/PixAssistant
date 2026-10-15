@@ -11,7 +11,7 @@ import './deadlines.css'
 type View = 'list' | 'calendar'
 type Filter = 'active' | 'overdue' | 'done' | 'all'
 const FILTERS: Filter[] = ['active', 'overdue', 'done', 'all']
-const VIEW_KEY = 'dock.deadlines.view'
+const VIEW_KEY = 'pix.deadlines.view'
 
 function loadView(): View {
   try {

@@ -8,8 +8,8 @@ function useClipboardState(): ClipState | null {
   const [state, setState] = useState<ClipState | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.clipboard.onChange((s) => alive && setState(s))
-    void window.dock.clipboard.state().then((s) => alive && s && setState(s))
+    const off = window.pix.clipboard.onChange((s) => alive && setState(s))
+    void window.pix.clipboard.state().then((s) => alive && s && setState(s))
     return () => {
       alive = false
       off()
@@ -38,7 +38,7 @@ export function ClipboardTab() {
     <div className="productivity">
       <div className="toolbar">
         <input className="search" type="search" value={query} placeholder={t('clipboard.search')} aria-label={t('clipboard.search')} onChange={(e) => setQuery(e.target.value)} />
-        <button className="btn" onClick={() => void window.dock.clipboard.apply({ op: 'pause', paused: !state.paused })}>
+        <button className="btn" onClick={() => void window.pix.clipboard.apply({ op: 'pause', paused: !state.paused })}>
           {state.paused ? t('clipboard.resume') : t('clipboard.pause')}
         </button>
       </div>
@@ -56,7 +56,7 @@ export function ClipboardTab() {
         <span className="hint">{t('clipboard.privacy')}</span>
         <span className="spacer" />
         {state.entries.some((e) => !e.pinned) && (
-          <DeleteButton className="btn subtle" onConfirm={() => void window.dock.clipboard.apply({ op: 'clear' })} />
+          <DeleteButton className="btn subtle" onConfirm={() => void window.pix.clipboard.apply({ op: 'clear' })} />
         )}
       </div>
     </div>
@@ -73,7 +73,7 @@ function ClipRow({ entry }: { entry: ClipEntry }) {
         className="clip-main"
         title={t('clipboard.copied')}
         onClick={() =>
-          void window.dock.clipboard.apply({ op: 'copy', id: entry.id }).then((ok) => {
+          void window.pix.clipboard.apply({ op: 'copy', id: entry.id }).then((ok) => {
             if (!ok) return
             setCopied(true)
             window.setTimeout(() => setCopied(false), 1200)
@@ -95,10 +95,10 @@ function ClipRow({ entry }: { entry: ClipEntry }) {
         </span>
       </button>
       <RowMenu label={t('clipboard.more')}>
-        <button onClick={() => void window.dock.clipboard.apply({ op: 'pin', id: entry.id, pinned: !entry.pinned })}>
+        <button onClick={() => void window.pix.clipboard.apply({ op: 'pin', id: entry.id, pinned: !entry.pinned })}>
           {entry.pinned ? t('clipboard.unpin') : t('clipboard.pin')}
         </button>
-        <DeleteButton onConfirm={() => void window.dock.clipboard.apply({ op: 'remove', id: entry.id })} />
+        <DeleteButton onConfirm={() => void window.pix.clipboard.apply({ op: 'remove', id: entry.id })} />
       </RowMenu>
     </li>
   )

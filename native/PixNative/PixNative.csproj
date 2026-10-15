@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Helper nativo di Dock. Parla con il processo main di Electron via stdin/stdout
+    Helper nativo di Pix. Parla con il processo main di Electron via stdin/stdout
     (una riga JSON per messaggio). Dalla milestone 4 il target diventa
     net*-windows10.0.19041.0 per usare Windows Hello (WinRT).
   -->

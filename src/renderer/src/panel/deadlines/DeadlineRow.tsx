@@ -25,7 +25,7 @@ export function DeadlineRow({ item, today, defaultLead, onEdit, compact = false 
   const repeat = repeatLabel(item, t)
   const snoozed = item.snoozedUntil && diffDays(today, item.snoozedUntil) > 0 ? item.snoozedUntil : null
   const canReopen = status === 'done' || (isRecurring(item) && item.history.length > 0)
-  const apply = window.dock.deadlines.apply
+  const apply = window.pix.deadlines.apply
 
   const meta = [
     dueLabel(item, status, today, t, i18n.language),

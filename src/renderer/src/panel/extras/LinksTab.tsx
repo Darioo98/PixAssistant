@@ -8,8 +8,8 @@ function useLinks(): LinkView[] | null {
   const [items, setItems] = useState<LinkView[] | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.links.onChange((l) => alive && setItems(l))
-    void window.dock.links.list().then((l) => alive && setItems(l))
+    const off = window.pix.links.onChange((l) => alive && setItems(l))
+    void window.pix.links.list().then((l) => alive && setItems(l))
     return () => {
       alive = false
       off()
@@ -32,12 +32,12 @@ export function LinksTab() {
     if (!dragId || dragId === targetId) return
     const ids = links.map((l) => l.id).filter((id) => id !== dragId)
     ids.splice(ids.indexOf(targetId), 0, dragId)
-    void window.dock.links.apply({ op: 'reorder', ids })
+    void window.pix.links.apply({ op: 'reorder', ids })
     setDragId(null)
   }
 
   const open = async (l: LinkView) => {
-    const r = await window.dock.links.apply({ op: 'open', id: l.id })
+    const r = await window.pix.links.apply({ op: 'open', id: l.id })
     setError(r.ok ? null : t('links.notFound'))
   }
 
@@ -77,7 +77,7 @@ export function LinksTab() {
                 <div className="link-menu">
                   <RowMenu label={t('links.more')}>
                     <button onClick={() => setEditing({ item: l, kind: l.kind })}>{t('links.edit')}</button>
-                    <DeleteButton onConfirm={() => void window.dock.links.apply({ op: 'remove', id: l.id })} />
+                    <DeleteButton onConfirm={() => void window.pix.links.apply({ op: 'remove', id: l.id })} />
                   </RowMenu>
                 </div>
               </li>
@@ -99,7 +99,7 @@ function LinkForm({ editing, onClose }: { editing: NonNullable<Editing>; onClose
 
   const browse = async () => {
     if (kind === 'web') return
-    const r = await window.dock.links.apply({ op: 'pick', kind })
+    const r = await window.pix.links.apply({ op: 'pick', kind })
     if (r.ok && r.value) setTarget(r.value)
   }
 
@@ -108,7 +108,7 @@ function LinkForm({ editing, onClose }: { editing: NonNullable<Editing>; onClose
       className="dl-form link-form"
       onSubmit={(e) => {
         e.preventDefault()
-        void window.dock.links.apply({ op: 'save', id: item?.id, kind, title: title.trim(), target: target.trim() }).then((r) => {
+        void window.pix.links.apply({ op: 'save', id: item?.id, kind, title: title.trim(), target: target.trim() }).then((r) => {
           if (r.ok) onClose()
           else setError(r.value === 'invalid-url' ? t('links.invalidUrl') : t('vault.errors.generic'))
         })

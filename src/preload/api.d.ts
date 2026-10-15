@@ -1,8 +1,8 @@
-import type { DockApi } from '../shared/ipc'
+import type { PixApi } from '../shared/ipc'
 
 declare global {
   interface Window {
-    dock: DockApi
+    pix: PixApi
   }
 }
 

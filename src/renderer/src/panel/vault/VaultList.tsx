@@ -53,7 +53,7 @@ interface RowProps {
 export function VaultRow({ entry, groups, depth = 0, path, today, lead, onEdit, onNewPassword }: RowProps) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState<'username' | 'password' | null>(null)
-  const apply = window.dock.vault.apply
+  const apply = window.pix.vault.apply
 
   const copy = async (field: 'username' | 'password') => {
     const r = await apply({ op: 'copy', id: entry.id, field })

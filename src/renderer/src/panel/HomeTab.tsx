@@ -36,7 +36,7 @@ export function HomeTab({ state }: { state: UiState }) {
   const sorted = [...items].sort(compareByUrgency(today, defaultLead))
   const overdue = sorted.filter((i) => deadlineStatus(i, today, defaultLead) === 'overdue')
   const week = sorted.filter((i) => ['today', 'soon', 'week'].includes(deadlineStatus(i, today, defaultLead)))
-  const open = () => window.dock.openPanel('deadlines')
+  const open = () => window.pix.openPanel('deadlines')
 
   return (
     <div className="home">
@@ -51,7 +51,7 @@ export function HomeTab({ state }: { state: UiState }) {
         ) : (
           <ul className="todo-list">
             {todayReminders.map((r) => (
-              <li key={r.id} className="todo-row home-link" onClick={() => window.dock.openPanel('timers')}>
+              <li key={r.id} className="todo-row home-link" onClick={() => window.pix.openPanel('timers')}>
                 <span aria-hidden="true">⏰</span>
                 <span className="todo-text">
                   {r.text}
@@ -84,7 +84,7 @@ export function HomeTab({ state }: { state: UiState }) {
           </h2>
           <ul className="vault-list">
             {toChange.map((p) => (
-              <VaultRowLocked key={p.id} entry={p} today={today} lead={defaultLead} onClick={() => window.dock.openPanel('vault')} />
+              <VaultRowLocked key={p.id} entry={p} today={today} lead={defaultLead} onClick={() => window.pix.openPanel('vault')} />
             ))}
           </ul>
         </section>
@@ -149,7 +149,7 @@ function QuickNote() {
         e.preventDefault()
         const body = text.trim()
         if (!body) return
-        void window.dock.data.apply('notes', { op: 'save', note: { title: '', body, pinned: false } }).then(() => {
+        void window.pix.data.apply('notes', { op: 'save', note: { title: '', body, pinned: false } }).then(() => {
           setText('')
           setSaved(true)
           window.setTimeout(() => setSaved(false), 1500)

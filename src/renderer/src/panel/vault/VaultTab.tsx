@@ -34,7 +34,7 @@ export function VaultTab({ state }: { state: UiState }) {
     if (intent?.kind !== 'vault-generate' || !status.unlocked || !entries) return
     const entry = entries.find((e) => e.id === intent.id)
     if (entry) setView({ kind: 'newPassword', entry })
-    window.dock.clearIntent()
+    window.pix.clearIntent()
   }, [state.intent, status.unlocked, entries])
 
   // Se la cassaforte si chiude mentre si sta modificando, si torna all'elenco.
@@ -118,7 +118,7 @@ export function VaultTab({ state }: { state: UiState }) {
       </div>
       <div className="vault-session">
         <span className="hint">{t('vault.session', { time: until })}</span>
-        <button className="btn subtle" onClick={() => void window.dock.vault.apply({ op: 'lock' })}>
+        <button className="btn subtle" onClick={() => void window.pix.vault.apply({ op: 'lock' })}>
           {t('vault.lock')}
         </button>
       </div>

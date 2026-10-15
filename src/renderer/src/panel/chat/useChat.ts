@@ -10,9 +10,9 @@ export function useChat() {
   useEffect(() => {
     let alive = true
     const offs = [
-      window.dock.chat.onChange((next) => alive && setItems(next)),
-      window.dock.chat.onState((s) => alive && setState(s)),
-      window.dock.chat.onStream((ev) =>
+      window.pix.chat.onChange((next) => alive && setItems(next)),
+      window.pix.chat.onState((s) => alive && setState(s)),
+      window.pix.chat.onStream((ev) =>
         setStreams((prev) => {
           const next = { ...prev }
           if (ev.done) delete next[ev.id]
@@ -21,8 +21,8 @@ export function useChat() {
         })
       )
     ]
-    void window.dock.chat.list().then((l) => alive && setItems(l))
-    void window.dock.chat.state().then((s) => alive && s && setState(s))
+    void window.pix.chat.list().then((l) => alive && setItems(l))
+    void window.pix.chat.state().then((s) => alive && s && setState(s))
     return () => {
       alive = false
       offs.forEach((off) => off())
@@ -32,7 +32,7 @@ export function useChat() {
   return { items, state, streams }
 }
 
-const SELECTED_KEY = 'dock.chat.selected'
+const SELECTED_KEY = 'pix.chat.selected'
 
 export function loadSelected(): string | null {
   try {
@@ -53,9 +53,9 @@ export function saveSelected(id: string | null): void {
 
 /** Domanda veloce (da Home): crea una conversazione, invia e apre la Chat. */
 export async function quickAsk(text: string): Promise<void> {
-  const created = await window.dock.chat.apply({ op: 'new' })
+  const created = await window.pix.chat.apply({ op: 'new' })
   if (!created.ok || !created.value) return
   saveSelected(created.value)
-  await window.dock.chat.apply({ op: 'send', id: created.value, text })
-  window.dock.openPanel('chat')
+  await window.pix.chat.apply({ op: 'send', id: created.value, text })
+  window.pix.openPanel('chat')
 }

@@ -7,8 +7,8 @@ export function useShift(): ShiftState | null {
   const [state, setState] = useState<ShiftState | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.shift.onChange((s) => alive && setState(s))
-    void window.dock.shift.state().then((s) => alive && s && setState(s))
+    const off = window.pix.shift.onChange((s) => alive && setState(s))
+    void window.pix.shift.state().then((s) => alive && s && setState(s))
     return () => {
       alive = false
       off()
@@ -55,7 +55,7 @@ export function ShiftCard({ defaultBreak }: { defaultBreak: number }) {
           className="shift-form"
           onSubmit={(e) => {
             e.preventDefault()
-            void window.dock.shift
+            void window.pix.shift
               .apply(state.shift ? { op: 'adjust', arrival, breakMinutes: brk } : { op: 'start', arrival, breakMinutes: brk })
               .then(() => setEditing(false))
           }}
@@ -117,7 +117,7 @@ export function ShiftCard({ defaultBreak }: { defaultBreak: number }) {
         <button className="btn subtle" onClick={() => setEditing(true)}>
           {t('shift.edit')}
         </button>
-        <button className="btn subtle" onClick={() => void window.dock.shift.apply({ op: 'clear' })}>
+        <button className="btn subtle" onClick={() => void window.pix.shift.apply({ op: 'clear' })}>
           {t('shift.clear')}
         </button>
       </div>

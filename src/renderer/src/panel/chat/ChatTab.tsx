@@ -25,7 +25,7 @@ export function ChatTab() {
   }
 
   const create = async () => {
-    const r = await window.dock.chat.apply({ op: 'new' })
+    const r = await window.pix.chat.apply({ op: 'new' })
     if (r.ok && r.value) select(r.value)
   }
 
@@ -76,7 +76,7 @@ function ConversationMenu({ conv }: { conv: ConversationItem }) {
         className="rename"
         onSubmit={(e) => {
           e.preventDefault()
-          if (title.trim()) void window.dock.chat.apply({ op: 'rename', id: conv.id, title: title.trim() })
+          if (title.trim()) void window.pix.chat.apply({ op: 'rename', id: conv.id, title: title.trim() })
           setRenaming(false)
         }}
       >
@@ -94,7 +94,7 @@ function ConversationMenu({ conv }: { conv: ConversationItem }) {
       >
         {t('ai.chat.rename')}
       </button>
-      <DeleteButton onConfirm={() => void window.dock.chat.apply({ op: 'remove', id: conv.id })} />
+      <DeleteButton onConfirm={() => void window.pix.chat.apply({ op: 'remove', id: conv.id })} />
     </RowMenu>
   )
 }
@@ -116,7 +116,7 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
     const text = draft.trim()
     if (!text || busy) return
     setDraft('')
-    void window.dock.chat.apply({ op: 'send', id: conv.id, text })
+    void window.pix.chat.apply({ op: 'send', id: conv.id, text })
   }
 
   const errorText = (code: string) => {
@@ -161,7 +161,7 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
             value={conv.model}
             aria-label={t('ai.chat.model')}
             title={t('ai.chat.model')}
-            onChange={(e) => void window.dock.chat.apply({ op: 'setModel', id: conv.id, model: e.target.value })}
+            onChange={(e) => void window.pix.chat.apply({ op: 'setModel', id: conv.id, model: e.target.value })}
           >
             {state.models.map((m) => (
               <option key={m.value} value={m.value}>
@@ -185,7 +185,7 @@ function Conversation({ conv, state, streaming }: { conv: ConversationItem; stat
             }}
           />
           {busy ? (
-            <button className="btn" onClick={() => void window.dock.chat.apply({ op: 'stop', id: conv.id })}>
+            <button className="btn" onClick={() => void window.pix.chat.apply({ op: 'stop', id: conv.id })}>
               {t('ai.chat.stop')}
             </button>
           ) : (
@@ -206,7 +206,7 @@ function CopyAnswer({ text }: { text: string }) {
     <button
       className="msg-copy"
       onClick={() =>
-        void window.dock.chat.apply({ op: 'copy', text }).then(() => {
+        void window.pix.chat.apply({ op: 'copy', text }).then(() => {
           setCopied(true)
           window.setTimeout(() => setCopied(false), 1500)
         })
@@ -221,14 +221,14 @@ function CopyAnswer({ text }: { text: string }) {
 function Connect({ state }: { state: ChatState }) {
   const { t } = useTranslation()
   const s = state.status.state
-  const recheck = () => void window.dock.chat.apply({ op: 'checkStatus' })
+  const recheck = () => void window.pix.chat.apply({ op: 'checkStatus' })
   if (s === 'checking') return <p className="chat-hint center">{t('ai.connect.checking')}</p>
   if (s === 'unavailable') {
     return (
       <div className="vault-card">
         <h2>{t('ai.connect.unavailableTitle')}</h2>
         <p>{t('ai.connect.unavailableText')}</p>
-        <button className="btn primary" onClick={() => void window.dock.chat.apply({ op: 'openDocs' })}>
+        <button className="btn primary" onClick={() => void window.pix.chat.apply({ op: 'openDocs' })}>
           {t('ai.connect.openDocs')}
         </button>
         <button className="btn" onClick={recheck}>
@@ -242,7 +242,7 @@ function Connect({ state }: { state: ChatState }) {
       <h2>{s === 'error' ? t('ai.connect.errorTitle') : t('ai.connect.notLoggedInTitle')}</h2>
       <p>{t('ai.connect.notLoggedInText')}</p>
       {state.status.detail && <p className="hint">{state.status.detail}</p>}
-      <button className="btn primary" onClick={() => void window.dock.chat.apply({ op: 'openLogin' })}>
+      <button className="btn primary" onClick={() => void window.pix.chat.apply({ op: 'openLogin' })}>
         {t('ai.connect.openLogin')}
       </button>
       <button className="btn" onClick={recheck}>

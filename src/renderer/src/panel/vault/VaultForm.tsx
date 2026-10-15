@@ -41,7 +41,7 @@ export function Generator({
   const { t } = useTranslation()
   const [preview, setPreview] = useState('')
   const regenerate = async (o = options) => {
-    const r = await window.dock.vault.apply({ op: 'generate', options: o })
+    const r = await window.pix.vault.apply({ op: 'generate', options: o })
     if (r.ok && r.value) setPreview(r.value)
   }
   useEffect(() => {
@@ -161,7 +161,7 @@ export function VaultForm({
   /** La password esistente si legge solo quando serve (mostra o modifica). */
   const loadPassword = async () => {
     if (password !== null || !entry) return
-    const r = await window.dock.vault.apply({ op: 'reveal', id: entry.id })
+    const r = await window.pix.vault.apply({ op: 'reveal', id: entry.id })
     // Se nel frattempo l'utente ha già scritto, vince quello che ha scritto.
     setPassword((prev) => (prev === null ? (r.ok ? (r.value ?? '') : '') : prev))
   }
@@ -295,7 +295,7 @@ export function VaultForm({
         {entry && (
           <DeleteButton
             className="btn danger-text"
-            onConfirm={() => void window.dock.vault.apply({ op: 'remove', id: entry.id }).then(onClose)}
+            onConfirm={() => void window.pix.vault.apply({ op: 'remove', id: entry.id }).then(onClose)}
           />
         )}
         <span className="spacer" />

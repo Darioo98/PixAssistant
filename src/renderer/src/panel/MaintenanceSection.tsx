@@ -6,8 +6,8 @@ function useMaintenance(): MaintenanceState | null {
   const [state, setState] = useState<MaintenanceState | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.maintenance.onChange((s) => alive && setState(s))
-    void window.dock.maintenance.state().then((s) => alive && s && setState(s))
+    const off = window.pix.maintenance.onChange((s) => alive && setState(s))
+    void window.pix.maintenance.state().then((s) => alive && s && setState(s))
     return () => {
       alive = false
       off()
@@ -44,7 +44,7 @@ export function MaintenanceSection() {
   const run = async (op: MaintenanceOp, okText: (v?: string) => string) => {
     setBusy(true)
     setMessage(null)
-    const r = await window.dock.maintenance.apply(op)
+    const r = await window.pix.maintenance.apply(op)
     setBusy(false)
     if (r.ok) setMessage({ ok: true, text: okText(r.value) })
     else if (r.error !== 'canceled') {
@@ -71,7 +71,7 @@ export function MaintenanceSection() {
         <button className="btn subtle" disabled={!state.canBackup || busy} onClick={() => void run({ op: 'backupNow' }, () => t('maint.backupDone'))}>
           {t('maint.backupNow')}
         </button>
-        <button className="btn subtle" onClick={() => void window.dock.maintenance.apply({ op: 'openBackups' })}>
+        <button className="btn subtle" onClick={() => void window.pix.maintenance.apply({ op: 'openBackups' })}>
           {t('maint.openBackups')}
         </button>
       </div>
@@ -120,10 +120,10 @@ export function MaintenanceSection() {
                     {t(COLLECTION_KEYS[c.collection] ?? 'tabs.settings')} · {t('maint.discardedVersion', { date: fmt(c.discardedAt) })}
                   </span>
                 </span>
-                <button className="btn" onClick={() => void window.dock.maintenance.apply({ op: 'resolveConflict', id: c.id, action: 'restore' })}>
+                <button className="btn" onClick={() => void window.pix.maintenance.apply({ op: 'resolveConflict', id: c.id, action: 'restore' })}>
                   {t('maint.restore')}
                 </button>
-                <button className="btn subtle" onClick={() => void window.dock.maintenance.apply({ op: 'resolveConflict', id: c.id, action: 'dismiss' })}>
+                <button className="btn subtle" onClick={() => void window.pix.maintenance.apply({ op: 'resolveConflict', id: c.id, action: 'dismiss' })}>
                   {t('maint.dismiss')}
                 </button>
               </li>

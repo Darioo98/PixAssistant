@@ -11,9 +11,9 @@ const MAX_BYTES = 1024 * 1024
 export function initLog(localDir: string): void {
   const dir = join(localDir, 'logs')
   mkdirSync(dir, { recursive: true })
-  file = join(dir, 'dock.log')
+  file = join(dir, 'pix.log')
   try {
-    if (statSync(file).size > MAX_BYTES) renameSync(file, join(dir, 'dock.old.log'))
+    if (statSync(file).size > MAX_BYTES) renameSync(file, join(dir, 'pix.old.log'))
   } catch {
     // il file non esiste ancora
   }

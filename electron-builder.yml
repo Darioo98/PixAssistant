@@ -1,5 +1,5 @@
-appId: com.dariocavallo.dock
-productName: Dock
+appId: com.dariocavallo.pix
+productName: Pix
 copyright: Copyright © 2026 Dario Cavallo
 directories:
   output: dist
@@ -8,7 +8,7 @@ files:
   - out/**
   - package.json
   # L'eseguibile di Claude Code incluso nell'SDK (oltre 250 MB) non si distribuisce:
-  # Dock usa il Claude Code installato sul PC.
+  # Pix usa il Claude Code installato sul PC.
   - '!node_modules/@anthropic-ai/claude-agent-sdk-*/**'
 asarUnpack:
   # L'SDK viene importato come modulo ESM: fuori dall'archivio asar per sicurezza.
@@ -31,7 +31,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: false
   createStartMenuShortcut: true
-  shortcutName: Dock
+  shortcutName: Pix
   runAfterFinish: true
   deleteAppDataOnUninstall: false
   installerLanguages: [it_IT, en_US]

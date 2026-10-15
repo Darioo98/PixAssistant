@@ -12,7 +12,7 @@ export function WeatherWidget({ city }: { city: string }) {
   useEffect(() => {
     let alive = true
     setState({ status: 'loading' })
-    void window.dock.weather().then((s) => alive && setState(s))
+    void window.pix.weather().then((s) => alive && setState(s))
     return () => {
       alive = false
     }
@@ -20,7 +20,7 @@ export function WeatherWidget({ city }: { city: string }) {
 
   if (state.status === 'off') {
     return (
-      <button className="weather weather-empty" onClick={() => window.dock.openPanel('settings')}>
+      <button className="weather weather-empty" onClick={() => window.pix.openPanel('settings')}>
         ⛅ {t('weather.setCity')}
       </button>
     )

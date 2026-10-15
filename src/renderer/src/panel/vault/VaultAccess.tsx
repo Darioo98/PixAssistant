@@ -11,7 +11,7 @@ export function useVaultOp() {
     setBusy(true)
     setError(null)
     try {
-      const res = await window.dock.vault.apply(op)
+      const res = await window.pix.vault.apply(op)
       if (!res.ok) {
         const key = `vault.errors.${res.error}`
         setError(i18n.exists(key) ? t(key) : t('vault.errors.generic'))
@@ -51,7 +51,7 @@ export function RecoveryKeyStep() {
   const [stored, setStored] = useState(false)
 
   useEffect(() => {
-    void window.dock.vault.apply({ op: 'pendingRecovery' }).then((r) => r.ok && setKey(r.value ?? null))
+    void window.pix.vault.apply({ op: 'pendingRecovery' }).then((r) => r.ok && setKey(r.value ?? null))
   }, [])
 
   if (!key) return null

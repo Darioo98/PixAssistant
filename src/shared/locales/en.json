@@ -1,9 +1,9 @@
 {
   "app": {
-    "name": "Dock"
+    "name": "Pix"
   },
   "tray": {
-    "tooltip": "Dock",
+    "tooltip": "Pix",
     "open": "Open",
     "hideMascot": "Hide the mascot",
     "showMascot": "Show the mascot",
@@ -13,7 +13,7 @@
     "pauseClipboard": "Pause clipboard history"
   },
   "pix": {
-    "label": "Pix: open Dock"
+    "label": "Pix: open Pix"
   },
   "panel": {
     "close": "Close"
@@ -179,6 +179,7 @@
     "shiftRemind": "Remind me before the end (minutes)",
     "transforms": "Spontaneous animations (now and then the body transforms and moves)",
     "tryTransforms": "Try the animations",
+    "tryPeek": "👀 Peek",
     "transformOptions": {
       "wobble": "Jelly",
       "waves": "Waves",
@@ -189,7 +190,7 @@
       "bubble": "Speech bubble",
       "hourglass": "Hourglass"
     },
-    "transformsHint": "Pix greets each section of the panel with its own animation.",
+    "transformsHint": "With the panel closed, Pix sometimes peeks out from behind the bar. Pix greets each section of the panel with its own animation.",
     "categories": {
       "general": "General",
       "pix": "Pix",
@@ -470,10 +471,10 @@
     "copied": "Copied"
   },
   "ai": {
-    "systemPrompt": "You are the assistant inside Dock, a personal Windows app. Answer in the user's language. Be clear and concise and use Markdown when it helps (lists, tables, code blocks). You have no access to files, commands, the Internet or other tools: if they are needed, explain to the user how to proceed.",
+    "systemPrompt": "You are Pix, the fluid mascot and assistant of a personal Windows app that shares your name. If asked who you are, say you are Pix. Answer in the user's language. Be clear and concise and use Markdown when it helps (lists, tables, code blocks). You have no access to files, commands, the Internet or other tools: if they are needed, explain to the user how to proceed.",
     "labels": {
       "user": "User",
-      "assistant": "Assistant"
+      "assistant": "Pix"
     },
     "newChat": "New chat",
     "chat": {
@@ -517,7 +518,7 @@
     "connect": {
       "checking": "Checking the connection to Claude…",
       "notLoggedInTitle": "Connect your Claude plan",
-      "notLoggedInText": "Dock uses Claude Code with your claude.ai account (Pro or Max), no API key. Open Claude Code, type /login and follow the steps in the browser; then come back and press \"Check again\".",
+      "notLoggedInText": "Pix uses Claude Code with your claude.ai account (Pro or Max), no API key. Open Claude Code, type /login and follow the steps in the browser; then come back and press \"Check again\".",
       "openLogin": "Open Claude Code",
       "recheck": "Check again",
       "unavailableTitle": "Claude Code not found",
@@ -632,7 +633,7 @@
     "clear": "Clear (except pinned)",
     "empty": "Nothing yet. Copy something and it will show up here.",
     "noResults": "No results.",
-    "unavailable": "Clipboard history needs Dock's native helper, which is not available.",
+    "unavailable": "Clipboard history needs Pix's native helper, which is not available.",
     "pin": "Pin",
     "unpin": "Unpin",
     "copied": "Copied",
@@ -706,11 +707,11 @@
     "restore": "Restore",
     "dismiss": "Dismiss",
     "changeDataDir": "Change data folder…",
-    "changeDataDirHint": "If the new folder is empty I copy the current data there; then Dock restarts.",
+    "changeDataDirHint": "If the new folder is empty I copy the current data there; then Pix restarts.",
     "restarting": "Restarting…",
     "errors": {
       "wrong-key": "Wrong recovery key.",
-      "invalid-backup": "The file is not a valid Dock backup.",
+      "invalid-backup": "The file is not a valid Pix backup.",
       "unlock-first": "The backup comes from another vault: unlock the vault first so passwords can be merged too.",
       "not-configured": "Set up the vault first.",
       "generic": "The operation failed."

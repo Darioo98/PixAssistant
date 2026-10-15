@@ -3,8 +3,8 @@ import { log } from './log'
 
 /** Avvio automatico al login. In sviluppo non viene registrato (l'eseguibile sarebbe electron.exe). */
 export function applyAutostart(enabled: boolean): void {
-  // DOCK_NO_AUTOSTART=1: per provare la build senza registrare l'avvio automatico.
-  if (!app.isPackaged || process.env.DOCK_NO_AUTOSTART === '1') return
+  // PIX_NO_AUTOSTART=1: per provare la build senza registrare l'avvio automatico.
+  if (!app.isPackaged || process.env.PIX_NO_AUTOSTART === '1') return
   app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath, args: ['--autostart'] })
 }
 

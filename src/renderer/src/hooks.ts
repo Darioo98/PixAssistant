@@ -21,8 +21,8 @@ export function useDeadlines(): DeadlineItem[] | null {
   const [items, setItems] = useState<DeadlineItem[] | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.deadlines.onChange((next) => alive && setItems(next))
-    void window.dock.deadlines.list().then((next) => alive && setItems(next))
+    const off = window.pix.deadlines.onChange((next) => alive && setItems(next))
+    void window.pix.deadlines.list().then((next) => alive && setItems(next))
     return () => {
       alive = false
       off()
@@ -36,8 +36,8 @@ export function useVaultData(): VaultData | null {
   const [data, setData] = useState<VaultData | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.vault.onChange((next) => alive && setData(next))
-    void window.dock.vault.list().then((next) => alive && setData(next))
+    const off = window.pix.vault.onChange((next) => alive && setData(next))
+    void window.pix.vault.list().then((next) => alive && setData(next))
     return () => {
       alive = false
       off()
@@ -55,8 +55,8 @@ export function useData<C extends DataCollection>(collection: C): DataItems[C] |
   const [items, setItems] = useState<DataItems[C] | null>(null)
   useEffect(() => {
     let alive = true
-    const off = window.dock.data.onChange(collection, (next) => alive && setItems(next))
-    void window.dock.data.list(collection).then((next) => alive && setItems(next))
+    const off = window.pix.data.onChange(collection, (next) => alive && setItems(next))
+    void window.pix.data.list(collection).then((next) => alive && setItems(next))
     return () => {
       alive = false
       off()

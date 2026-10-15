@@ -35,12 +35,17 @@ export const maintenanceOpSchema = z.discriminatedUnion('op', [
 export type MaintenanceOp = z.infer<typeof maintenanceOpSchema>
 export type MaintenanceResult = { ok: true; value?: string } | { ok: false; error: string }
 
+/** Backup giornalieri o manuali: `pix-AAAA-MM-GG[-ms].pixbak` (o i vecchi `dock-….dockbak`). */
+export const BACKUP_RE = /^(?:pix|dock)-(\d{4})-(\d{2})-(\d{2})(?:-\d+)?\.(?:pix|dock)bak$/
+const DAILY_RE = /^(?:pix|dock)-\d{4}-\d{2}-\d{2}\.(?:pix|dock)bak$/
+
 /** Nome del backup giornaliero e rotazione (si tengono gli ultimi N). */
 export function backupName(date: string): string {
-  return `dock-${date}.dockbak`
+  return `pix-${date}.pixbak`
 }
 
 export function backupsToDelete(names: string[], keep: number): string[] {
-  const backups = names.filter((n) => /^dock-\d{4}-\d{2}-\d{2}\.dockbak$/.test(n)).sort()
+  // Accetta anche i backup creati quando l'app si chiamava Dock.
+  const backups = names.filter((n) => DAILY_RE.test(n)).sort((a, b) => a.slice(a.indexOf('-')).localeCompare(b.slice(b.indexOf('-'))))
   return backups.slice(0, Math.max(0, backups.length - keep))
 }

@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import i18next from 'i18next'
 import { initLog, log } from './log'
 import { OverlayWindow } from './windows/overlay'
-import { DockTray } from './tray'
+import { PixTray } from './tray'
 import { GlobalShortcut, applyAutostart } from './system'
 import { FullscreenWatcher } from './fullscreen'
 import { PixNative } from './native/pixNative'
@@ -27,7 +27,7 @@ import { SyncManager } from './sync'
 import { MaintenanceController } from './maintenance'
 import { ShiftService } from './shift'
 import { loadDevice } from './storage/device'
-import { resolveDataDir } from './storage/paths'
+import { migrateLegacyFolder, resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataCollection, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
 import { DEFAULT_SETTINGS, type Settings } from '@shared/settings'
 import { resolveLang, resources, type Lang } from '@shared/i18n'
@@ -40,10 +40,11 @@ import { maintenanceOpSchema } from '@shared/maintenance'
 import { formatHHMM, shiftOpSchema } from '@shared/shift'
 import { noteTitle } from '@shared/productivity'
 
-// Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Dock, non nel profilo roaming.
-const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Dock')
+// Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Pix, non nel profilo roaming.
+const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Pix')
+const migratedLocal = migrateLegacyFolder(localDir)
 app.setPath('userData', localDir)
-app.setAppUserModelId('com.dariocavallo.dock')
+app.setAppUserModelId('com.dariocavallo.pix')
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -51,17 +52,18 @@ if (!app.requestSingleInstanceLock()) {
   process.on('unhandledRejection', (err) => log.error('Promessa rifiutata non gestita', err))
   main().catch((err) => {
     // Un avvio a metà è peggio di un errore chiaro.
-    log.error('Avvio di Dock non riuscito', err)
-    dialog.showErrorBox('Dock', `Dock non è riuscito ad avviarsi.\n\n${err instanceof Error ? err.message : String(err)}\n\nDettagli nel log: ${join(localDir, 'logs', 'dock.log')}`)
+    log.error('Avvio di Pix non riuscito', err)
+    dialog.showErrorBox('Pix', `Pix non è riuscito ad avviarsi.\n\n${err instanceof Error ? err.message : String(err)}\n\nDettagli nel log: ${join(localDir, 'logs', 'pix.log')}`)
     app.quit()
   })
 }
 
 async function main(): Promise<void> {
   initLog(localDir)
+  if (migratedLocal) log.info('Dati locali spostati da Dock a Pix')
   hardenSecurity()
   await app.whenReady()
-  log.info(`Avvio Dock ${app.getVersion()} (packaged=${app.isPackaged})`)
+  log.info(`Avvio Pix ${app.getVersion()} (packaged=${app.isPackaged})`)
 
   const resourcesDir = app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources')
   const native = new PixNative(join(resourcesDir, 'native', 'PixNative.exe'))
@@ -428,7 +430,7 @@ async function main(): Promise<void> {
     updateVisibility()
   })
 
-  const tray = new DockTray(join(resourcesDir, 'icons', 'tray.ico'), {
+  const tray = new PixTray(join(resourcesDir, 'icons', 'tray.ico'), {
     open: () => openPanel(),
     openSettings: () => openPanel('settings'),
     toggleMascot: () => void settings.set({ mascotHidden: !settings.get().mascotHidden }),
@@ -634,6 +636,9 @@ function isOutcome(v: unknown): v is BubbleOutcome {
 /** Prepara la cartella dati; se OneDrive non è scrivibile ripiega su una cartella locale. */
 async function prepareDataDir(custom: string): Promise<DataDirInfo> {
   const info = resolveDataDir(custom, process.env, localDir)
+  if (info.kind === 'personal' || info.kind === 'business') {
+    if (migrateLegacyFolder(info.path)) log.info('Cartella OneDrive Dock rinominata in Pix')
+  }
   try {
     await mkdir(info.path, { recursive: true })
     if (info.kind === 'personal' || info.kind === 'business') keepOnDevice(info.path)

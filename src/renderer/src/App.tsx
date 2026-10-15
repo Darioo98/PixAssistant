@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { eyeColorFor, lighten } from '@shared/mascot'
-import { useDockState } from './useDockState'
+import { usePixState } from './usePixState'
 import { isTyping, useHitTest } from './useHitTest'
 import { Mascot } from './pix/Mascot'
 import { Panel } from './panel/Panel'
@@ -9,7 +9,7 @@ import { TimerPill } from './panel/timers/TimersTab'
 const LEAVE_CLOSE_MS = 800
 
 export function App() {
-  const state = useDockState()
+  const state = usePixState()
   useHitTest()
 
   // Il colore del pannello segue quello di Pix (più chiaro nel tema scuro, testo sempre leggibile).
@@ -26,7 +26,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && state?.panelOpen) window.dock.closePanel()
+      if (e.key === 'Escape' && state?.panelOpen) window.pix.closePanel()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -41,7 +41,7 @@ export function App() {
       if (timer !== undefined) return
       timer = window.setTimeout(() => {
         timer = undefined
-        if (!isTyping()) window.dock.closePanel()
+        if (!isTyping()) window.pix.closePanel()
       }, LEAVE_CLOSE_MS)
     }
     const disarm = () => {

@@ -47,7 +47,7 @@ function Timers() {
   return (
     <>
       <div className="timer-start">
-        <button className="btn primary" onClick={() => void window.dock.data.apply('timers', { op: 'startPomodoro' })}>
+        <button className="btn primary" onClick={() => void window.pix.data.apply('timers', { op: 'startPomodoro' })}>
           🍅 {t('timers.startPomodoro')}
         </button>
       </div>
@@ -55,7 +55,7 @@ function Timers() {
         className="todo-add"
         onSubmit={(e) => {
           e.preventDefault()
-          void window.dock.data.apply('timers', { op: 'startCustom', label, minutes })
+          void window.pix.data.apply('timers', { op: 'startCustom', label, minutes })
           setLabel('')
         }}
       >
@@ -95,7 +95,7 @@ function TimerCard({ timer, now }: { timer: TimerView; now: number }) {
   const { t } = useTranslation()
   const remaining = remainingOf(timer, now)
   const progress = timer.durationMs ? 1 - remaining / timer.durationMs : 1
-  const apply = (op: 'pause' | 'resume' | 'cancel' | 'next') => void window.dock.data.apply('timers', { op, id: timer.id })
+  const apply = (op: 'pause' | 'resume' | 'cancel' | 'next') => void window.pix.data.apply('timers', { op, id: timer.id })
   return (
     <li className={`timer-card ${timer.state} ${timer.phase ?? ''}`}>
       <div className="timer-head">
@@ -144,7 +144,7 @@ export function TimerPill() {
     if (shiftLeft === null) return null
     const time = formatRemaining(shiftLeft, { h: t('shift.h'), min: t('shift.min') })
     return (
-      <button className="timer-pill" data-hit aria-label={t('shift.pill', { time })} onClick={() => window.dock.openPanel('home')}>
+      <button className="timer-pill" data-hit aria-label={t('shift.pill', { time })} onClick={() => window.pix.openPanel('home')}>
         🏢 {time}
       </button>
     )
@@ -152,7 +152,7 @@ export function TimerPill() {
   const next = running.reduce<TimerView | null>((a, b) => (!a || (b.endsAt ?? 0) < (a.endsAt ?? 0) ? b : a), null)
   const time = next ? formatDuration(remainingOf(next, now)) : '⏸'
   return (
-    <button className="timer-pill" data-hit aria-label={t('timers.pillLabel', { time })} onClick={() => window.dock.openPanel('timers')}>
+    <button className="timer-pill" data-hit aria-label={t('timers.pillLabel', { time })} onClick={() => window.pix.openPanel('timers')}>
       {next?.phase === 'work' ? '🍅 ' : '⏱ '}
       {time}
     </button>
@@ -187,7 +187,7 @@ function Reminders() {
         onSubmit={(e) => {
           e.preventDefault()
           if (!text.trim() || !date || !time) return
-          void window.dock.data.apply('reminders', { op: 'save', text: text.trim(), at: `${date}T${time}`, repeat })
+          void window.pix.data.apply('reminders', { op: 'save', text: text.trim(), at: `${date}T${time}`, repeat })
           setText('')
         }}
       >
@@ -225,7 +225,7 @@ function Reminders() {
                 </em>
               </span>
               <RowMenu label={t('todos.more')}>
-                <DeleteButton onConfirm={() => void window.dock.data.apply('reminders', { op: 'remove', id: r.id })} />
+                <DeleteButton onConfirm={() => void window.pix.data.apply('reminders', { op: 'remove', id: r.id })} />
               </RowMenu>
             </li>
           ))}

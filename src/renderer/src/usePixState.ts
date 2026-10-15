@@ -3,7 +3,7 @@ import i18next from './i18n'
 import type { UiState } from '@shared/ipc'
 
 /** Stato dell'interfaccia, sempre allineato a quello del processo main. */
-export function useDockState(): UiState | null {
+export function usePixState(): UiState | null {
   const [state, setState] = useState<UiState | null>(null)
 
   useEffect(() => {
@@ -15,8 +15,8 @@ export function useDockState(): UiState | null {
       document.documentElement.dataset.animations = s.settings.animations
       setState(s)
     }
-    const off = window.dock.onState(apply)
-    void window.dock.getState().then(apply)
+    const off = window.pix.onState(apply)
+    void window.pix.getState().then(apply)
     return () => {
       alive = false
       off()

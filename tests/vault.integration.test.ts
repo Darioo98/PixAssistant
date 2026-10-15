@@ -12,7 +12,7 @@ import type { SecureClipboard } from '../src/main/secureClipboard'
 
 let root: string
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), 'dock-vault-'))
+  root = await mkdtemp(join(tmpdir(), 'pix-vault-'))
 })
 afterEach(async () => {
   await rm(root, { recursive: true, force: true })

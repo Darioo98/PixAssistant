@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { writeFileAtomic, isTempName } from './storage/atomic'
 import { keyFileSchema, openKeys, readKeyFile, writeKeyFile, type KeyFile, type Keys } from './crypto/keyring'
 import { encryptedCodec } from './crypto/codec'
-import { backupName, backupsToDelete } from '@shared/maintenance'
+import { BACKUP_RE, backupName, backupsToDelete } from '@shared/maintenance'
 import { toISODate } from '@shared/dates'
 
 /**
@@ -63,11 +63,14 @@ export async function dailyBackup(dataDir: string, backupsDir: string, deviceNam
 
 export async function lastBackupTime(backupsDir: string): Promise<number | null> {
   try {
-    const names = (await readdir(backupsDir)).filter((n) => n.endsWith('.dockbak')).sort()
-    const last = names.at(-1)
-    if (!last) return null
-    const m = /dock-(\d{4})-(\d{2})-(\d{2})/.exec(last)
-    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime() : null
+    let best: number | null = null
+    for (const n of await readdir(backupsDir)) {
+      const m = BACKUP_RE.exec(n)
+      if (!m) continue
+      const t = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime()
+      if (best === null || t > best) best = t
+    }
+    return best
   } catch {
     return null
   }

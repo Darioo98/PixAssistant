@@ -10,14 +10,14 @@ import { addClip, isExcludedApp, type ClipEntry, type ClipOp, type ClipState } f
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 const THUMB_SIZE = 96
-const OWN_PROCESSES = ['dock.exe', 'electron.exe']
+const OWN_PROCESSES = ['pix.exe', 'electron.exe']
 
 /**
  * Cronologia appunti: solo su questo PC, cifrata con DPAPI. Ascolta i cambi
  * tramite l'helper nativo (nessun polling) e ignora:
  * - i contenuti marcati come sensibili (password della cassaforte, password manager);
  * - le app escluse nelle impostazioni;
- * - le copie fatte da Dock stesso;
+ * - le copie fatte da Pix stesso;
  * - tutto, mentre è in pausa.
  */
 export class ClipboardHistory {
@@ -128,7 +128,7 @@ export class ClipboardHistory {
           const png = this.opts.protector.unprotect(await readFile(join(this.dir, `${e.id}.bin`)))
           await clipboard.write([new ClipboardItem({ 'image/png': new Blob([new Uint8Array(png)], { type: 'image/png' }) })])
         }
-        // La copia da Dock non crea un duplicato: la voce torna in cima.
+        // La copia da Pix non crea un duplicato: la voce torna in cima.
         this.entries = [{ ...e, at: Date.now() }, ...this.entries.filter((x) => x.id !== e.id)]
         this.changed()
         return true

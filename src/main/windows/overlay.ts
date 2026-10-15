@@ -31,7 +31,7 @@ export class OverlayWindow {
       fullscreenable: false,
       skipTaskbar: true,
       alwaysOnTop: true,
-      title: 'Dock',
+      title: 'Pix',
       webPreferences: {
         preload: opts.preload,
         contextIsolation: true,

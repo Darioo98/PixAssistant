@@ -14,7 +14,7 @@ import type { DeadlineInput } from '@shared/deadlines'
 
 let root: string
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), 'dock-sync-'))
+  root = await mkdtemp(join(tmpdir(), 'pix-sync-'))
 })
 afterEach(async () => {
   await rm(root, { recursive: true, force: true })
@@ -160,7 +160,9 @@ describe('backup', () => {
   })
 
   it('tiene gli ultimi 7 backup giornalieri', () => {
-    const names = Array.from({ length: 10 }, (_, i) => `dock-2026-10-${String(i + 1).padStart(2, '0')}.dockbak`)
+    const names = Array.from({ length: 10 }, (_, i) => `pix-2026-10-${String(i + 1).padStart(2, '0')}.pixbak`)
     expect(backupsToDelete([...names, 'altro.txt'], 7)).toEqual(names.slice(0, 3))
+    // i vecchi backup di Dock contano nella rotazione
+    expect(backupsToDelete(['dock-2026-09-30.dockbak', ...names], 10)).toEqual(['dock-2026-09-30.dockbak'])
   })
 })

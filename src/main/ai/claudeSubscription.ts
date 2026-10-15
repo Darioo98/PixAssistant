@@ -12,7 +12,7 @@ type Sdk = typeof import('@anthropic-ai/claude-agent-sdk')
 /**
  * Claude Code installato sul PC (lo stesso che usi da terminale, con il tuo
  * login). L'eseguibile incluso nell'SDK pesa centinaia di MB e non viene
- * distribuito con Dock: si usa solo in sviluppo se Claude Code non è installato.
+ * distribuito con Pix: si usa solo in sviluppo se Claude Code non è installato.
  */
 export function findClaudeCode(): string | null {
   const home = process.env.USERPROFILE ?? ''
@@ -67,7 +67,7 @@ export class ClaudeSubscriptionProvider implements AIProvider {
   }
 
   private env(): Record<string, string | undefined> {
-    const env: Record<string, string | undefined> = { ...process.env, CLAUDE_AGENT_SDK_CLIENT_APP: 'dock/0.1' }
+    const env: Record<string, string | undefined> = { ...process.env, CLAUDE_AGENT_SDK_CLIENT_APP: 'pix/0.1' }
     delete env.ANTHROPIC_API_KEY
     delete env.ANTHROPIC_AUTH_TOKEN
     delete env.CLAUDE_CODE_USE_BEDROCK
@@ -88,7 +88,7 @@ export class ClaudeSubscriptionProvider implements AIProvider {
       settingSources: [] as [],
       persistSession: false,
       maxTurns: 1,
-      canUseTool: async () => ({ behavior: 'deny' as const, message: 'Dock: strumenti disattivati.' })
+      canUseTool: async () => ({ behavior: 'deny' as const, message: 'Pix: strumenti disattivati.' })
     }
   }
 

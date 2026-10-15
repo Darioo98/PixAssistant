@@ -176,7 +176,7 @@ export class ChatService {
 
   /**
    * Apre un terminale con Claude Code: lì si digita /login per collegare
-   * l'account claude.ai (abbonamento Pro/Max). Dock non vede mai le credenziali.
+   * l'account claude.ai (abbonamento Pro/Max). Pix non vede mai le credenziali.
    */
   private openLogin(): ChatOpResult {
     const claude = this.deps.claudePath()

@@ -1,4 +1,4 @@
-# Dock
+# Pix
 
 Barra multifunzione per Windows 10/11 con **Pix**, la mascotte a forma di piastrella.
 Vive sul bordo destro dello schermo: passa il mouse sulla barra e diventa Pix, cliccalo
@@ -8,10 +8,10 @@ il turno in sede.
 
 ## Installazione
 
-1. Avvia `Dock Setup 0.1.0.exe`. L'installer non è firmato: se Windows SmartScreen
+1. Avvia `Pix Setup 0.1.0.exe`. L'installer non è firmato: se Windows SmartScreen
    avvisa, scegli **Ulteriori informazioni → Esegui comunque**.
 2. Scegli la cartella (predefinita: solo per il tuo utente, senza diritti di amministratore).
-3. Dock parte da solo a fine installazione e, d'ora in poi, all'accesso a Windows
+3. Pix parte da solo a fine installazione e, d'ora in poi, all'accesso a Windows
    (si disattiva in **Impostazioni → Avvio**).
 
 Requisiti: Windows 10 o 11 a 64 bit. Per la chat serve **Claude Code** installato
@@ -20,16 +20,16 @@ l'helper nativo lo include.
 
 ## Primo avvio
 
-- **Cartella dati**: Dock usa una cartella `Dock` dentro OneDrive (preferisce il
+- **Cartella dati**: Pix usa una cartella `Pix` dentro OneDrive (preferisce il
   OneDrive personale; se c'è solo quello aziendale lo segnala). Si cambia in
   **Impostazioni → Backup e sincronizzazione → Cambia cartella dati**.
 - **Cassaforte**: apri la scheda **Password** e premi **Configura**.
-  1. Dock crea le chiavi e ti mostra **una sola volta** la **chiave di recupero**
+  1. Pix crea le chiavi e ti mostra **una sola volta** la **chiave di recupero**
      (8 gruppi da 4 caratteri). Conservala fuori dal PC: stampata o in un altro
      password manager. Per proseguire ti chiede di riscriverne l'ultimo gruppo.
   2. Attiva **Windows Hello** (volto, impronta o PIN) per aprire la cassaforte senza
      la chiave di recupero. Vale solo per quel PC.
-- **Chat**: alla prima apertura della scheda **Chat AI** Dock verifica il collegamento
+- **Chat**: alla prima apertura della scheda **Chat AI** Pix verifica il collegamento
   a Claude. Se non hai fatto il login premi **Apri Claude Code**, digita `/login`,
   completa l'accesso nel browser e torna su **Verifica di nuovo**.
 
@@ -48,7 +48,7 @@ l'helper nativo lo include.
 - Dopo lo sblocco la cassaforte resta aperta 8 ore (configurabile) e si chiude
   subito se blocchi Windows, se il PC va in sospensione, o con **Blocca**.
 - Le password copiate non entrano nella cronologia appunti (né in quella di Windows
-  né in quella di Dock) e gli appunti si svuotano dopo 30 secondi.
+  né in quella di Pix) e gli appunti si svuotano dopo 30 secondi.
 - La chat usa Claude Code **senza strumenti**: niente accesso a file, comandi o
   Internet. Nessuna API key: si usa il tuo abbonamento.
 - Dati inviati all'esterno: solo i messaggi della chat (a Claude), il nome della
@@ -56,26 +56,26 @@ l'helper nativo lo include.
 - Le impostazioni condivise (lingua, tema, aspetto di Pix…) non sono cifrate:
   non contengono dati sensibili.
 
-## Usare Dock su un secondo PC
+## Usare Pix su un secondo PC
 
-1. Installa Dock e assicurati che OneDrive sincronizzi la stessa cartella.
-2. Apri la scheda **Password**: Dock vede che la cassaforte esiste già e chiede la
+1. Installa Pix e assicurati che OneDrive sincronizzi la stessa cartella.
+2. Apri la scheda **Password**: Pix vede che la cassaforte esiste già e chiede la
    **chiave di recupero** per collegare il PC.
 3. Attiva Windows Hello anche lì.
 
 Finché il PC non è collegato, le scadenze e gli altri dati cifrati degli altri PC
-non sono leggibili (e Dock non li sovrascrive).
+non sono leggibili (e Pix non li sovrascrive).
 
 ## Recupero e backup
 
 - **Windows Hello non funziona** (nuovo PIN, nuovo PC, TPM azzerato): nella scheda
   Password scegli **Usa la chiave di recupero**, poi riattiva Windows Hello.
-- **Backup automatico**: ogni giorno in `%LOCALAPPDATA%\Dock\backups`, si tengono gli
+- **Backup automatico**: ogni giorno in `%LOCALAPPDATA%\Pix\backups`, si tengono gli
   ultimi 7. Il file contiene i dati già cifrati e si apre solo con la chiave di recupero.
 - **Esporta / Importa**: in **Impostazioni → Backup e sincronizzazione**. L'import
   *unisce* i dati a quelli attuali, non sovrascrive nulla; su un PC nuovo ripristina
   anche le chiavi.
-- **Conflitti**: se due PC modificano la stessa voce, Dock tiene la versione più
+- **Conflitti**: se due PC modificano la stessa voce, Pix tiene la versione più
   recente e conserva l'altra: la ritrovi in **Versioni in conflitto**, con
   **Ripristina** o **Ignora**.
 - **Chiave di recupero persa**: finché hai Windows Hello attivo su almeno un PC puoi
@@ -86,9 +86,9 @@ non sono leggibili (e Dock non li sovrascrive).
 
 | Cosa | Dove |
 |---|---|
-| Dati sincronizzati (cifrati) | `OneDrive\Dock\<collezione>\<id-PC>.json` (un file per PC) |
-| Chiavi cifrate | `OneDrive\Dock\keys.json` |
-| Sync key protetta, Windows Hello, cronologia appunti, timer, turno, log, backup | `%LOCALAPPDATA%\Dock` |
+| Dati sincronizzati (cifrati) | `OneDrive\Pix\<collezione>\<id-PC>.json` (un file per PC) |
+| Chiavi cifrate | `OneDrive\Pix\keys.json` |
+| Sync key protetta, Windows Hello, cronologia appunti, timer, turno, log, backup | `%LOCALAPPDATA%\Pix` |
 
 ## Sviluppo
 
@@ -97,20 +97,20 @@ Requisiti: Node.js 22, .NET SDK 6 o successivo.
 ```
 npm install
 npm run native       # helper nativo (PixNative) per lo sviluppo
-npm run dev          # avvia Dock in modalità sviluppo
+npm run dev          # avvia Pix in modalità sviluppo
 npm test             # test unitari e di integrazione (Vitest)
 npm run typecheck
 npm run dist         # installer NSIS in dist\ (helper self-contained)
 ```
 
 Per provare la build impacchettata senza registrare l'avvio automatico:
-`set DOCK_NO_AUTOSTART=1` prima di lanciare `dist\win-unpacked\Dock.exe`.
+`set PIX_NO_AUTOSTART=1` prima di lanciare `dist\win-unpacked\Pix.exe`.
 
 Struttura:
 
 - `src/main` — processo principale: finestra, crittografia, dati, sincronizzazione,
   avvisi, AI (tutta la logica sensibile sta qui).
-- `src/preload` — API minima esposta al renderer (`window.dock`).
+- `src/preload` — API minima esposta al renderer (`window.pix`).
 - `src/renderer` — interfaccia React: Pix, pannello, schede.
 - `src/shared` — tipi e logica pura condivisa (date, ricorrenze, unione dei dati…).
 - `native/PixNative` — helper C# per Windows Hello, appunti protetti e stato schermo intero.

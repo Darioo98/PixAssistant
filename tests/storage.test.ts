@@ -9,7 +9,7 @@ import { resolveDataDir } from '../src/main/storage/paths'
 
 let dir: string
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'dock-test-'))
+  dir = await mkdtemp(join(tmpdir(), 'pix-test-'))
 })
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true })
@@ -107,7 +107,7 @@ describe('resolveDataDir', () => {
       { OneDriveConsumer: 'C:\\U\\OneDrive', OneDriveCommercial: 'C:\\U\\OneDrive - Ditta', OneDrive: 'C:\\U\\OneDrive - Ditta' },
       'C:\\L'
     )
-    expect(r).toEqual({ path: join('C:\\U\\OneDrive', 'Dock'), kind: 'personal' })
+    expect(r).toEqual({ path: join('C:\\U\\OneDrive', 'Pix'), kind: 'personal' })
   })
 
   it('riconosce il OneDrive aziendale', () => {

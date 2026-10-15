@@ -12,7 +12,7 @@ export interface TrayActions {
 }
 
 /** Icona nell'area di notifica, vicino all'orologio. */
-export class DockTray {
+export class PixTray {
   private tray: Tray
 
   constructor(

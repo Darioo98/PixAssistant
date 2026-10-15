@@ -32,7 +32,7 @@ export function DeadlineForm({ item, date, defaultLead, categories, onClose }: P
   const save = async () => {
     if (!valid || saving) return
     setSaving(true)
-    const ok = await window.dock.deadlines.apply({
+    const ok = await window.pix.deadlines.apply({
       op: 'save',
       input: {
         id: item?.id,
@@ -163,7 +163,7 @@ export function DeadlineForm({ item, date, defaultLead, categories, onClose }: P
           <DeleteButton
             className="btn danger-text"
             onConfirm={() => {
-              void window.dock.deadlines.apply({ op: 'remove', id: item.id })
+              void window.pix.deadlines.apply({ op: 'remove', id: item.id })
               onClose()
             }}
           />

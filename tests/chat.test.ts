@@ -8,7 +8,7 @@ import { AIError, type AIProvider, type AIRequest } from '../src/main/ai/provide
 
 let dir: string
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'dock-chat-'))
+  dir = await mkdtemp(join(tmpdir(), 'pix-chat-'))
 })
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true })

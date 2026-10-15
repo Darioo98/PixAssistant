@@ -1,8 +1,26 @@
-import { join } from 'node:path'
+import { existsSync, renameSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import type { DataDirInfo } from '@shared/ipc'
 
 /** Nome della cartella dell'app dentro OneDrive. */
-export const DATA_FOLDER = 'Dock'
+export const DATA_FOLDER = 'Pix'
+/** Nome della cartella quando l'app si chiamava Dock. */
+export const LEGACY_FOLDER = 'Dock'
+
+/**
+ * Migrazione dal vecchio nome: se `target` (…\Pix) non esiste ancora ma accanto c'è
+ * la cartella …\Dock, la rinomina. Restituisce true se l'ha spostata.
+ */
+export function migrateLegacyFolder(target: string): boolean {
+  const legacy = join(dirname(target), LEGACY_FOLDER)
+  if (existsSync(target) || !existsSync(legacy)) return false
+  try {
+    renameSync(legacy, target)
+    return true
+  } catch {
+    return false // cartella in uso (es. vecchia versione aperta): si riparte da zero
+  }
+}
 
 /**
  * Cartella dati sincronizzata. Ordine di preferenza:

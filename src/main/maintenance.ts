@@ -91,8 +91,8 @@ export class MaintenanceController {
       case 'export': {
         const res = await this.withDialog(() =>
           dialog.showSaveDialog(this.opts.window(), {
-            defaultPath: join(app.getPath('documents'), `Dock-backup-${toISODate(new Date())}.dockbak`),
-            filters: [{ name: 'Backup di Dock', extensions: ['dockbak'] }]
+            defaultPath: join(app.getPath('documents'), `Pix-backup-${toISODate(new Date())}.pixbak`),
+            filters: [{ name: 'Backup di Pix', extensions: ['pixbak'] }]
           })
         )
         if (res.canceled || !res.filePath) return { ok: false, error: 'canceled' }
@@ -105,7 +105,7 @@ export class MaintenanceController {
           dialog.showOpenDialog(this.opts.window(), {
             properties: ['openFile'],
             defaultPath: this.backupsDir,
-            filters: [{ name: 'Backup di Dock', extensions: ['dockbak'] }]
+            filters: [{ name: 'Backup di Pix', extensions: ['pixbak', 'dockbak'] }]
           })
         )
         const file = res.filePaths[0]
@@ -126,7 +126,7 @@ export class MaintenanceController {
       }
       case 'backupNow': {
         if (this.opts.keys.setup === 'unconfigured') return { ok: false, error: 'not-configured' }
-        const name = `dock-${toISODate(new Date())}-${Date.now()}.dockbak`
+        const name = `pix-${toISODate(new Date())}-${Date.now()}.pixbak`
         await writeFileAtomic(join(this.backupsDir, name), await createBackup(this.opts.dataDir, this.opts.deviceName))
         this.last = Date.now()
         this.opts.onChange()

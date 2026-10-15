@@ -6,7 +6,7 @@ import { AlertEngine, type AlertCandidate } from '../src/main/alerts'
 
 let dir: string
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'dock-alerts-'))
+  dir = await mkdtemp(join(tmpdir(), 'pix-alerts-'))
 })
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true })
@@ -31,7 +31,7 @@ function setup(keys: () => string[], opts: { quiet?: () => boolean; now?: () => 
     isQuiet: opts.quiet ?? (() => false),
     toast: (title) => toasts.push(title),
     bubble: (c) => bubbles.push(c.text),
-    summary: (count) => ({ category: 'Avvisi', title: 'Dock', text: `Hai ${count} avvisi`, openLabel: 'Apri' }),
+    summary: (count) => ({ category: 'Avvisi', title: 'Pix', text: `Hai ${count} avvisi`, openLabel: 'Apri' }),
     openSummary: () => undefined,
     now: opts.now
   })
@@ -78,7 +78,7 @@ describe('AlertEngine', () => {
     const { engine, toasts, bubbles } = setup(() => ['a', 'b', 'c', 'd', 'e'])
     await engine.init()
     expect(await engine.run()).toBe(5)
-    expect(toasts).toEqual(['Dock'])
+    expect(toasts).toEqual(['Pix'])
     expect(bubbles).toEqual(['Hai 5 avvisi'])
   })
 })

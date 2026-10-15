@@ -17,7 +17,7 @@ export function Panel({ state }: { state: UiState }) {
 
   return (
     <section className="panel" data-hit aria-label={t(`tabs.${tab}`)}>
-      <nav className="rail" aria-label="Dock">
+      <nav className="rail" aria-label="Pix">
         {TABS.map((id) => (
           <button
             key={id}
@@ -25,7 +25,7 @@ export function Panel({ state }: { state: UiState }) {
             title={t(`tabs.${id}`)}
             aria-label={t(`tabs.${id}`)}
             aria-current={id === tab ? 'page' : undefined}
-            onClick={() => window.dock.openPanel(id)}
+            onClick={() => window.pix.openPanel(id)}
           >
             <TabIcon tab={id} />
           </button>
@@ -34,7 +34,7 @@ export function Panel({ state }: { state: UiState }) {
       <div className="panel-body">
         <header className="panel-header">
           <h1>{t(`tabs.${tab}`)}</h1>
-          <button className="icon-btn" aria-label={t('panel.close')} title={t('panel.close')} onClick={() => window.dock.closePanel()}>
+          <button className="icon-btn" aria-label={t('panel.close')} title={t('panel.close')} onClick={() => window.pix.closePanel()}>
             <CloseIcon />
           </button>
         </header>

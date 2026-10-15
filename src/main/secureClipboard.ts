@@ -6,7 +6,7 @@ const CLEAR_AFTER_MS = 30_000
 
 /**
  * Copia di dati sensibili: tramite l'helper nativo il testo viene marcato
- * come da escludere dalla cronologia appunti (di Windows e di Dock) e dal
+ * come da escludere dalla cronologia appunti (di Windows e di Pix) e dal
  * cloud. Dopo 30 secondi gli appunti si svuotano, ma solo se contengono
  * ancora quello che abbiamo copiato.
  */

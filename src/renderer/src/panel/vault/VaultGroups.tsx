@@ -18,9 +18,9 @@ import { DeleteButton, RowMenu } from '../RowMenu'
  * riorganizzano trascinando password e cartelle.
  */
 
-const COLLAPSED_KEY = 'dock.vault.collapsed'
-const DRAG_ENTRY = 'application/x-dock-entry'
-const DRAG_FOLDER = 'application/x-dock-folder'
+const COLLAPSED_KEY = 'pix.vault.collapsed'
+const DRAG_ENTRY = 'application/x-pix-entry'
+const DRAG_FOLDER = 'application/x-pix-folder'
 
 export function loadCollapsed(): string[] {
   try {
@@ -169,7 +169,7 @@ export function FolderTree({ entries, groups, renderEntry, editable, onNewEntry,
     onCreated?.()
     if (!name) return
     const color = GROUP_COLORS[groups.length % GROUP_COLORS.length]!
-    void window.dock.vault.apply({ op: 'groupSave', name, color, parentId })
+    void window.pix.vault.apply({ op: 'groupSave', name, color, parentId })
     if (parentId) expand(parentId)
   }
 
@@ -192,9 +192,9 @@ export function FolderTree({ entries, groups, renderEntry, editable, onNewEntry,
     setDragging(false)
     const entry = e.dataTransfer.getData(DRAG_ENTRY)
     const folder = e.dataTransfer.getData(DRAG_FOLDER)
-    if (entry) void window.dock.vault.apply({ op: 'move', id: entry, groupId: target })
+    if (entry) void window.pix.vault.apply({ op: 'move', id: entry, groupId: target })
     else if (folder && folder !== target && canMoveGroup(folder, target, groups)) {
-      void window.dock.vault.apply({ op: 'groupMove', id: folder, parentId: target })
+      void window.pix.vault.apply({ op: 'groupMove', id: folder, parentId: target })
     }
     if (target) expand(target)
   }
@@ -222,7 +222,7 @@ export function FolderTree({ entries, groups, renderEntry, editable, onNewEntry,
           initial={g.name}
           onDone={(name) => {
             setRenaming(null)
-            if (name && name !== g.name) void window.dock.vault.apply({ op: 'groupSave', id: g.id, name, color: g.color })
+            if (name && name !== g.name) void window.pix.vault.apply({ op: 'groupSave', id: g.id, name, color: g.color })
           }}
         />
       )
@@ -261,14 +261,14 @@ export function FolderTree({ entries, groups, renderEntry, editable, onNewEntry,
             </button>
             <button onClick={() => setRenaming(g.id)}>{t('vault.groups.rename')}</button>
             <span className="menu-label">{t('vault.groups.color')}</span>
-            <ColorChoice value={g.color} onChange={(c) => void window.dock.vault.apply({ op: 'groupSave', id: g.id, name: g.name, color: c })} />
+            <ColorChoice value={g.color} onChange={(c) => void window.pix.vault.apply({ op: 'groupSave', id: g.id, name: g.name, color: c })} />
             <FolderMoveItems
               groups={groups}
               exclude={descendantsOf(g.id, groups)}
               current={g.parentId ?? null}
-              onPick={(parentId) => void window.dock.vault.apply({ op: 'groupMove', id: g.id, parentId })}
+              onPick={(parentId) => void window.pix.vault.apply({ op: 'groupMove', id: g.id, parentId })}
             />
-            <DeleteButton onConfirm={() => void window.dock.vault.apply({ op: 'groupRemove', id: g.id })} />
+            <DeleteButton onConfirm={() => void window.pix.vault.apply({ op: 'groupRemove', id: g.id })} />
           </RowMenu>
         )}
       </li>,
@@ -335,7 +335,7 @@ export function GroupSelect({ groups, value, onChange }: { groups: VaultGroupVie
           disabled={!name.trim()}
           onClick={() => {
             const color = GROUP_COLORS[groups.length % GROUP_COLORS.length]!
-            void window.dock.vault.apply({ op: 'groupSave', name: name.trim(), color, parentId: value }).then((r) => {
+            void window.pix.vault.apply({ op: 'groupSave', name: name.trim(), color, parentId: value }).then((r) => {
               if (r.ok && r.value) onChange(r.value)
               setCreating(false)
               setName('')
