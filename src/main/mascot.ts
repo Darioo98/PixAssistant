@@ -16,6 +16,8 @@ export interface BubbleRequest {
   text: string
   actions?: Bubble['actions']
   alert?: boolean
+  /** Durata del fumetto (ms); predefinita dalle impostazioni. */
+  timeoutMs?: number
   /** Chiamata alla chiusura del fumetto: azione scelta, chiusura manuale o scadenza. */
   onOutcome?: (outcome: BubbleOutcome) => void
 }
@@ -32,6 +34,10 @@ export interface MascotDeps {
   /** Se false (mascotte nascosta, schermo intero…) i fumetti non vengono mostrati. */
   canShowBubbles: () => boolean
   onChange: (state: MascotState) => void
+  /** Pomodoro di lavoro in corso. */
+  focus?: () => boolean
+  /** Scadenze vicine o to-do in ritardo. */
+  tension?: () => boolean
   now?: () => Date
 }
 
@@ -57,7 +63,10 @@ export class MascotService {
 
   constructor(private readonly deps: MascotDeps) {
     this.asleep = this.computeAsleep()
-    this.tickTimer = setInterval(() => this.refreshSleep(), TICK_MS)
+    this.tickTimer = setInterval(() => {
+      this.refreshSleep()
+      this.emit() // tensione e focus dipendono dall'ora
+    }, TICK_MS)
   }
 
   state(): MascotState {
@@ -66,11 +75,14 @@ export class MascotService {
         bubbleAlert: Boolean(this.current?.bubble.alert),
         thinking: this.thinking,
         transient: this.transient,
-        asleep: this.asleep
+        asleep: this.asleep,
+        focus: this.deps.focus?.() ?? false
       }),
       bubble: this.current?.bubble ?? null,
       queued: this.queue.length,
-      spotlight: this.transient !== null
+      spotlight: this.transient !== null,
+      focus: this.deps.focus?.() ?? false,
+      tension: this.deps.tension?.() ?? false
     }
   }
 
@@ -88,7 +100,7 @@ export class MascotService {
       text: req.text,
       actions: req.actions ?? [],
       alert: req.alert ?? true,
-      timeoutMs: this.deps.settings().bubbleSeconds * 1000
+      timeoutMs: req.timeoutMs ?? this.deps.settings().bubbleSeconds * 1000
     }
     this.queue.push({ bubble, onOutcome: req.onOutcome })
     if (!this.current && !this.nextTimer) this.showNext()
@@ -135,6 +147,11 @@ export class MascotService {
     this.flash('happy')
   }
 
+  /** Ricalcola lo stato (es. è cambiato il focus o una scadenza). */
+  refresh(): void {
+    this.emit()
+  }
+
   /** Va chiamato quando l'utente interagisce: Pix si sveglia subito. */
   wake(): void {
     this.refreshSleep(true)
@@ -175,7 +192,7 @@ export class MascotService {
 
   private muted(): boolean {
     const s = this.deps.settings()
-    if (s.notificationsPaused || !this.deps.canShowBubbles()) return true
+    if (s.notificationsPaused || !this.deps.canShowBubbles() || this.deps.focus?.()) return true
     return s.dndEnabled && inTimeRange(this.now(), s.dndFrom, s.dndTo)
   }
 

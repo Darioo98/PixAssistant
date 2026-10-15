@@ -112,7 +112,8 @@
       "happy": "Felice",
       "think": "Pensa",
       "sleep": "Dorme",
-      "greet": "Saluto"
+      "greet": "Saluto",
+      "summary": "Riepilogo"
     },
     "animationsHint": "Riguarda i movimenti spontanei di Pix. La trasformazione della barra resta, a meno che in Windows siano disattivati gli effetti di animazione.",
     "appearance": "Aspetto di Pix",
@@ -197,7 +198,9 @@
       "features": "Funzioni",
       "data": "Dati"
     },
-    "searchShortcut": "Scorciatoia della ricerca globale"
+    "searchShortcut": "Scorciatoia della ricerca globale",
+    "morningSummary": "Riepilogo della giornata al primo utilizzo",
+    "tryYawn": "🥱 Sbadiglio"
   },
   "mascot": {
     "preview": {
@@ -625,7 +628,12 @@
     "finished": "Timer «{{label}}» finito!",
     "pomodoroBreak": "Ottimo lavoro! Ora: {{phase}}.",
     "pomodoroWork": "Pausa finita: si torna al lavoro?",
-    "pillLabel": "Timer: {{time}}"
+    "pillLabel": "Timer: {{time}}",
+    "pomodoroBreakCycles_one": "Ottimo lavoro: primo ciclo di oggi! 🍅 Ora: {{phase}}.",
+    "pomodoroBreakCycles_other": "Ottimo lavoro: {{count}} cicli oggi! 🍅 Ora: {{phase}}.",
+    "cyclesToday_one": "Oggi {{count}} ciclo",
+    "cyclesToday_other": "Oggi {{count}} cicli",
+    "focusHint": "Durante il lavoro Pix dorme sulla barra e tiene gli avvisi per la pausa."
   },
   "reminders": {
     "category": "Promemoria",
@@ -824,6 +832,25 @@
         "usage": "/{{cmd}}",
         "text": "Mostra questo elenco"
       }
+    }
+  },
+  "day": {
+    "allDone": "Hai completato tutti i to-do di oggi! 🎉",
+    "summary": {
+      "category": "La tua giornata",
+      "open": "Apri Home",
+      "morning": "Buongiorno! ☀️",
+      "afternoon": "Ciao! Ecco la tua giornata:",
+      "evening": "Buonasera! Ecco cosa resta di oggi:",
+      "shift": "🏢 Turno: finisci alle {{time}}",
+      "deadlines_one": "📅 {{count}} scadenza oggi: {{names}}",
+      "deadlines_other": "📅 {{count}} scadenze oggi: {{names}}",
+      "noDeadlines": "📅 Nessuna scadenza oggi",
+      "todos_one": "☑️ {{count}} to-do per oggi",
+      "todos_other": "☑️ {{count}} to-do per oggi",
+      "reminders_one": "⏰ {{time}} {{text}}",
+      "reminders_other": "⏰ {{time}} {{text}} (+ altri {{more}} oggi)",
+      "weather": "{{icon}} {{city}} {{temp}}° (min {{min}}° · max {{max}}°)"
     }
   }
 }

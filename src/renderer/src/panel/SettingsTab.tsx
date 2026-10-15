@@ -141,6 +141,7 @@ export function SettingsTab({ state }: { state: UiState }) {
               checked={s.eyesFollowCursor}
               onChange={(v) => void save({ eyesFollowCursor: v })}
             />
+            <Toggle label={t('settings.morningSummary')} checked={s.morningSummary} onChange={(v) => void save({ morningSummary: v })} />
             <Row label={t('settings.bubbleSeconds')}>
               <input
                 type="number"

@@ -165,6 +165,13 @@
 /* ---------- Timer ---------- */
 .timer-start {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.focus-hint {
+  font-size: 12px;
 }
 
 .timer-card {

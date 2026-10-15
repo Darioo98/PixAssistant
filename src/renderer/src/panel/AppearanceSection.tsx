@@ -4,7 +4,7 @@ import { PIX_TRANSFORMS, PIX_EYES, PIX_FINISHES, PIX_PALETTE, PIX_SHAPES, type M
 import { DEFAULT_SETTINGS, type Settings, type SettingsPatch } from '@shared/settings'
 import { PixFigure } from '../pix/PixFigure'
 import { ColorPicker } from './ColorPicker'
-import { PEEK_EVENT, TRANSFORM_EVENT } from '../pix/Mascot'
+import { PEEK_EVENT, TRANSFORM_EVENT, YAWN_EVENT } from '../pix/Mascot'
 
 const PREVIEW_MOODS: Mood[] = ['alert', 'happy', 'sleep']
 
@@ -106,6 +106,9 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
           ))}
           <button className="pill" onClick={() => window.dispatchEvent(new CustomEvent(PEEK_EVENT))}>
             {t('settings.tryPeek')}
+          </button>
+          <button className="pill" onClick={() => window.dispatchEvent(new CustomEvent(YAWN_EVENT))}>
+            {t('settings.tryYawn')}
           </button>
         </div>
       </div>

@@ -381,6 +381,8 @@
 .bubble-text {
   margin: 2px 0 10px;
   line-height: 1.4;
+  /* Il riepilogo della giornata va su più righe. */
+  white-space: pre-line;
 }
 
 .bubble-actions {
@@ -415,4 +417,85 @@
 .icon-btn.small {
   width: 24px;
   height: 24px;
+}
+
+/* ---------- Stanchezza serale e sbadiglio ---------- */
+.lids {
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+  transition: transform 0.8s ease;
+}
+
+.lids-evening {
+  transform: scaleY(0.72);
+}
+
+.lids-late {
+  transform: scaleY(0.52);
+}
+
+.yawn-body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+[data-yawn] .yawn-body {
+  animation: pix-yawn-body 2.4s ease-in-out 1;
+}
+
+[data-yawn] .yawn-mouth {
+  animation: pix-yawn-mouth 2.4s ease-in-out 1;
+  transform-box: fill-box;
+  transform-origin: 50% 30%;
+}
+
+[data-yawn] .lids {
+  animation: pix-yawn-lids 2.4s ease-in-out 1;
+}
+
+@keyframes pix-yawn-body {
+  0%,
+  100% {
+    transform: none;
+  }
+  35%,
+  60% {
+    transform: scale(0.94, 1.1);
+  }
+  75% {
+    transform: scale(1.04, 0.96);
+  }
+}
+
+@keyframes pix-yawn-mouth {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  30%,
+  62% {
+    opacity: 0.38;
+    transform: scale(1);
+  }
+}
+
+@keyframes pix-yawn-lids {
+  30%,
+  62% {
+    transform: scaleY(0.12);
+  }
+}
+
+/* ---------- Tensione (scadenze vicine) ---------- */
+.tense {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lids {
+    transition: none;
+  }
 }

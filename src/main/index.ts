@@ -26,6 +26,7 @@ import { safeStorageProtector } from './vaultController'
 import { SyncManager } from './sync'
 import { MaintenanceController } from './maintenance'
 import { ShiftService } from './shift'
+import { DayService } from './day'
 import { loadDevice } from './storage/device'
 import { migrateLegacyFolder, resolveDataDir } from './storage/paths'
 import { IPC, PREVIEWS, TABS, type DataCollection, type DataDirInfo, type MascotPreview, type UiIntent, type SetSettingsResult, type TabId, type UiState } from '@shared/ipc'
@@ -39,6 +40,9 @@ import { clipOpSchema, linkOpSchema } from '@shared/extras'
 import { maintenanceOpSchema } from '@shared/maintenance'
 import { formatHHMM, shiftOpSchema } from '@shared/shift'
 import { noteTitle } from '@shared/productivity'
+import { buildSummary, hasTension, todosLeftToday } from '@shared/day'
+import { toISODate } from '@shared/dates'
+import { WEATHER_ICONS, weatherKind } from '@shared/extras'
 
 // Dati locali (mai su OneDrive) in %LOCALAPPDATA%\Pix, non nel profilo roaming.
 const localDir = join(process.env.LOCALAPPDATA ?? app.getPath('appData'), 'Pix')
@@ -133,9 +137,13 @@ async function main(): Promise<void> {
   let chatChecked = false
 
   // ---- Note, to-do, promemoria e timer ----
+  const day = new DayService(localDir)
+  await day.init()
+  /** Pomodoro di lavoro in corso: Pix dorme sulla barra e gli avvisi aspettano la pausa. */
+  const focusActive = () => productivity.timers.list().some((t) => t.kind === 'pomodoro' && t.phase === 'work' && t.state === 'running')
   const isQuiet = () => {
     const s = settings.get()
-    return s.notificationsPaused || (s.dndEnabled && inTimeRange(new Date(), s.dndFrom, s.dndTo))
+    return s.notificationsPaused || (s.dndEnabled && inTimeRange(new Date(), s.dndFrom, s.dndTo)) || focusActive()
   }
   const productivity = new ProductivityController({
     dataDir: dataDir.path,
@@ -150,6 +158,11 @@ async function main(): Promise<void> {
     bubble: (req) => mascot.notify(req),
     celebrate: () => mascot.celebrate(),
     openPanel: (target) => openPanel(target),
+    focusCycle: () => {
+      const n = day.addCycle()
+      setTimeout(() => pushState(), 0)
+      return n
+    },
     send: (collection, items) => sendToRenderer(IPC.dataChanged, { collection, items })
   })
   await productivity.load()
@@ -179,6 +192,7 @@ async function main(): Promise<void> {
     dataDir,
     autostartAvailable: app.isPackaged,
     mascot: mascot.state(),
+    day: { cyclesToday: day.cyclesToday() },
     vault: vaultCtl.status(),
     intent
   })
@@ -193,7 +207,13 @@ async function main(): Promise<void> {
     settings: () => settings.get(),
     idleSeconds: () => powerMonitor.getSystemIdleTime(),
     canShowBubbles: () => !settings.get().mascotHidden && !fullscreenBusy,
+    focus: focusActive,
+    tension: () => hasTension(deadlines.list(), productivity.todos.list(), toISODate(new Date())),
     onChange: () => pushState()
+  })
+  productivity.timers.onChange(() => {
+    mascot.refresh()
+    pushState()
   })
 
   const updateVisibility = () => {
@@ -282,10 +302,24 @@ async function main(): Promise<void> {
   const pushDeadlines = () => {
     sendToRenderer(IPC.deadlinesChanged, deadlines.list())
   }
-  productivity.todos.store.onChange(() => alerts.schedule())
+  // Tutti i to-do di oggi completati: Pix festeggia.
+  let todosLeft = todosLeftToday(productivity.todos.list(), toISODate(new Date()))
+  productivity.todos.store.onChange(() => {
+    alerts.schedule()
+    mascot.refresh()
+    const today = toISODate(new Date())
+    const left = todosLeftToday(productivity.todos.list(), today)
+    const doneToday = productivity.todos.list().some((t) => t.done && t.doneAt !== null && toISODate(new Date(t.doneAt)) === today)
+    if (todosLeft > 0 && left === 0 && doneToday) {
+      mascot.celebrate()
+      mascot.notify({ category: i18next.t('todos.category'), text: i18next.t('day.allDone'), alert: false })
+    }
+    todosLeft = left
+  })
   deadlines.onChange(() => {
     pushDeadlines()
     alerts.schedule()
+    mascot.refresh()
   })
   // Controllo all'avvio (recupera gli avvisi persi), ogni 15 minuti e al ritorno dalla sospensione.
   alerts.schedule(5000)
@@ -410,6 +444,67 @@ async function main(): Promise<void> {
   })
   await shift.init()
   shift.onChange(() => sendToRenderer(IPC.shiftChanged, shift.state()))
+
+  // ---- Riepilogo del mattino: la prima volta che usi il PC nella giornata ----
+  const morningSummary = async (force = false) => {
+    if (!force) {
+      if (!settings.get().morningSummary || !day.summaryDue() || isQuiet()) return
+      if (powerMonitor.getSystemIdleTime() > 120) return // aspetta che tu sia al PC
+    }
+    const now = new Date()
+    const w = settings.get().weatherCity ? await weather.get(false).catch(() => null) : null
+    const today = w?.status === 'ok' ? w.weather.days[0] : undefined
+    const icons = w?.status === 'ok' ? WEATHER_ICONS[weatherKind(w.weather.code)] : null
+    const text = buildSummary(
+      {
+        now,
+        deadlines: deadlines.list(),
+        todos: productivity.todos.list(),
+        reminders: productivity.reminders.list(),
+        shiftEndsAt: shift.state().endsAt,
+        weather:
+          w?.status === 'ok' && today && icons
+            ? { city: w.weather.city, temperature: w.weather.temperature, min: today.min, max: today.max, icon: w.weather.isDay ? icons.day : icons.night }
+            : null
+      },
+      toISODate(now),
+      (key, opts) => i18next.t(key, opts) as string
+    )
+    const id = mascot.notify({
+      category: i18next.t('day.summary.category'),
+      text,
+      alert: false,
+      timeoutMs: Math.max(20, settings.get().bubbleSeconds * 2) * 1000,
+      actions: [
+        { id: 'ok', label: i18next.t('reminders.ok') },
+        { id: 'home', label: i18next.t('day.summary.open'), primary: true }
+      ],
+      onOutcome: (o) => o.kind === 'action' && o.actionId === 'home' && openPanel('home')
+    })
+    if (id && !force) day.markSummary()
+  }
+  setTimeout(() => void morningSummary(), 12_000)
+  const summaryTimer = setInterval(() => void morningSummary(), 10 * 60_000)
+  powerMonitor.on('unlock-screen', () => setTimeout(() => void morningSummary(), 4000))
+
+  // ---- Bentornato: dopo una pausa (PC inattivo o bloccato) Pix ti saluta ----
+  let away = false
+  const welcomeBack = () => {
+    if (!isQuiet() && !panelOpen) mascot.flash('greet', 2200)
+  }
+  const idleWatch = setInterval(() => {
+    const idle = powerMonitor.getSystemIdleTime()
+    if (idle >= AWAY_AFTER_S) away = true
+    else if (away && idle < 5) {
+      away = false
+      welcomeBack()
+    }
+  }, 5000)
+  powerMonitor.on('unlock-screen', () => {
+    away = false
+    setTimeout(welcomeBack, 1500)
+  })
+  powerMonitor.on('resume', () => setTimeout(() => void morningSummary(), 6000))
   powerMonitor.on('unlock-screen', () => void shift.markActivity())
   powerMonitor.on('resume', () => void shift.markActivity())
   settings.onChange((next, prev) => {
@@ -505,6 +600,10 @@ async function main(): Promise<void> {
 
   /** Anteprima degli stati di Pix dalle impostazioni. */
   const previewMascot = (preview: MascotPreview) => {
+    if (preview === 'summary') {
+      void morningSummary(true)
+      return
+    }
     if (preview !== 'alert') {
       mascot.flash(preview)
       return
@@ -627,6 +726,8 @@ async function main(): Promise<void> {
     void chat.flush()
     alerts.dispose()
     clearInterval(alertTimer)
+    clearInterval(summaryTimer)
+    clearInterval(idleWatch)
     void deadlines.flush()
     void vaultCtl.flush().finally(() => vaultCtl.dispose())
     fullscreen.dispose()
@@ -635,6 +736,9 @@ async function main(): Promise<void> {
     void settings.flush()
   })
 }
+
+/** Dopo quanti secondi di inattività al ritorno Pix ti saluta. */
+const AWAY_AFTER_S = 5 * 60
 
 function isOutcome(v: unknown): v is BubbleOutcome {
   if (typeof v !== 'object' || v === null) return false

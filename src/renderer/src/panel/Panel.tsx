@@ -83,7 +83,7 @@ export function Panel({ state }: { state: UiState }) {
           {tab === 'vault' && <VaultTab state={state} />}
           {tab === 'chat' && <ChatTab />}
           {tab === 'notes' && <NotesTab />}
-          {tab === 'timers' && <TimersTab />}
+          {tab === 'timers' && <TimersTab cyclesToday={state.day.cyclesToday} />}
           {tab === 'clipboard' && <ClipboardTab />}
           {tab === 'links' && <LinksTab />}
           {tab === 'settings' && <SettingsTab state={state} />}

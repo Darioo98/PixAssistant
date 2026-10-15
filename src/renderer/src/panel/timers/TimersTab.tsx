@@ -16,7 +16,7 @@ import '../notes/productivity.css'
 import { useShiftRemaining } from '../extras/Shift'
 import { formatRemaining } from '@shared/shift'
 
-export function TimersTab() {
+export function TimersTab({ cyclesToday = 0 }: { cyclesToday?: number }) {
   const { t } = useTranslation()
   const [segment, setSegment] = useState<'timers' | 'reminders'>('timers')
   return (
@@ -28,14 +28,14 @@ export function TimersTab() {
           </button>
         ))}
       </div>
-      {segment === 'timers' ? <Timers /> : <Reminders />}
+      {segment === 'timers' ? <Timers cyclesToday={cyclesToday} /> : <Reminders />}
     </div>
   )
 }
 
 // ======================= Timer =======================
 
-function Timers() {
+function Timers({ cyclesToday }: { cyclesToday: number }) {
   const { t } = useTranslation()
   const timers = useData('timers')
   const [label, setLabel] = useState('')
@@ -50,6 +50,9 @@ function Timers() {
         <button className="btn primary" onClick={() => void window.pix.data.apply('timers', { op: 'startPomodoro' })}>
           🍅 {t('timers.startPomodoro')}
         </button>
+        <span className="hint focus-hint">
+          {cyclesToday > 0 ? `${t('timers.cyclesToday', { count: cyclesToday })} ${'🍅'.repeat(Math.min(cyclesToday, 8))}` : t('timers.focusHint')}
+        </span>
       </div>
       <form
         className="todo-add"

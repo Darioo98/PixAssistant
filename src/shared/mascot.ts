@@ -39,22 +39,27 @@ export interface MascotState {
   queued: number
   /** Stato momentaneo in corso (saluto, festa, anteprima): Pix si mostra anche da chiuso. */
   spotlight: boolean
+  /** Pomodoro in corso: Pix dorme sulla barra e non disturba. */
+  focus: boolean
+  /** Scadenza vicina o to-do in ritardo: Pix è un po' preoccupato. */
+  tension: boolean
 }
 
 export const MASCOT_SCALE = { small: 0.85, medium: 1, large: 1.2 } as const
 export type MascotSize = keyof typeof MASCOT_SCALE
 
-/** Priorità degli stati: avviso > pensa > stati momentanei (felice, saluto) > dorme > normale. */
+/** Priorità degli stati: avviso > pensa > stati momentanei (felice, saluto) > focus/dorme > normale. */
 export function resolveMood(input: {
   bubbleAlert: boolean
   thinking: boolean
   transient: Mood | null
   asleep: boolean
+  focus?: boolean
 }): Mood {
   if (input.bubbleAlert) return 'alert'
   if (input.thinking) return 'think'
   if (input.transient) return input.transient
-  if (input.asleep) return 'sleep'
+  if (input.asleep || input.focus) return 'sleep'
   return 'normal'
 }
 

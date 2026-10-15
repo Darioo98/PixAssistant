@@ -38,6 +38,8 @@ export interface UiState {
   /** In sviluppo l'avvio automatico non viene registrato. */
   autostartAvailable: boolean
   mascot: MascotState
+  /** Giornata su questo PC: cicli di focus completati oggi. */
+  day: { cyclesToday: number }
   vault: VaultStatus
   /** Azione richiesta da un avviso (es. "Genera" una nuova password), da eseguire all'apertura. */
   intent: UiIntent | null
@@ -61,7 +63,7 @@ export type DataResult = { ok: boolean; id?: string }
 
 export type UiIntent = { kind: 'vault-generate'; id: string } | { kind: 'search'; query?: string }
 
-export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet'] as const
+export const PREVIEWS = ['alert', 'happy', 'think', 'sleep', 'greet', 'summary'] as const
 export type MascotPreview = (typeof PREVIEWS)[number]
 
 export type SetSettingsResult = { ok: true } | { ok: false; error: 'invalid' | 'shortcutTaken' }

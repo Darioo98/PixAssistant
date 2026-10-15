@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MASCOT_SCALE, SECTION_ANIMATIONS, eyeColorFor, moodColor, moodTransform, pickTransform, type MascotState, type PixTransform } from '@shared/mascot'
+import { MASCOT_SCALE, NIGHT, SECTION_ANIMATIONS, eyeColorFor, moodColor, moodTransform, pickTransform, type MascotState, type PixTransform } from '@shared/mascot'
 import type { Settings } from '@shared/settings'
 import { MorphController } from './morph'
 import { PIX_ANCHOR, VIEW, faceTransform } from './geometry'
@@ -19,6 +19,20 @@ const PIX_BREATH_EVERY_MS = 10_000
 export const TRANSFORM_EVENT = 'pix:transform'
 /** Evento con cui le impostazioni chiedono di provare la sbirciata (chiude il pannello). */
 export const PEEK_EVENT = 'pix:peek'
+/** Evento con cui le impostazioni chiedono di provare lo sbadiglio. */
+export const YAWN_EVENT = 'pix:yawn'
+
+type Tired = 'none' | 'evening' | 'late'
+
+/** Di sera Pix ha le palpebre pesanti; vicino all'ora della nanna sbadiglia. */
+function tirednessAt(now: Date, settings: Settings): Tired {
+  const [h, m] = (settings.dndEnabled ? settings.dndFrom : NIGHT.from).split(':').map(Number) as [number, number]
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const untilNight = (h * 60 + m - nowMin + 1440) % 1440
+  if (untilNight <= 90) return 'late'
+  if (untilNight <= 240) return 'evening'
+  return 'none'
+}
 const EYE_RANGE = 2
 /** Ogni quanto, a pannello chiuso, Pix sbircia da dietro la barra. */
 const PEEK_MIN_MS = 45_000
@@ -63,6 +77,8 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   const [lookAround, setLookAround] = useState(false)
   const [pixBreath, setPixBreath] = useState(false)
   const [fadeKey, setFadeKey] = useState(0)
+  const [yawning, setYawning] = useState(false)
+  const [tired, setTired] = useState<Tired>(() => tirednessAt(new Date(), settings))
   const lastTransform = useRef<PixTransform | null>(null)
 
   const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight
@@ -221,6 +237,27 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     return () => window.removeEventListener(PEEK_EVENT, onPeek)
   }, [])
 
+  // ---- Stanchezza serale: si ricalcola ogni minuto ----
+  useEffect(() => {
+    const update = () => setTired(tirednessAt(new Date(), settings))
+    update()
+    const id = window.setInterval(update, 60_000)
+    return () => window.clearInterval(id)
+  }, [settings.dndEnabled, settings.dndFrom])
+
+  // Tardi la sera, se lavori ancora, ogni tanto sbadiglia.
+  const sleepy = formed && mood === 'normal' && anim === 'normal' && !reducedMotion
+  useEffect(() => {
+    if (!sleepy || tired !== 'late' || yawning) return
+    const id = window.setTimeout(() => setYawning(true), 25_000 + Math.random() * 45_000)
+    return () => window.clearTimeout(id)
+  }, [sleepy, tired, yawning])
+  useEffect(() => {
+    const onYawn = () => setYawning(true)
+    window.addEventListener(YAWN_EVENT, onYawn)
+    return () => window.removeEventListener(YAWN_EVENT, onYawn)
+  }, [])
+
   // ---- Respiro di Pix: un ciclo ogni 10 s invece di un'animazione continua.
   // La finestra è trasparente: ogni fotogramma animato la ridisegna tutta. ----
   useEffect(() => {
@@ -265,7 +302,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   const face = faceTransform(scale, shape)
 
   return (
-    <div className="mascot" style={{ ['--pix-color' as string]: color }} data-anim={anim}>
+    <div className="mascot" style={{ ['--pix-color' as string]: color }} data-anim={anim} data-yawn={yawning && formed && !reducedMotion ? '' : undefined}>
       {bubble && <BubbleCard key={bubble.id} bubble={bubble} panelOpen={panelOpen} />}
       <svg
         ref={svgRef}
@@ -297,32 +334,45 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
             onAnimationEnd={(e) => e.animationName === 'pix-breathe' && setPixBreath(false)}
           >
-            <path
-              ref={bodyRef}
-              className={`body ${breathing && collapsed ? 'breathe' : ''}`}
-              fill={`url(#${fillId})`}
-              data-hit
-              data-pix-zone
-              role="button"
-              aria-label={t('pix.label')}
-              onClick={toggle}
-              onAnimationEnd={() => setBreathing(false)}
-            />
-            <g ref={faceRef} transform={face} opacity="0" pointerEvents="none">
-              {settings.pixShine && <Shine />}
-              <g
-                ref={lookRef}
-                className="look"
-                onAnimationEnd={(e) => {
-                  if (e.animationName === 'pix-blink') setBlink(false)
-                  if (e.animationName === 'pix-look-around') setLookAround(false)
-                }}
-              >
-                <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
-                  <g className={`eyes ${blink ? 'blink' : ''}`}>
-                    <Eyes mood={formed ? mood : 'normal'} style={settings.pixEyes} />
+            <g className="yawn-body" onAnimationEnd={(e) => e.animationName === 'pix-yawn-body' && setYawning(false)}>
+              <path
+                ref={bodyRef}
+                className={`body ${breathing && collapsed ? 'breathe' : ''}`}
+                fill={`url(#${fillId})`}
+                data-hit
+                data-pix-zone
+                role="button"
+                aria-label={t('pix.label')}
+                onClick={toggle}
+                onAnimationEnd={() => setBreathing(false)}
+              />
+              <g ref={faceRef} transform={face} opacity="0" pointerEvents="none">
+                {settings.pixShine && <Shine />}
+                <g
+                  ref={lookRef}
+                  className="look"
+                  onAnimationEnd={(e) => {
+                    if (e.animationName === 'pix-blink') setBlink(false)
+                    if (e.animationName === 'pix-look-around') setLookAround(false)
+                  }}
+                >
+                  <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
+                    <g className={`lids ${formed && mood === 'normal' && tired !== 'none' ? `lids-${tired}` : ''}`}>
+                      <g className={`eyes ${blink ? 'blink' : ''}`}>
+                        <Eyes mood={formed ? mood : 'normal'} style={settings.pixEyes} />
+                      </g>
+                    </g>
                   </g>
                 </g>
+                {/* Scadenze vicine: sopracciglia preoccupate e una goccia di sudore */}
+                {formed && mood === 'normal' && mascot.tension && (
+                  <g className="tense">
+                    <path d="M36 41.5 L45.5 37.5" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                    <path d="M64 41.5 L54.5 37.5" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                    <path d="M80 26 C77 31 76.5 34 80 35.5 C83.5 34 83 31 80 26 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="1" />
+                  </g>
+                )}
+                <ellipse className="yawn-mouth" cx="50" cy="69" rx="5.5" ry="7" fill="#000" opacity="0" />
               </g>
             </g>
           </g>

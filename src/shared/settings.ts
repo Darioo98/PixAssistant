@@ -21,6 +21,8 @@ export const settingsSchema = z.object({
   pixTransforms: z.boolean(),
   eyesFollowCursor: z.boolean(),
   bubbleSeconds: z.number().int().min(3).max(120),
+  /** Fumetto con il riepilogo della giornata la prima volta che usi il PC. */
+  morningSummary: z.boolean(),
   defaultLeadDays: z.number().int().min(0).max(365),
   shiftWorkMinutes: z.number().int().min(15).max(16 * 60),
   shiftBreakMinutes: z.number().int().min(0).max(240),
@@ -95,6 +97,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pixTransforms: true,
   eyesFollowCursor: true,
   bubbleSeconds: 12,
+  morningSummary: true,
   defaultLeadDays: 3,
   shiftWorkMinutes: 480,
   shiftBreakMinutes: 60,

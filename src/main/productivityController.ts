@@ -20,6 +20,8 @@ export interface ProductivityDeps {
   bubble: (req: BubbleRequest) => void
   celebrate: () => void
   openPanel: (tab: 'notes' | 'timers') => void
+  /** Un ciclo di lavoro del Pomodoro è finito: restituisce quanti se ne sono fatti oggi. */
+  focusCycle?: () => number
   send: (collection: DataCollection, items: unknown) => void
 }
 
@@ -148,7 +150,13 @@ export class ProductivityController {
       return
     }
     const next = nextPomodoro(phase, completedWork, this.pomodoro()).phase
-    const text = phase === 'work' ? t('timers.pomodoroBreak', { phase: t(`timers.phase.${next}`) }) : t('timers.pomodoroWork')
+    const cycles = phase === 'work' ? this.deps.focusCycle?.() : undefined
+    const text =
+      phase === 'work'
+        ? cycles
+          ? t('timers.pomodoroBreakCycles', { phase: t(`timers.phase.${next}`), count: cycles })
+          : t('timers.pomodoroBreak', { phase: t(`timers.phase.${next}`) })
+        : t('timers.pomodoroWork')
     this.deps.toast(t('timers.pomodoro'), text, () => this.deps.openPanel('timers'))
     this.deps.bubble({
       category: t('timers.pomodoro'),
