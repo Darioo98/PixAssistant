@@ -201,7 +201,8 @@
     "searchShortcut": "Scorciatoia della ricerca globale",
     "morningSummary": "Riepilogo della giornata al primo utilizzo",
     "tryYawn": "🥱 Sbadiglio",
-    "trySwallow": "📄 Inghiotte un file"
+    "trySwallow": "Inghiotte un file",
+    "trySwallowText": "Lettera di prova per Pix"
   },
   "mascot": {
     "preview": {
@@ -872,7 +873,7 @@
     "gotUrl": "Ho preso il link a {{name}}. Lo salvo?",
     "gotText": "Ho preso questo testo. Cosa ne faccio?",
     "privacy": "Se scegli «Analizza», il contenuto viene inviato a Claude.",
-    "cantRead": "Questo tipo di file posso solo salvarlo: la chat legge PDF, immagini, Word e file di testo.",
+    "cantRead": "Questo tipo di file posso solo salvarlo: la chat legge PDF, immagini, Word, Excel, PowerPoint e file di testo.",
     "saveLinks": "Salva nei Link",
     "saveNote": "Salva come nota",
     "analyze": "Analizza in chat",

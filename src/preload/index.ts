@@ -59,6 +59,7 @@ const api: PixApi = {
     }
   },
   drop: (payload) => ipcRenderer.invoke(IPC.drop, payload),
+  fileIcon: (path) => ipcRenderer.invoke(IPC.fileIcon, path),
   data: {
     list: (collection) => ipcRenderer.invoke(IPC.dataList, collection),
     onChange: (collection, cb) =>

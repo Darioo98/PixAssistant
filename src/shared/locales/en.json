@@ -201,7 +201,8 @@
     "searchShortcut": "Global search shortcut",
     "morningSummary": "Daily summary on first use",
     "tryYawn": "🥱 Yawn",
-    "trySwallow": "📄 Swallows a file"
+    "trySwallow": "Swallows a file",
+    "trySwallowText": "A test letter for Pix"
   },
   "mascot": {
     "preview": {
@@ -872,7 +873,7 @@
     "gotUrl": "I grabbed the link to {{name}}. Save it?",
     "gotText": "I grabbed this text. What should I do with it?",
     "privacy": "If you choose “Analyze”, the content is sent to Claude.",
-    "cantRead": "I can only save this kind of file: chat reads PDFs, images, Word and text files.",
+    "cantRead": "I can only save this kind of file: chat reads PDFs, images, Word, Excel, PowerPoint and text files.",
     "saveLinks": "Save to Links",
     "saveNote": "Save as note",
     "analyze": "Analyze in chat",

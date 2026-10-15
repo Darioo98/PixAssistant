@@ -25,6 +25,7 @@ function setup() {
   const notes: string[] = []
   const bubbles: BubbleRequest[] = []
   const analyzed: Array<{ files: Attachment[]; prompt: string }> = []
+  const dismissed: string[] = []
   const deps = {
     links: {
       store: { list: () => links },
@@ -35,7 +36,11 @@ function setup() {
     },
     notes: { apply: (op: { note: { body: string } }) => notes.push(op.note.body) },
     t: () => ((k: string) => k) as never,
-    bubble: (req: BubbleRequest) => bubbles.push(req),
+    bubble: (req: BubbleRequest) => {
+      bubbles.push(req)
+      return String(bubbles.length)
+    },
+    dismiss: (id: string) => dismissed.push(id),
     happy: () => undefined,
     openPanel: () => undefined,
     analyze: async (files: Attachment[], prompt: string) => {
@@ -43,7 +48,7 @@ function setup() {
       return true
     }
   } as unknown as DropDeps
-  return { deps, links, notes, bubbles, analyzed }
+  return { deps, links, notes, bubbles, analyzed, dismissed }
 }
 
 describe('trascinare su Pix', () => {
@@ -81,6 +86,18 @@ describe('trascinare su Pix', () => {
     const { deps, bubbles } = setup()
     await handleDrop({ paths: [file], text: '' }, deps)
     expect(bubbles[0]!.actions!.map((a) => a.id)).toEqual(['save'])
+  })
+
+  it('un nuovo file sostituisce la domanda ancora aperta (con "Analizza" se si può)', async () => {
+    const exe = join(dir, 'setup.exe')
+    const doc = join(dir, 'relazione.md')
+    await writeFile(exe, 'x')
+    await writeFile(doc, '# Relazione')
+    const { deps, bubbles, dismissed } = setup()
+    await handleDrop({ paths: [exe], text: '' }, deps)
+    await handleDrop({ paths: [doc], text: '' }, deps)
+    expect(dismissed.at(-1)).toBe('1') // la domanda sul file precedente viene chiusa
+    expect(bubbles[1]!.actions!.map((a) => a.id)).toEqual(['save', 'analyze'])
   })
 
   it('il testo diventa una nota oppure va in chat; un indirizzo un link', async () => {

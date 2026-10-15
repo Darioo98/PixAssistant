@@ -1,71 +1,59 @@
 import { useEffect, useRef } from 'react'
 import { SWALLOW_S } from './shapes'
 
-export type SwallowKind = 'pdf' | 'word' | 'image' | 'text' | 'file' | 'folder' | 'link' | 'note'
+/**
+ * Aspetto di ciò che Pix inghiotte, preso dall'oggetto stesso:
+ * l'icona di Windows del file (come in Esplora file), le prime parole del
+ * testo su un foglietto, oppure il nome del sito per un link.
+ */
+export type SwallowLook = { icon: string } | { text: string } | { site: string }
 
-/** Riconosce il tipo di ciò che è stato trascinato, per disegnarne l'icona. */
-export function swallowKindOf(names: string[], text: string): SwallowKind {
-  if (names.length === 0) return /^\s*(https?:\/\/|www\.)\S+\s*$/i.test(text) ? 'link' : 'note'
-  const name = names[0]!.toLowerCase()
-  const ext = /\.([a-z0-9]+)$/.exec(name)?.[1]
-  if (!ext) return 'folder'
-  if (ext === 'pdf') return 'pdf'
-  if (ext === 'doc' || ext === 'docx' || ext === 'odt' || ext === 'rtf') return 'word'
-  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'heic'].includes(ext)) return 'image'
-  if (['txt', 'md', 'csv', 'json', 'log', 'xml', 'html', 'ini', 'yaml', 'yml'].includes(ext)) return 'text'
-  return 'file'
+/** Prime parole del testo, su al massimo 4 righe brevi. */
+function lines(text: string): string[] {
+  const words = text.replace(/\s+/g, ' ').trim().split(' ')
+  const out: string[] = []
+  let line = ''
+  for (const w of words) {
+    if ((line + ' ' + w).trim().length > 11) {
+      if (line) out.push(line)
+      line = w.slice(0, 11)
+      if (out.length === 4) break
+    } else line = (line + ' ' + w).trim()
+  }
+  if (line && out.length < 4) out.push(line)
+  return out
 }
 
-/** Icona disegnata attorno all'origine, circa 22×28. */
-function Icon({ kind }: { kind: SwallowKind }) {
-  if (kind === 'folder') {
+function Look({ look }: { look: SwallowLook }) {
+  if ('icon' in look) return <image href={look.icon} x="-16" y="-16" width="32" height="32" />
+  if ('site' in look) {
+    const label = look.site.length > 16 ? `${look.site.slice(0, 15)}…` : look.site
+    const w = Math.max(24, label.length * 3.1 + 8)
     return (
       <g>
-        <path d="M-12 -8 a2 2 0 0 1 2 -2 h7 l3 3 h10 a2 2 0 0 1 2 2 v14 a2 2 0 0 1 -2 2 h-20 a2 2 0 0 1 -2 -2 z" fill="#f2b84b" />
-        <path d="M-12 -3 h24 v12 a2 2 0 0 1 -2 2 h-20 a2 2 0 0 1 -2 -2 z" fill="#f7cd6b" />
+        <rect x={-w / 2} y="-6" width={w} height="12" rx="6" fill="var(--surface, #fff)" stroke="rgba(0,0,0,.15)" />
+        <text y="2" fontSize="5.4" textAnchor="middle" fill="currentColor" fontFamily="Segoe UI, sans-serif">
+          {label}
+        </text>
       </g>
     )
   }
-  if (kind === 'link') {
-    return (
-      <g fill="none" stroke="#3b82f6" strokeWidth="2">
-        <circle r="11" fill="#fff" />
-        <ellipse rx="5" ry="11" />
-        <path d="M-11 0 h22 M-9 -6 h18 M-9 6 h18" strokeWidth="1.4" />
-      </g>
-    )
-  }
-  const band: Partial<Record<SwallowKind, [string, string]>> = { pdf: ['#e5484d', 'PDF'], word: ['#2b6cd8', 'W'] }
-  const b = band[kind]
   return (
     <g>
-      <path d="M-9 -14 h12 l7 7 v19 a2 2 0 0 1 -2 2 h-17 a2 2 0 0 1 -2 -2 v-24 a2 2 0 0 1 2 -2 z" fill="#fff" stroke="#cfd2dc" strokeWidth="1" />
-      <path d="M3 -14 v7 h7" fill="#eceef3" stroke="#cfd2dc" strokeWidth="1" />
-      {kind === 'image' ? (
-        <g>
-          <rect x="-8" y="-4" width="15" height="11" rx="1.5" fill="#d9f2e4" />
-          <path d="M-8 6 l5 -6 l4 4 l3 -3 l3 5 z" fill="#2fa36b" />
-          <circle cx="3" cy="-1" r="1.6" fill="#f2b84b" />
-        </g>
-      ) : (
-        <g stroke={kind === 'note' ? '#f2b84b' : '#c3c7d3'} strokeWidth="1.6" strokeLinecap="round">
-          <path d="M-6 -3 h11 M-6 1 h11 M-6 5 h8 M-6 9 h10" />
-        </g>
-      )}
-      {b && (
-        <g>
-          <rect x="-12" y="-9" width={b[1].length > 1 ? 15 : 10} height="8" rx="1.5" fill={b[0]} />
-          <text x={b[1].length > 1 ? -4.5 : -7} y="-2.7" fontSize="5.6" fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Segoe UI, sans-serif">
-            {b[1]}
-          </text>
-        </g>
-      )}
+      <rect x="-13" y="-15" width="26" height="30" rx="2.5" fill="#fff" stroke="rgba(0,0,0,.15)" />
+      <text x="-10" y="-8" fontSize="4.4" fill="#3a3b45" fontFamily="Segoe UI, sans-serif">
+        {lines(look.text).map((l, i) => (
+          <tspan key={i} x="-10" dy={i === 0 ? 0 : 5.6}>
+            {l}
+          </tspan>
+        ))}
+      </text>
     </g>
   )
 }
 
 interface Props {
-  kind: SwallowKind
+  look: SwallowLook
   from: { x: number; y: number }
   to: { x: number; y: number }
 }
@@ -75,7 +63,7 @@ interface Props {
  * piano, accelera, si allunga nel verso del moto (con una scia), si
  * rimpicciolisce e sparisce in bocca esattamente quando la bocca si chiude.
  */
-export function SwallowItem({ kind, from, to }: Props) {
+export function SwallowItem({ look, from, to }: Props) {
   const refs = [useRef<SVGGElement>(null), useRef<SVGGElement>(null), useRef<SVGGElement>(null)]
 
   useEffect(() => {
@@ -121,13 +109,13 @@ export function SwallowItem({ kind, from, to }: Props) {
     <g pointerEvents="none" aria-hidden="true">
       {/* Scia: due copie sbiadite un attimo indietro, come un mosso */}
       <g ref={refs[2]} opacity="0.18">
-        <Icon kind={kind} />
+        <Look look={look} />
       </g>
       <g ref={refs[1]} opacity="0.35">
-        <Icon kind={kind} />
+        <Look look={look} />
       </g>
       <g ref={refs[0]} style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,.25))' }}>
-        <Icon kind={kind} />
+        <Look look={look} />
       </g>
     </g>
   )

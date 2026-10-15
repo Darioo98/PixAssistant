@@ -12,7 +12,10 @@ export interface DropDeps {
   links: LinksService
   notes: NotesService
   t: () => TFunction
-  bubble: (req: BubbleRequest) => void
+  /** Mostra un fumetto; restituisce il suo id (null se i fumetti sono silenziati). */
+  bubble: (req: BubbleRequest) => string | null | void
+  /** Chiude un fumetto ancora aperto o in coda. */
+  dismiss: (id: string) => void
   happy: () => void
   openPanel: (tab: 'links' | 'notes') => void
   /** Apre una nuova chat sui documenti e la mostra. */
@@ -25,6 +28,21 @@ const CHOICE_TIMEOUT_MS = 45_000
 const MAX_ANALYZE = 5
 
 const nameOf = (p: string) => p.split(/[\\/]/).filter(Boolean).pop() ?? p
+
+/** Domanda "cosa ne faccio?" ancora aperta: un nuovo boccone la sostituisce. */
+let openQuestion: string | null = null
+
+function ask(deps: DropDeps, req: BubbleRequest): void {
+  if (openQuestion) deps.dismiss(openQuestion)
+  const id = deps.bubble({
+    ...req,
+    onOutcome: (o) => {
+      if (openQuestion === id) openQuestion = null
+      req.onOutcome?.(o)
+    }
+  })
+  openQuestion = typeof id === 'string' ? id : null
+}
 
 interface Item {
   path: string
@@ -60,7 +78,7 @@ export async function handleDrop(payload: DropPayload, deps: DropDeps): Promise<
     const single = items.length === 1 ? items[0]! : null
     const what = single ? t(single.kind === 'folder' ? 'drop.gotFolder' : 'drop.gotFile', { name: nameOf(single.path) }) : t('drop.gotMany', { count: items.length })
     const hint = readable.length ? t('drop.privacy') : single && single.kind !== 'folder' ? t('drop.cantRead') : ''
-    deps.bubble({
+    ask(deps, {
       category,
       text: [what, hint].filter(Boolean).join('\n'),
       alert: false,
@@ -84,7 +102,7 @@ export async function handleDrop(payload: DropPayload, deps: DropDeps): Promise<
   const url = !/\s/.test(text) ? normalizeUrl(text) : null
   deps.happy()
   if (url) {
-    deps.bubble({
+    ask(deps, {
       category,
       text: t('drop.gotUrl', { name: new URL(url).host.replace(/^www\./, '') }),
       alert: false,
@@ -101,7 +119,7 @@ export async function handleDrop(payload: DropPayload, deps: DropDeps): Promise<
     })
     return true
   }
-  deps.bubble({
+  ask(deps, {
     category,
     text: `${t('drop.gotText')}\n${t('drop.privacy')}`,
     alert: false,

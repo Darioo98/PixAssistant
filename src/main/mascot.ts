@@ -125,6 +125,19 @@ export class MascotService {
     }
   }
 
+  /** Chiude un fumetto (visibile o ancora in coda), come se l'avessi chiuso tu. */
+  dismiss(id: string): void {
+    if (this.current?.bubble.id === id) {
+      this.resolveBubble(id, { kind: 'dismiss' })
+      return
+    }
+    const i = this.queue.findIndex((q) => q.bubble.id === id)
+    if (i < 0) return
+    const [removed] = this.queue.splice(i, 1)
+    removed?.onOutcome?.({ kind: 'dismiss' })
+    this.emit()
+  }
+
   setThinking(value: boolean): void {
     if (this.thinking === value) return
     this.thinking = value

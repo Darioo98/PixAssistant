@@ -7,7 +7,7 @@ import { PIX_ANCHOR, VIEW, faceTransform, mouthPoint } from './geometry'
 import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
-import { SwallowItem, swallowKindOf, type SwallowKind } from './SwallowItem'
+import { SwallowItem, type SwallowLook } from './SwallowItem'
 import { SWALLOW_S } from './shapes'
 import type { DropPayload } from '@shared/extras'
 import { useReducedMotion } from './useReducedMotion'
@@ -86,7 +86,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
   /** Un file o un testo trascinato sopra Pix (bocca aperta) e il boccone appena inghiottito. */
   const [hungry, setHungry] = useState(false)
   /** `payload` assente = prova dalle impostazioni: nessun file da gestire. */
-  const [swallow, setSwallow] = useState<{ id: number; kind: SwallowKind; from: { x: number; y: number }; payload: DropPayload | null } | null>(null)
+  const [swallow, setSwallow] = useState<{ id: number; look: SwallowLook; from: { x: number; y: number }; payload: DropPayload | null } | null>(null)
   /** Fasi dell'inghiottire: bocca spalancata mentre arriva il boccone, poi mastica. */
   const [swallowPhase, setSwallowPhase] = useState<'open' | 'chew' | null>(null)
   const [tired, setTired] = useState<Tired>(() => tirednessAt(new Date(), settings))
@@ -192,8 +192,20 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
       // Punto da cui parte il boccone (coordinate dell'SVG).
       const r = svgRef.current?.getBoundingClientRect()
       const from = r ? { x: ((e.clientX - r.left) / r.width) * VIEW.width, y: ((e.clientY - r.top) / r.height) * VIEW.height } : { x: 90, y: 150 }
-      const kind = swallowKindOf(Array.from(dt.files).map((f) => f.name), text)
-      setSwallow({ id: performance.now(), kind, from, payload: { paths, text } })
+      const payload = { paths, text }
+      const id = performance.now()
+      if (paths.length) {
+        // L'icona vera del file (quella di Esplora file); se non arriva subito, il nome su un foglietto.
+        const name = Array.from(dt.files)[0]?.name ?? paths[0]!
+        const fallback = window.setTimeout(() => setSwallow((s) => s ?? { id, look: { text: name }, from, payload }), 300)
+        void window.pix.fileIcon(paths[0]!).then((icon) => {
+          window.clearTimeout(fallback)
+          setSwallow((s) => s ?? { id, look: icon ? { icon } : { text: name }, from, payload })
+        })
+      } else {
+        const site = /^\s*(https?:\/\/|www\.)\S+\s*$/i.test(text) ? text.trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '').split(/[/?#]/)[0]! : null
+        setSwallow({ id, look: site ? { site } : { text }, from, payload })
+      }
     }
     document.addEventListener('dragover', onOver)
     document.addEventListener('drop', onDrop)
@@ -214,7 +226,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
     setSwallow(null)
   }
   useEffect(() => {
-    const onTry = () => setSwallow({ id: performance.now(), kind: 'pdf', from: { x: 92, y: 110 }, payload: null })
+    const onTry = () => setSwallow({ id: performance.now(), look: { text: t('settings.trySwallowText') }, from: { x: 92, y: 110 }, payload: null })
     window.addEventListener(SWALLOW_EVENT, onTry)
     return () => window.removeEventListener(SWALLOW_EVENT, onTry)
   }, [])
@@ -492,7 +504,7 @@ export function Mascot({ mascot, panelOpen, tab, settings }: Props) {
           </g>
         </g>
         {/* Ciò che hai trascinato vola nella bocca di Pix */}
-        {swallow && formed && swallowPhase === 'open' && <SwallowItem key={swallow.id} kind={swallow.kind} from={swallow.from} to={mouthPoint(scale, shape)} />}
+        {swallow && formed && swallowPhase === 'open' && <SwallowItem key={swallow.id} look={swallow.look} from={swallow.from} to={mouthPoint(scale, shape)} />}
         {/* Occhi della sbirciata: il corpo è la barra stessa (setBar). */}
         {peek !== null && canPeek && (
           <Peek

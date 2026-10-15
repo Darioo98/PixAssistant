@@ -37,7 +37,7 @@ import { inTimeRange, type BubbleOutcome } from '@shared/mascot'
 import { deadlineOpSchema } from '@shared/deadlines'
 import { vaultOpSchema } from '@shared/vault'
 import { chatOpSchema } from '@shared/chat'
-import { clipOpSchema, dropSchema, linkOpSchema } from '@shared/extras'
+import { clipOpSchema, dropSchema, isAbsoluteWinPath, linkOpSchema } from '@shared/extras'
 import { maintenanceOpSchema } from '@shared/maintenance'
 import { formatHHMM, shiftOpSchema } from '@shared/shift'
 import { noteTitle } from '@shared/productivity'
@@ -693,6 +693,15 @@ async function main(): Promise<void> {
     return parsed.success ? links.apply(parsed.data) : { ok: false }
   })
   ipcMain.handle(IPC.weather, (e, force: unknown) => (fromOverlay(e) ? weather.get(force === true) : { status: 'off' }))
+  ipcMain.handle(IPC.fileIcon, async (e, path: unknown) => {
+    if (!fromOverlay(e) || typeof path !== 'string' || path.length > 1024 || !isAbsoluteWinPath(path)) return null
+    try {
+      const img = await app.getFileIcon(path, { size: 'large' })
+      return img.isEmpty() ? null : img.toDataURL()
+    } catch {
+      return null
+    }
+  })
   ipcMain.handle(IPC.drop, async (e, payload: unknown) => {
     if (!fromOverlay(e)) return false
     const parsed = dropSchema.safeParse(payload)
@@ -702,6 +711,7 @@ async function main(): Promise<void> {
       notes: productivity.notes,
       t: () => i18next.t,
       bubble: (req) => mascot.notify(req),
+      dismiss: (id) => mascot.dismiss(id),
       happy: () => mascot.flash('happy', 1600),
       openPanel: (target) => openPanel(target),
       analyze: async (files, prompt, title) => {

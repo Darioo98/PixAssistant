@@ -637,7 +637,14 @@ input {
 .link-tile,
 .timer-card,
 .msg {
-  animation: item-in 0.24s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  /* "backwards" e non "both": finita l'entrata la riga torna normale e non copre i menu delle altre. */
+  animation: item-in 0.24s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+/* La riga con un menu aperto sta sopra le altre. */
+:is(.dl-row, .vault-row, .folder-row, .todo-row, .note-list > li, .clip-row, .link-tile, .timer-card):has(.menu) {
+  position: relative;
+  z-index: 30;
 }
 
 :is(.dl-list, .vault-list, .folder-tree, .todo-list, .note-list, .clip-list, .link-grid) > :nth-child(2) {
@@ -705,6 +712,13 @@ input {
 .color-picker {
   animation: pop-in 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.1);
   transform-origin: top right;
+}
+
+/* Vicino al fondo del pannello il menu si apre verso l'alto. */
+.menu.up {
+  top: auto;
+  bottom: 100%;
+  transform-origin: bottom right;
 }
 
 @keyframes pop-in {

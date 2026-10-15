@@ -1,10 +1,34 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 /** Menu "…" con le azioni secondarie di una riga. */
 export function RowMenu({ label, children }: { label: string; children: ReactNode }) {
   const [open, setOpen] = useState(false)
+  const [up, setUp] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Se sotto non c'è spazio (fondo del pannello o della lista che scorre), si apre verso l'alto.
+  useLayoutEffect(() => {
+    if (!open) {
+      setUp(false)
+      return
+    }
+    const menu = menuRef.current
+    const btn = ref.current
+    if (!menu || !btn) return
+    let limit = window.innerHeight
+    for (let el = btn.parentElement; el; el = el.parentElement) {
+      const o = getComputedStyle(el).overflowY
+      if (o === 'auto' || o === 'scroll' || o === 'hidden') {
+        limit = Math.min(limit, el.getBoundingClientRect().bottom)
+        break
+      }
+    }
+    const b = btn.getBoundingClientRect()
+    const h = menu.offsetHeight
+    setUp(b.bottom + h > limit && b.top - h > 0)
+  }, [open])
   useEffect(() => {
     if (!open) return
     const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
@@ -21,7 +45,7 @@ export function RowMenu({ label, children }: { label: string; children: ReactNod
         </svg>
       </button>
       {open && (
-        <div className="menu" role="menu" onClick={(e) => (e.target as HTMLElement).dataset.keep === undefined && setOpen(false)}>
+        <div ref={menuRef} className={`menu ${up ? 'up' : ''}`} role="menu" onClick={(e) => (e.target as HTMLElement).dataset.keep === undefined && setOpen(false)}>
           {children}
         </div>
       )}

@@ -103,6 +103,8 @@ export interface PixApi {
   weather(force?: boolean): Promise<WeatherState>
   /** Percorso sul PC di un file trascinato (vuoto se non è un file locale). */
   pathForFile(file: File): string
+  /** Icona di Windows di un file o di una cartella (data URL), come in Esplora file. */
+  fileIcon(path: string): Promise<string | null>
   /** File, cartelle o testo lasciati cadere su Pix. */
   drop(payload: DropPayload): Promise<boolean>
   data: {
@@ -164,6 +166,7 @@ export const IPC = {
   linksApply: 'links:apply',
   weather: 'weather:get',
   drop: 'pix:drop',
+  fileIcon: 'pix:file-icon',
   maintState: 'maint:state',
   maintChanged: 'maint:changed',
   maintApply: 'maint:apply',
