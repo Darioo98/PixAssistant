@@ -177,28 +177,17 @@
     "shiftWork": "Workday length (hours:minutes)",
     "shiftBreak": "Break (minutes)",
     "shiftRemind": "Remind me before the end (minutes)",
-    "accessory": "Permanent shape",
-    "accessoryOptions": {
-      "none": "Normal",
-      "horns": "Horns",
-      "ears": "Ears",
-      "antennae": "Antennae",
-      "tuft": "Tuft",
-      "heart": "Heart",
-      "cloud": "Cloud",
-      "spiky": "Spiky"
-    },
-    "transforms": "Spontaneous transformations (now and then the body changes shape)",
-    "tryTransforms": "Try the transformations",
+    "transforms": "Spontaneous animations (now and then the body transforms and moves)",
+    "tryTransforms": "Try the animations",
     "transformOptions": {
-      "horns": "Horns",
-      "ears": "Ears",
+      "wobble": "Jelly",
+      "waves": "Waves",
+      "tentacles": "Jellyfish",
       "antennae": "Antennae",
-      "tuft": "Tuft",
+      "horns": "Horns",
+      "heart": "Beating heart",
       "melt": "Melts",
-      "heart": "Heart",
-      "cloud": "Cloud",
-      "spiky": "Spiky"
+      "spiky": "Urchin"
     }
   },
   "mascot": {

@@ -1,13 +1,12 @@
 import { svgPathProperties } from 'svg-path-properties'
-import type { PixAccessory, PixShape, PixTransform } from '@shared/mascot'
+import type { PixShape, PixTransform } from '@shared/mascot'
 import { pixPath } from './geometry'
 
 /**
- * Trasformazioni del fluido: il contorno di Pix diventa un poligono di N punti
- * e ogni trasformazione sposta quei punti con profili morbidi (gaussiani o
- * triangolari). Ogni punto corrisponde sempre allo stesso punto della forma
- * di partenza, quindi il passaggio è continuo: è il corpo stesso che si
- * allunga in corna, orecchie, gocce… e poi torna com'era.
+ * Animazioni del fluido: il contorno di Pix diventa un poligono di N punti e
+ * ogni animazione sposta quei punti nel tempo (onde, tentacoli, battito…).
+ * Ogni punto corrisponde sempre allo stesso punto della forma di partenza,
+ * quindi il corpo resta un unico fluido che si deforma e torna com'era.
  */
 
 export type Pt = [number, number]
@@ -30,7 +29,7 @@ export function toPath(points: Pt[]): string {
   return `M${points.map(([x, y]) => `${r(x)} ${r(y)}`).join(' L')} Z`
 }
 
-/** Interpolazione punto per punto; t fuori da [0, 1] dà l'effetto gelatina (rimbalzo). */
+/** Interpolazione punto per punto; t fuori da [0, 1] dà l'effetto gelatina. */
 export function lerpPoints(a: Pt[], b: Pt[], t: number): Pt[] {
   return a.map(([x, y], i) => {
     const [bx, by] = b[i] ?? [x, y]
@@ -38,25 +37,7 @@ export function lerpPoints(a: Pt[], b: Pt[], t: number): Pt[] {
   })
 }
 
-interface Box {
-  cx: number
-  cy: number
-  w: number
-  h: number
-}
-
-function box(points: Pt[]): Box {
-  const xs = points.map((p) => p[0])
-  const ys = points.map((p) => p[1])
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const minY = Math.min(...ys)
-  const maxY = Math.max(...ys)
-  return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, w: maxX - minX, h: maxY - minY }
-}
-
 const gauss = (d: number, s: number) => Math.exp(-((d / s) ** 2))
-const tri = (d: number, s: number) => Math.max(0, 1 - Math.abs(d) / s)
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 
 /** Allinea un poligono a un altro (stesso verso e punto di partenza più vicino). */
@@ -81,10 +62,72 @@ export function alignTo(base: Pt[], target: Pt[]): Pt[] {
   return Array.from({ length: n }, (_, i) => best.pts[(i + best.k) % n]!)
 }
 
+/**
+ * Dati precalcolati del contorno a riposo: per ogni punto la normale uscente,
+ * la posizione orizzontale (u), quanto guarda in alto/in basso e l'angolo.
+ */
+export interface Body {
+  pts: Pt[]
+  cx: number
+  cy: number
+  w: number
+  h: number
+  nx: number[]
+  ny: number[]
+  u: number[]
+  top: number[]
+  low: number[]
+  theta: number[]
+  heart: Pt[]
+}
+
+function prepare(pts: Pt[]): Body {
+  const n = pts.length
+  const xs = pts.map((p) => p[0])
+  const ys = pts.map((p) => p[1])
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const cx = (minX + maxX) / 2
+  const cy = (minY + maxY) / 2
+  const w = maxX - minX
+  const h = maxY - minY
+  let nx: number[] = []
+  let ny: number[] = []
+  for (let i = 0; i < n; i++) {
+    const [ax, ay] = pts[(i - 2 + n) % n]!
+    const [bx, by] = pts[(i + 2) % n]!
+    const len = Math.hypot(bx - ax, by - ay) || 1
+    nx.push((by - ay) / len)
+    ny.push(-(bx - ax) / len)
+  }
+  // Le normali devono puntare fuori dal corpo.
+  const out = pts.reduce((s, [x, y], i) => s + nx[i]! * (x - cx) + ny[i]! * (y - cy), 0)
+  if (out < 0) {
+    nx = nx.map((v) => -v)
+    ny = ny.map((v) => -v)
+  }
+  return {
+    pts,
+    cx,
+    cy,
+    w,
+    h,
+    nx,
+    ny,
+    u: pts.map(([x]) => (x - cx) / (w / 2)),
+    top: ny.map((v) => Math.max(0, -v) ** 3),
+    low: ny.map((v) => Math.max(0, v) ** 3),
+    theta: pts.map(([x, y]) => Math.atan2(y - cy, x - cx)),
+    heart: alignTo(pts, samplePath(heartPath(cx, maxY, w), n))
+  }
+}
+
 /** Cuore della stessa misura del corpo, appoggiato alla stessa base. */
-function heart(b: Box, bottom: number): string {
-  const s = b.w / 66
-  const x = (v: number) => b.cx + (v - 51) * s
+function heartPath(cx: number, bottom: number, w: number): string {
+  const s = w / 66
+  const x = (v: number) => cx + (v - 51) * s
   const y = (v: number) => bottom + (v - 226) * s
   return (
     `M${x(51)} ${y(226)} C${x(30)} ${y(210)} ${x(17)} ${y(196)} ${x(17)} ${y(181)} ` +
@@ -94,109 +137,107 @@ function heart(b: Box, bottom: number): string {
   )
 }
 
-/** Normali uscenti (versori) di un poligono chiuso. */
-function normals(points: Pt[], b: Box): Pt[] {
-  const n = points.length
-  const raw = points.map((_, i) => {
-    const [ax, ay] = points[(i - 2 + n) % n]!
-    const [bx, by] = points[(i + 2) % n]!
-    const tx = bx - ax
-    const ty = by - ay
-    const len = Math.hypot(tx, ty) || 1
-    return [ty / len, -tx / len] as Pt
-  })
-  // Verso: le normali devono puntare fuori dal corpo.
-  const outward = raw.reduce((s, [nx, ny], i) => s + nx * (points[i]![0] - b.cx) + ny * (points[i]![1] - b.cy), 0)
-  return outward >= 0 ? raw : raw.map(([nx, ny]) => [-nx, -ny] as Pt)
+const cache = new Map<string, Body>()
+
+/** Contorno a riposo di Pix (calcolato una volta per forma e dimensione). */
+export function restBody(scale: number, shape: PixShape): Body {
+  const key = `${scale}:${shape}`
+  let b = cache.get(key)
+  if (!b) {
+    b = prepare(samplePath(pixPath(scale, shape)))
+    cache.set(key, b)
+  }
+  return b
+}
+
+/** Battito "tu-tum" ogni 0,9 s. */
+function beat(t: number): number {
+  const ph = (t % 0.9) / 0.9
+  return Math.max(0, Math.sin(Math.PI * clamp01(ph / 0.18))) + 0.6 * Math.max(0, Math.sin(Math.PI * clamp01((ph - 0.22) / 0.18)))
 }
 
 /**
- * Deforma il contorno di base nella trasformazione richiesta. Il peso di ogni
- * spostamento dipende da dove "guarda" il bordo: le corna crescono solo dai
- * punti rivolti verso l'alto, le gocce solo da quelli rivolti verso il basso,
- * così il resto del corpo non si deforma.
+ * Forma del corpo durante un'animazione: `t` sono i secondi dall'inizio,
+ * `a` l'ampiezza (0 = forma a riposo, 1 = animazione piena; oltre 1 = rimbalzo).
  */
-export function deform(base: Pt[], kind: PixTransform): Pt[] {
-  const b = box(base)
-  const bottom = b.cy + b.h / 2
-  if (kind === 'heart') return alignTo(base, samplePath(heart(b, bottom), base.length))
-  const nrm = normals(base, b)
+export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt[] {
+  if (kind === 'heart') {
+    const pulse = 1 + 0.1 * beat(t) * clamp01(a)
+    return b.pts.map(([x, y], i) => {
+      const [hx, hy] = b.heart[i]!
+      const mx = x + (hx - x) * a
+      const my = y + (hy - y) * a
+      return [b.cx + (mx - b.cx) * pulse, b.cy + 0.15 * b.h + (my - b.cy - 0.15 * b.h) * pulse] as Pt
+    })
+  }
 
-  return base.map(([x, y], i) => {
-    const [nx, ny] = nrm[i]!
-    const u = (x - b.cx) / (b.w / 2) // -1 sinistra … +1 destra
-    const top = Math.max(0, -ny) ** 3 // 1 sul bordo superiore
-    const low = Math.max(0, ny) ** 3 // 1 sul bordo inferiore
+  return b.pts.map(([x, y], i) => {
+    const nx = b.nx[i]!
+    const ny = b.ny[i]!
+    const u = b.u[i]!
+    const top = b.top[i]!
+    const low = b.low[i]!
+    const th = b.theta[i]!
     let dx = 0
     let dy = 0
     switch (kind) {
-      case 'horns':
-        for (const u0 of [-0.5, 0.5]) {
-          const k = top * gauss(u - u0, 0.16)
-          dy -= 0.42 * b.h * k
-          dx += Math.sign(u0) * 0.14 * b.w * k * k
-        }
+      case 'wobble': {
+        // Budino: onde che girano attorno al corpo.
+        const r = (0.042 * Math.sin(3 * th - 6 * t) + 0.024 * Math.sin(5 * th + 4.3 * t)) * b.h * a
+        dx += nx * r
+        dy += ny * r
         break
-      case 'ears':
-        for (const u0 of [-0.52, 0.52]) {
-          const k = top * tri(u - u0, 0.3)
-          dy -= 0.3 * b.h * k
-          dx += Math.sign(u0) * 0.04 * b.w * k
-        }
+      }
+      case 'waves': {
+        // Onda: increspature che scorrono sulla superficie in cima.
+        dy -= top * 0.13 * b.h * a * (0.55 + 0.45 * Math.sin(3 * Math.PI * u - 7 * t))
+        dx += top * 0.03 * b.w * a * Math.sin(2 * Math.PI * u - 5 * t)
+        break
+      }
+      case 'tentacles':
+        // Medusa: quattro tentacoli dal fondo, ognuno con il suo ritmo.
+        ;[-0.62, -0.2, 0.22, 0.62].forEach((u0, k) => {
+          const g = low * gauss(u - u0, 0.145)
+          const reach = 0.28 + 0.06 * Math.sin(3 * t + k)
+          dy += reach * b.h * g * a
+          dx += 0.12 * b.w * g * g * a * Math.sin(4.5 * t + k * 1.4)
+        })
         break
       case 'antennae':
-        for (const u0 of [-0.3, 0.3]) {
-          const k = top * gauss(u - u0, 0.09)
-          dy -= 0.4 * b.h * k
-          dx += Math.sign(u0) * 0.1 * b.w * k * k
-        }
-        break
-      case 'tuft': {
-        const k = top * gauss(u - 0.05, 0.14)
-        dy -= 0.3 * b.h * k
-        dx += 0.14 * b.w * k * k
-        break
-      }
-      case 'melt':
-        ;[
-          [-0.45, 0.24],
-          [0.08, 0.34],
-          [0.55, 0.18]
-        ].forEach(([u0, hgt]) => {
-          dy += hgt! * b.h * low * gauss(u - u0!, 0.12)
+        ;[-0.3, 0.3].forEach((u0, k) => {
+          const g = top * gauss(u - u0, 0.09)
+          dy -= (0.4 + 0.05 * Math.sin(8 * t + k)) * b.h * g * a
+          dx += (Math.sign(u0) * 0.08 + 0.1 * Math.sin(5 * t + k * Math.PI * 0.7)) * b.w * g * g * a
         })
-        dx += nx * 0.05 * b.w * Math.max(0, ny) // si allarga in basso
-        dy += 0.04 * b.h * top // e si affloscia un po' in cima
         break
-      case 'cloud': {
-        const theta = Math.atan2(y - b.cy, x - b.cx)
-        const k = (0.5 + 0.5 * Math.cos(7 * theta)) ** 1.5 * (1 - 0.8 * low)
-        dx += nx * 0.09 * b.h * k
-        dy += ny * 0.09 * b.h * k
+      case 'horns':
+        ;[-0.5, 0.5].forEach((u0) => {
+          const g = top * gauss(u - u0, 0.16)
+          dy -= 0.42 * b.h * g * a
+          dx += (Math.sign(u0) * 0.14 + 0.07 * Math.sin(11 * t)) * b.w * g * g * a
+        })
         break
-      }
+      case 'melt':
+        // Le gocce si allungano piano, ognuna con la sua velocità.
+        ;[
+          [-0.45, 0.26, 0.9],
+          [0.08, 0.36, 0.6],
+          [0.55, 0.2, 1.2]
+        ].forEach(([u0, len, speed]) => {
+          const grow = clamp01(t * speed!) * (0.85 + 0.15 * Math.sin(2.5 * t + u0! * 5))
+          dy += len! * b.h * low * gauss(u - u0!, 0.11) * grow * a
+        })
+        dx += nx * 0.05 * b.w * Math.max(0, ny) * a
+        dy += 0.04 * b.h * top * a
+        break
       case 'spiky': {
-        const theta = Math.atan2(y - b.cy, x - b.cx)
-        const k = Math.max(0, Math.cos(9 * theta)) ** 4
-        dx += nx * 0.16 * b.h * k
-        dy += ny * 0.16 * b.h * k
+        // Riccio: spine che ruotano attorno al corpo.
+        const k = Math.max(0, Math.cos(9 * (th - 1.4 * t))) ** 4
+        dx += nx * 0.16 * b.h * k * a
+        dy += ny * 0.16 * b.h * k * a
         break
       }
     }
     return [x + dx, y + dy] as Pt
   })
-}
-
-const cache = new Map<string, Pt[]>()
-
-/** Contorno (in punti) di Pix con eventuale trasformazione, calcolato una volta sola. */
-export function shapePoints(scale: number, shape: PixShape, kind: PixTransform | PixAccessory | null): Pt[] {
-  const key = `${scale}:${shape}:${kind ?? 'none'}`
-  let pts = cache.get(key)
-  if (!pts) {
-    const base = kind && kind !== 'none' ? shapePoints(scale, shape, null) : samplePath(pixPath(scale, shape))
-    pts = kind && kind !== 'none' ? deform(base, kind) : base
-    cache.set(key, pts)
-  }
-  return pts
 }

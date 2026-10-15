@@ -134,13 +134,9 @@ export function eyeColorFor(body: string): string {
 
 // ---- Trasformazioni del fluido ----
 
-/** Forme in cui il corpo di Pix (un unico fluido) può trasformarsi. */
-export const PIX_TRANSFORMS = ['horns', 'ears', 'antennae', 'tuft', 'melt', 'heart', 'cloud', 'spiky'] as const
+/** Animazioni del corpo di Pix (un unico fluido che si deforma e si muove). */
+export const PIX_TRANSFORMS = ['wobble', 'waves', 'tentacles', 'antennae', 'horns', 'heart', 'melt', 'spiky'] as const
 export type PixTransform = (typeof PIX_TRANSFORMS)[number]
-
-/** Forme che si possono tenere fisse (lo scioglimento è solo momentaneo). */
-export const PIX_ACCESSORIES = ['none', 'horns', 'ears', 'antennae', 'tuft', 'heart', 'cloud', 'spiky'] as const
-export type PixAccessory = (typeof PIX_ACCESSORIES)[number]
 
 /** Trasformazioni legate allo stato: antenne mentre pensa, cuore quando festeggia. */
 export function moodTransform(mood: Mood): PixTransform | null {
@@ -149,8 +145,8 @@ export function moodTransform(mood: Mood): PixTransform | null {
   return null
 }
 
-/** Sceglie una trasformazione spontanea diversa dall'accessorio fisso e dall'ultima fatta. */
-export function pickTransform(fixed: PixAccessory, last: PixTransform | null, random: () => number): PixTransform {
-  const options = PIX_TRANSFORMS.filter((x) => x !== fixed && x !== last)
+/** Sceglie un'animazione spontanea diversa dall'ultima fatta. */
+export function pickTransform(last: PixTransform | null, random: () => number): PixTransform {
+  const options = PIX_TRANSFORMS.filter((x) => x !== last)
   return options[Math.floor(random() * options.length) % options.length]!
 }

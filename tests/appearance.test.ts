@@ -52,44 +52,35 @@ describe('selettore di colore', () => {
   })
 })
 
-describe('trasformazioni', () => {
-  it('sceglie una trasformazione diversa dall’accessorio fisso e dall’ultima', async () => {
+describe('animazioni del fluido', () => {
+  it('sceglie un’animazione spontanea diversa dall’ultima; antenne e cuore per gli stati', async () => {
     const { pickTransform, moodTransform } = await import('@shared/mascot')
-    for (let i = 0; i < 50; i++) {
-      const x = pickTransform('horns', 'ears', Math.random)
-      expect(x).not.toBe('horns')
-      expect(x).not.toBe('ears')
-    }
+    for (let i = 0; i < 50; i++) expect(pickTransform('wobble', Math.random)).not.toBe('wobble')
     expect(moodTransform('think')).toBe('antennae')
+    expect(moodTransform('happy')).toBe('heart')
     expect(moodTransform('normal')).toBeNull()
   })
-})
 
-describe('trasformazioni del corpo (un unico fluido)', () => {
-  it('ogni forma ha gli stessi punti della base: il morph è continuo', async () => {
-    const { shapePoints, lerpPoints, SAMPLES } = await import('../src/renderer/src/pix/shapes')
+  it('il corpo resta un unico contorno che si muove nel tempo e torna com’era', async () => {
+    const { restBody, liveShape, SAMPLES } = await import('../src/renderer/src/pix/shapes')
     const { PIX_TRANSFORMS } = await import('@shared/mascot')
-    const base = shapePoints(1, 'squircle', null)
-    expect(base).toHaveLength(SAMPLES)
-    const maxY = (pts: number[][]) => Math.max(...pts.map((p) => p[1]!))
-    const minY = (pts: number[][]) => Math.min(...pts.map((p) => p[1]!))
+    const body = restBody(1, 'squircle')
+    expect(body.pts).toHaveLength(SAMPLES)
+    const dist = (a: [number, number][], b: [number, number][]) => a.reduce((s, [x, y], i) => s + Math.hypot(x - b[i]![0], y - b[i]![1]), 0) / a.length
     for (const k of PIX_TRANSFORMS) {
-      const pts = shapePoints(1, 'squircle', k)
-      expect(pts).toHaveLength(SAMPLES)
-      expect(pts.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true)
+      const at0 = liveShape(body, k, 1, 0)
+      const at1 = liveShape(body, k, 1, 1)
+      const at2 = liveShape(body, k, 1.4, 1)
+      expect(at1).toHaveLength(SAMPLES)
+      expect(at1.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true)
+      expect(dist(at0, body.pts)).toBeLessThan(0.01) // ampiezza 0 = forma a riposo
+      expect(dist(at1, body.pts)).toBeGreaterThan(0.5) // si deforma davvero
+      if (k !== 'melt') expect(dist(at1, at2)).toBeGreaterThan(0.05) // e si muove nel tempo
     }
-    // Le corna crescono verso l'alto senza toccare il fondo del corpo
-    const horns = shapePoints(1, 'squircle', 'horns')
-    expect(minY(horns)).toBeLessThan(minY(base) - 15)
-    expect(maxY(horns)).toBeCloseTo(maxY(base), 0)
-    // Le gocce colano sotto la base
-    expect(maxY(shapePoints(1, 'squircle', 'melt'))).toBeGreaterThan(maxY(base) + 10)
-    // Il cuore è allineato: i punti non "girano" attorno al corpo durante il morph
-    const heart = shapePoints(1, 'squircle', 'heart')
-    const avgShift = heart.reduce((s, [x, y], i) => s + Math.hypot(x - base[i]![0], y - base[i]![1]), 0) / SAMPLES
-    expect(avgShift).toBeLessThan(15)
-    // Oltre t = 1 la forma va un po' oltre (effetto gelatina)
-    const over = lerpPoints(base, horns, 1.1)
-    expect(minY(over)).toBeLessThan(minY(horns))
+    const maxY = (pts: [number, number][]) => Math.max(...pts.map((q) => q[1]))
+    expect(maxY(liveShape(body, 'tentacles', 1, 1))).toBeGreaterThan(maxY(body.pts) + 10)
+    // Il cuore batte: in due istanti diversi ha dimensioni diverse
+    const w = (pts: [number, number][]) => Math.max(...pts.map((q) => q[0])) - Math.min(...pts.map((q) => q[0]))
+    expect(Math.abs(w(liveShape(body, 'heart', 0.08, 1)) - w(liveShape(body, 'heart', 0.5, 1)))).toBeGreaterThan(2)
   })
 })

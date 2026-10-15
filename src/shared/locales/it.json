@@ -177,28 +177,17 @@
     "shiftWork": "Durata del turno (ore:minuti)",
     "shiftBreak": "Pausa (minuti)",
     "shiftRemind": "Avvisami prima della fine (minuti)",
-    "accessory": "Forma fissa",
-    "accessoryOptions": {
-      "none": "Normale",
-      "horns": "Corna",
-      "ears": "Orecchie",
-      "antennae": "Antenne",
-      "tuft": "Ciuffo",
-      "heart": "Cuore",
-      "cloud": "Nuvola",
-      "spiky": "Spinoso"
-    },
-    "transforms": "Trasformazioni spontanee (ogni tanto il corpo cambia forma)",
-    "tryTransforms": "Prova le trasformazioni",
+    "transforms": "Animazioni spontanee (ogni tanto il corpo si trasforma e si muove)",
+    "tryTransforms": "Prova le animazioni",
     "transformOptions": {
-      "horns": "Corna",
-      "ears": "Orecchie",
+      "wobble": "Budino",
+      "waves": "Onda",
+      "tentacles": "Medusa",
       "antennae": "Antenne",
-      "tuft": "Ciuffo",
+      "horns": "Corna",
+      "heart": "Cuore che batte",
       "melt": "Si scioglie",
-      "heart": "Cuore",
-      "cloud": "Nuvola",
-      "spiky": "Spinoso"
+      "spiky": "Riccio"
     }
   },
   "mascot": {

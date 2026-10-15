@@ -14,8 +14,6 @@ const LEAVE_DELAY_MS = 1500
 const HIDE_DELAY_MS = 400
 const BREATH_EVERY_MS = 25_000
 const PIX_BREATH_EVERY_MS = 10_000
-const TRANSFORM_MS = 4000
-const RETRACT_MS = 700
 /** Evento con cui le impostazioni chiedono a Pix di provare una trasformazione. */
 export const TRANSFORM_EVENT = 'dock:pix-transform'
 const EYE_RANGE = 2
@@ -57,8 +55,6 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
   const [lookAround, setLookAround] = useState(false)
   const [pixBreath, setPixBreath] = useState(false)
   const [fadeKey, setFadeKey] = useState(0)
-  /** Trasformazione momentanea (spontanea o di prova) e sua fase. */
-  const [temp, setTemp] = useState<{ kind: PixTransform; phase: 'in' | 'out' } | null>(null)
   const lastTransform = useRef<PixTransform | null>(null)
 
   const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight
@@ -66,7 +62,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
   // ---- Controller del morph ----
   useLayoutEffect(() => {
     const els = { body: bodyRef.current!, face: faceRef.current!, shadow: shadowRef.current! }
-    morph.current = new MorphController(els, scale, shape, settings.pixAccessory, (isFormed) => {
+    morph.current = new MorphController(els, scale, shape, (isFormed) => {
       setFormed(isFormed)
       setCollapsed(!isFormed)
       if (isFormed) setBlink(true) // battito di palpebre di saluto
@@ -74,7 +70,7 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
     return () => morph.current?.dispose()
   }, [])
 
-  useEffect(() => morph.current?.setShape(scale, shape, settings.pixAccessory), [scale, shape, settings.pixAccessory])
+  useEffect(() => morph.current?.setShape(scale, shape), [scale, shape])
 
   useEffect(() => {
     const m = morph.current
@@ -148,42 +144,39 @@ export function Mascot({ mascot, panelOpen, settings }: Props) {
     return () => window.clearTimeout(id)
   }, [formed, anim, mood])
 
-  // ---- Trasformazioni del fluido: spuntano appendici e poi si riassorbono ----
-  const showTransform = (kind: PixTransform) => {
+  // ---- Animazioni del fluido: il corpo si deforma e si muove, poi torna com'era ----
+  const play = (kind: PixTransform, loop = false) => {
+    if (reducedMotion) return
     lastTransform.current = kind
-    setTemp({ kind, phase: 'in' })
+    morph.current?.start(kind, loop)
   }
-  useEffect(() => {
-    if (!temp) return
-    const id =
-      temp.phase === 'in'
-        ? window.setTimeout(() => setTemp({ kind: temp.kind, phase: 'out' }), TRANSFORM_MS)
-        : window.setTimeout(() => setTemp(null), RETRACT_MS)
-    return () => window.clearTimeout(id)
-  }, [temp])
 
-  // Trasformazioni spontanee, ogni tanto, solo se Pix è visibile e sveglio.
+  // Animazioni spontanee, ogni tanto, solo se Pix è visibile e sveglio.
+  const [spontaneousTick, setSpontaneousTick] = useState(0)
   useEffect(() => {
     if (!formed || anim !== 'normal' || !settings.pixTransforms || mood !== 'normal' || reducedMotion) return
-    const id = window.setTimeout(
-      () => showTransform(pickTransform(settings.pixAccessory, lastTransform.current, Math.random)),
-      35_000 + Math.random() * 35_000
-    )
+    const id = window.setTimeout(() => {
+      play(pickTransform(lastTransform.current, Math.random))
+      setSpontaneousTick((n) => n + 1)
+    }, 35_000 + Math.random() * 35_000)
     return () => window.clearTimeout(id)
-  }, [formed, anim, settings.pixTransforms, settings.pixAccessory, mood, reducedMotion, temp])
+  }, [formed, anim, settings.pixTransforms, mood, reducedMotion, spontaneousTick])
 
-  // Il corpo prende la forma richiesta: prova/spontanea, altrimenti quella legata allo stato.
-  const desiredShape: PixTransform | null = temp ? (temp.phase === 'in' ? temp.kind : null) : formed ? moodTransform(mood) : null
+  // Animazioni legate allo stato (antenne mentre pensa, cuore che batte quando festeggia):
+  // durano finché dura lo stato.
+  const moodAnim = formed && !reducedMotion ? moodTransform(mood) : null
   useEffect(() => {
-    morph.current?.transform(desiredShape, instant)
-  }, [desiredShape, formed, instant])
+    if (!moodAnim) return
+    play(moodAnim, true)
+    return () => morph.current?.stopPlay()
+  }, [moodAnim])
 
-  // Prova dalle impostazioni ("Prova le trasformazioni").
+  // Prova dalle impostazioni ("Prova le animazioni").
   useEffect(() => {
-    const onPreview = (e: Event) => showTransform((e as CustomEvent<PixTransform>).detail)
+    const onPreview = (e: Event) => play((e as CustomEvent<PixTransform>).detail)
     window.addEventListener(TRANSFORM_EVENT, onPreview)
     return () => window.removeEventListener(TRANSFORM_EVENT, onPreview)
-  }, [])
+  }, [reducedMotion])
 
   // ---- Respiro di Pix: un ciclo ogni 10 s invece di un'animazione continua.
   // La finestra è trasparente: ogni fotogramma animato la ridisegna tutta. ----
