@@ -1083,7 +1083,7 @@
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
-  animation: pix-flake 3.4s linear var(--flake-delay, 0s) infinite;
+  animation: pix-flake 2.2s linear var(--flake-delay, 0s) 1 both;
 }
 
 @keyframes pix-flake {
@@ -1158,5 +1158,60 @@
   }
   100% {
     transform: none;
+  }
+}
+
+/* Raggio di sole: si accende piano, l'alone respira, i granelli brillano */
+.sun-glow {
+  animation: pix-beam 3s ease-in-out 3;
+}
+
+.sun-mote {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pix-mote 1.8s ease-in-out var(--mote-delay, 0s) 3;
+}
+
+@keyframes pix-mote {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1) rotate(45deg);
+  }
+}
+
+/* Caldo: gocce che si staccano dai fianchi e cadono nella pozza */
+.melt-drop {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: pix-melt-drop 1.1s cubic-bezier(0.55, 0, 0.85, 0.45) var(--drip-delay, 0s) 1 both;
+}
+
+@keyframes pix-melt-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.4, 0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(2px) scale(0.9, 1.3);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(30px) scale(0.85, 1.25);
+  }
+  92% {
+    opacity: 0.9;
+    transform: translateY(33px) scale(1.8, 0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(34px) scale(2.2, 0.1);
   }
 }

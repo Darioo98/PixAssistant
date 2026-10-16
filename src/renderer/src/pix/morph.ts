@@ -117,6 +117,15 @@ export class MorphController {
   private cancelSwallow(): void {
     if (this.swallowRaf) cancelAnimationFrame(this.swallowRaf)
     this.swallowRaf = 0
+    this.act = null
+  }
+
+  /** Ferma subito qualunque animazione del corpo (ne parte una più importante). */
+  interrupt(): void {
+    this.pending = null
+    this.cancelPlay()
+    this.cancelSwallow()
+    if (!this.raf) this.render()
   }
 
   private swallowFrame = (ts: number): void => {

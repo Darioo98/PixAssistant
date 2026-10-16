@@ -319,7 +319,7 @@ export function swallowShape(b: Body, t: number): Pt[] {
 // ======================= Meteo e movimento come un liquido =======================
 
 /** Durate: brividi (freddo) e pozza (caldo). */
-export const SHIVER_S = 1.7
+export const SHIVER_S = 3.2
 export const PUDDLE_S = { melt: 1.4, hold: 3.6, total: 4.9 } as const
 
 /**

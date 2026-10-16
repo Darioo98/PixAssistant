@@ -13,6 +13,8 @@ import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
 import { useSlosh } from './useSlosh'
+import { SunBeam } from './SunBeam'
+import { Director, type Act } from './director'
 import { weatherKind } from '@shared/extras'
 import type { DropPayload } from '@shared/extras'
 import { useReducedMotion } from './useReducedMotion'
@@ -118,13 +120,25 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   const [tired, setTired] = useState<Tired>(() => tirednessAt(new Date(), settings))
   const lastTransform = useRef<PixTransform | null>(null)
   /** Trascinamento della barra in corso. */
-  const barDrag = useRef<{ startY: number; startLift: number; lift: number; moved: boolean; raf: number } | null>(null)
+  const barDrag = useRef<{ startY: number; startX: number; startLift: number; lift: number; moved: boolean; raf: number; pix: boolean } | null>(null)
   const draggingBar = useRef(false)
   /** Sbirciata in corso e funzione che la spaventa. */
   const peekActive = useRef(false)
   const scareRef = useRef<(() => void) | null>(null)
 
-  const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight || hungry || swallow !== null
+  /** Pix afferrato dal puntatore: lo segue come un fluido, spaventato. */
+  const [grabbed, setGrabbed] = useState(false)
+
+  const wantPix = panelOpen || hovered || bubble !== null || mascot.spotlight || hungry || swallow !== null || grabbed
+
+  // ---- Regista: una sola animazione alla volta (vedi director.ts) ----
+  const [act, setAct] = useState<Act | null>(null)
+  const interruptRef = useRef<(a: Act) => void>(() => {})
+  const director = useRef<Director | null>(null)
+  director.current ??= new Director(setAct, (a) => interruptRef.current(a))
+  useEffect(() => () => director.current?.dispose(), [])
+  const claim = (a: Act, ms: number) => (reducedMotion ? null : (director.current?.claim(a, ms) ?? null))
+  const release = (token: number | null) => director.current?.release(token)
 
   // ---- Controller del morph ----
   useLayoutEffect(() => {
@@ -273,6 +287,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       sendDrop(swallow)
       return
     }
+    const token = claim('swallow', SWALLOW_S.total * 1000 + 100)
     setSwallowPhase('open')
     const started = morph.current?.swallow() ?? false
     const timers = [
@@ -280,7 +295,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       window.setTimeout(() => setSwallowPhase(null), SWALLOW_S.chewEnd * 1000),
       window.setTimeout(() => sendDrop(swallow), (started ? SWALLOW_S.total : SWALLOW_S.bite + 0.3) * 1000)
     ]
-    return () => timers.forEach((t) => window.clearTimeout(t))
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t))
+      release(token)
+    }
   }, [swallow?.id, formed])
 
   // ---- Battito di palpebre casuale (4–8 s; più raro con animazioni ridotte) ----
@@ -313,10 +331,14 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [formed, anim, mood])
 
   // ---- Animazioni del fluido: il corpo si deforma e si muove, poi torna com'era ----
-  const play = (kind: PixTransform, loop = false) => {
-    if (reducedMotion) return
+  const PLAY_MS = 4800
+  const play = (kind: PixTransform, loop = false, as: Act = 'spontaneous') => {
+    if (reducedMotion) return null
+    const token = claim(as, loop ? 10 * 60_000 : PLAY_MS)
+    if (token === null) return null
     lastTransform.current = kind
     morph.current?.start(kind, loop)
+    return token
   }
 
   // Animazioni spontanee, ogni tanto, solo se Pix è visibile e sveglio.
@@ -324,7 +346,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   useEffect(() => {
     if (!formed || anim !== 'normal' || !settings.pixTransforms || mood !== 'normal' || reducedMotion) return
     const id = window.setTimeout(() => {
-      play(pickTransform(lastTransform.current, Math.random))
+      play(pickTransform(lastTransform.current, Math.random), false, 'spontaneous')
       setSpontaneousTick((n) => n + 1)
     }, 35_000 + Math.random() * 35_000)
     return () => window.clearTimeout(id)
@@ -333,22 +355,28 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   // Animazioni legate allo stato (antenne mentre pensa, cuore che batte quando festeggia):
   // durano finché dura lo stato.
   const moodAnim = formed && !reducedMotion ? moodTransform(mood) : null
+  // Riparte quando il palco si libera (es. dopo un'animazione più importante).
+  const moodStage = act === null || act === 'mood'
   useEffect(() => {
-    if (!moodAnim) return
-    play(moodAnim, true)
-    return () => morph.current?.stopPlay()
-  }, [moodAnim])
+    if (!moodAnim || !moodStage) return
+    const token = play(moodAnim, true, 'mood')
+    if (token === null) return
+    return () => {
+      morph.current?.stopPlay()
+      release(token)
+    }
+  }, [moodAnim, moodStage])
 
   // Ogni sezione del pannello ha la sua animazione di benvenuto.
   useEffect(() => {
     if (!panelOpen || anim === 'off') return
     const kind = SECTION_ANIMATIONS[tab]
-    if (kind) play(kind)
+    if (kind) play(kind, false, 'section')
   }, [tab, panelOpen, anim])
 
   // Prova dalle impostazioni ("Prova le animazioni").
   useEffect(() => {
-    const onPreview = (e: Event) => play((e as CustomEvent<PixTransform>).detail)
+    const onPreview = (e: Event) => play((e as CustomEvent<PixTransform>).detail, false, 'preview')
     window.addEventListener(TRANSFORM_EVENT, onPreview)
     return () => window.removeEventListener(TRANSFORM_EVENT, onPreview)
   }, [reducedMotion])
@@ -394,11 +422,11 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   const sleepy = formed && mood === 'normal' && anim === 'normal' && !reducedMotion
   useEffect(() => {
     if (!sleepy || tired !== 'late' || yawning) return
-    const id = window.setTimeout(() => setYawning(true), 25_000 + Math.random() * 45_000)
+    const id = window.setTimeout(() => claim('yawn', 2500) !== null && setYawning(true), 25_000 + Math.random() * 45_000)
     return () => window.clearTimeout(id)
   }, [sleepy, tired, yawning])
   useEffect(() => {
-    const onYawn = () => setYawning(true)
+    const onYawn = () => claim('preview', 2500) !== null && setYawning(true)
     window.addEventListener(YAWN_EVENT, onYawn)
     return () => window.removeEventListener(YAWN_EVENT, onYawn)
   }, [])
@@ -417,6 +445,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     const schedule = (first: boolean) => {
       id = window.setTimeout(
         () => {
+          if (claim('turn', 950) === null) return schedule(false)
           setTurning(true)
           setSleepSide((s) => (s === 1 ? -1 : 1))
           end = window.setTimeout(() => setTurning(false), 900)
@@ -468,7 +497,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       window.removeEventListener(WEATHER_FX_EVENT, onTry)
     }
   }, [])
-  const fx = formed && mood === 'normal' && anim !== 'off' && !reducedMotion ? (weatherPreview ?? weatherFx) : null
+  const fxOn = formed && mood === 'normal' && anim !== 'off' && !reducedMotion ? (weatherPreview ?? weatherFx) : null
+  /** Gli elementi del meteo (raggio, neve, broncio…) non si sovrappongono ad altre animazioni. */
+  const fx = act === null || act === 'weather' ? fxOn : null
   const [rainKey, setRainKey] = useState(0)
   const [wince, setWince] = useState(false)
   useEffect(() => {
@@ -485,15 +516,19 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   const [shivering, setShivering] = useState(false)
   const [melting, setMelting] = useState(false)
   useEffect(() => {
-    if (!fx) {
+    if (!fxOn) {
       setShades(false)
       return
     }
+    const fx = fxOn
     let id: number
     let end: number
     const schedule = (first: boolean) => {
       id = window.setTimeout(
         () => {
+          const ms = fx === 'rain' ? 2300 : fx === 'cold' ? SHIVER_S * 1000 : fx === 'hot' ? PUDDLE_S.total * 1000 : 4700
+          // Se c'è già un'altra animazione, il meteo aspetta il prossimo giro.
+          if (claim('weather', ms) === null) return schedule(false)
           if (fx === 'rain') setRainKey((k) => k + 1)
           else if (fx === 'cold') {
             if (morph.current?.perform(shiverShape, SHIVER_S)) {
@@ -521,12 +556,12 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       setShivering(false)
       setMelting(false)
     }
-  }, [fx])
+  }, [fxOn])
 
   // ---- Fumetto: nasce come una bolla dalla testa, e Pix fa un piccolo sussulto ----
   const [pop, setPop] = useState(false)
   useEffect(() => {
-    if (!bubble) return
+    if (!bubble || claim('pop', 500) === null) return
     setPop(true)
     const id = window.setTimeout(() => setPop(false), 500)
     return () => window.clearTimeout(id)
@@ -536,7 +571,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   const [farewell, setFarewell] = useState(false)
   const gestureAt = mascot.gesture?.at
   useEffect(() => {
-    if (!gestureAt || reducedMotion) return
+    if (!gestureAt || reducedMotion || claim('farewell', 3600) === null) return
     setFarewell(true)
     const id = window.setTimeout(() => setFarewell(false), 3600)
     return () => window.clearTimeout(id)
@@ -550,6 +585,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       const at = (e as CustomEvent<DeletedDetail | null>).detail
       const r = svgRef.current?.getBoundingClientRect()
       if (!at || !r || reducedMotion || anim === 'off') return
+      if (claim('trash', TRASH_S.total * 1000 + 80) === null) return
       if (!morph.current?.perform(trashShape, TRASH_S.total)) return
       const from = { x: ((at.x - r.left) / r.width) * VIEW.width, y: ((at.y - r.top) / r.height) * VIEW.height }
       setTrash({ id: performance.now(), look: { text: at.text || '…' }, from })
@@ -562,6 +598,21 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       window.removeEventListener(DELETED_EVENT, onDeleted)
     }
   }, [reducedMotion, anim])
+
+  // Quando il regista interrompe un'animazione, si ferma tutto ciò che la riguarda.
+  interruptRef.current = (a: Act) => {
+    morph.current?.interrupt()
+    if (a === 'yawn' || a === 'preview') setYawning(false)
+    if (a === 'weather') {
+      setShades(false)
+      setShivering(false)
+      setMelting(false)
+    }
+    if (a === 'pop') setPop(false)
+    if (a === 'farewell') setFarewell(false)
+    if (a === 'turn') setTurning(false)
+    if (a === 'trash') setTrash(null)
+  }
 
   // ---- Avvio con Windows: la barra si riempie dal basso come un tubo, poi Pix si sveglia ----
   const [booting, setBooting] = useState(false)
@@ -655,9 +706,6 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }
 
   // ---- Barra spostabile: trascinandola su e giù lungo il bordo dello schermo ----
-  /** Pix afferrato dal puntatore (ha paura) e spinto di lato contro il bordo quando lo lasci. */
-  const [grabbed, setGrabbed] = useState(false)
-  const [shoved, setShoved] = useState(false)
   /** Molla della barra trascinata: allungamento (px) e sua velocità. */
   const barSpring = useRef({ s: 0, v: 0, target: 0, raf: 0, last: 0, t0: 0, lastLift: 0, lastAt: 0 })
   const runBarSpring = () => {
@@ -672,10 +720,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       sp.v += ((sp.target - sp.s) * 160 - sp.v * 9) * dt
       sp.s += sp.v * dt
       const t = (now - sp.t0) / 1000
-      // Pix afferrato: si allunga sotto il puntatore quando lo tiri su, si schiaccia quando scende.
-      svgRef.current?.style.setProperty('--grab', sp.s.toFixed(2))
       if (!draggingBar.current && Math.abs(sp.s) < 0.15 && Math.abs(sp.v) < 0.5) {
-        svgRef.current?.style.setProperty('--grab', '0')
         morph.current?.setBar(null)
         sp.raf = 0
         sp.last = 0
@@ -688,26 +733,95 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     sp.raf = requestAnimationFrame(step)
   }
 
+  /**
+   * Pix afferrato: segue il cursore con un po' di ritardo (come un liquido),
+   * si allunga nel verso del movimento e trema dalla paura. Lasciato andare,
+   * la barra si sposta a quell'altezza e Pix scivola di nuovo contro il bordo.
+   */
+  const grabRef = useRef<SVGGElement>(null)
+  const grabState = useRef({ x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, raf: 0, last: 0, released: false, token: null as number | null })
+  const runGrab = () => {
+    const g = grabState.current
+    if (g.raf) return
+    const step = (now: number) => {
+      const dt = g.last ? Math.min(0.033, (now - g.last) / 1000) : 1 / 60
+      g.last = now
+      // Molla: segue il bersaglio con un piccolo ritardo e oscilla quando si ferma.
+      const k = g.released ? 120 : 260
+      const damp = g.released ? 13 : 20
+      g.vx += ((g.tx - g.x) * k - g.vx * damp) * dt
+      g.vy += ((g.ty - g.y) * k - g.vy * damp) * dt
+      g.x += g.vx * dt
+      g.y += g.vy * dt
+      const speed = Math.hypot(g.vx, g.vy)
+      const stretch = Math.min(0.4, speed * 0.0011)
+      const angle = (Math.atan2(g.vy, g.vx) * 180) / Math.PI
+      const cx = PIX_ANCHOR.x
+      const cy = PIX_ANCHOR.y - 33 * scale
+      grabRef.current?.setAttribute(
+        'transform',
+        `translate(${g.x.toFixed(2)} ${g.y.toFixed(2)}) translate(${cx} ${cy}) rotate(${angle.toFixed(1)}) scale(${(1 + stretch).toFixed(3)} ${(1 / (1 + stretch)).toFixed(3)}) rotate(${(-angle).toFixed(1)}) translate(${-cx} ${-cy})`
+      )
+      if (g.released && Math.abs(g.x) < 0.6 && Math.abs(g.y) < 0.6 && speed < 8) {
+        // Tornato al bordo: diventa barra, che tremola come una gelatina.
+        grabRef.current?.removeAttribute('transform')
+        g.raf = 0
+        g.last = 0
+        g.released = false
+        setGrabbed(false)
+        setHovered(false)
+        morph.current?.go(0)
+        release(g.token)
+        g.token = null
+        window.setTimeout(() => {
+          const sp = barSpring.current
+          sp.v += -45
+          runBarSpring()
+        }, 750)
+        return
+      }
+      g.raf = requestAnimationFrame(step)
+    }
+    g.raf = requestAnimationFrame(step)
+  }
+
   const onBarPointerDown = (e: React.PointerEvent<SVGElement>) => {
     // Si sposta solo a pannello chiuso (barra o Pix appena formato al passaggio del mouse).
     if (e.button !== 0 || panelOpen) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    barDrag.current = { startY: e.screenY, startLift: settings.barLift, lift: settings.barLift, moved: false, raf: 0 }
+    barDrag.current = { startY: e.screenY, startX: e.screenX, startLift: settings.barLift, lift: settings.barLift, moved: false, raf: 0, pix: false }
   }
   const onBarPointerMove = (e: React.PointerEvent<SVGElement>) => {
     const d = barDrag.current
     if (!d) return
+    const dx = e.screenX - d.startX
     const dy = e.screenY - d.startY
-    if (!d.moved && Math.abs(dy) < 5) return
+    if (!d.moved && Math.hypot(dx, dy) < 5) return
     if (!d.moved) {
       d.moved = true
       draggingBar.current = true
-      // Se è già Pix, viene afferrato (e si spaventa); se è la barra, si sposta la barra.
-      if (morph.current?.formed) setGrabbed(true)
-      else {
+      // Se è già Pix viene afferrato (e si spaventa); se è la barra, si sposta la barra.
+      d.pix = Boolean(morph.current?.formed)
+      if (d.pix) {
+        const g = grabState.current
+        g.token = claim('grab', 10 * 60_000)
+        g.released = false
+        setGrabbed(true)
+      } else {
         setHovered(false)
         morph.current?.go(0)
       }
+    }
+    if (d.pix) {
+      // Pix segue il cursore dentro la sua finestra (che resta ferma finché non lo lasci).
+      const r = svgRef.current?.getBoundingClientRect()
+      const g = grabState.current
+      const minX = r ? -(r.left + PIX_ANCHOR.x - 30) : -400
+      const minY = r ? -(r.top + PIX_ANCHOR.y - 70 * scale) : -400
+      g.tx = Math.max(minX, Math.min(10, dx))
+      g.ty = Math.max(minY, Math.min(30, dy))
+      runGrab()
+      return
     }
     d.lift = Math.max(0, d.startLift - dy)
     // Velocità della barra: il liquido resta indietro rispetto al movimento.
@@ -731,27 +845,26 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     const d = barDrag.current
     if (!d) return
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
-    if (d.moved) {
+    if (d.moved && d.pix) {
+      // Lasciato andare: la barra va all'altezza dove l'hai lasciato, Pix scivola contro il bordo.
+      const g = grabState.current
+      const wanted = Math.max(0, d.startLift - g.y)
+      void window.pix.moveBar(wanted, true).then((applied) => {
+        // La finestra (o Pix al suo interno) si è spostata: lo si compensa per non vederlo saltare.
+        g.y += applied - d.startLift
+        g.tx = 0
+        g.ty = 0
+        g.released = true
+        runGrab()
+      })
+    } else if (d.moved) {
       void window.pix.moveBar(d.lift, true)
+      // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
       const sp = barSpring.current
       sp.target = 0
       sp.lastAt = 0
-      if (grabbed) {
-        // Lasciato andare: viene spinto di lato contro il bordo e torna barra, che poi tremola.
-        setGrabbed(false)
-        setShoved(true)
-        setHovered(false)
-        morph.current?.go(0)
-        window.setTimeout(() => setShoved(false), 480)
-        window.setTimeout(() => {
-          sp.v += -45
-          runBarSpring()
-        }, 820)
-      } else {
-        // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
-        sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
-        runBarSpring()
-      }
+      sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
+      runBarSpring()
     }
     draggingBar.current = false
     // Il clic arriva subito dopo: lo si lascia passare solo se non c'è stato trascinamento.
@@ -766,7 +879,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       className="mascot"
       style={{ ['--pix-color' as string]: color }}
       data-anim={anim}
-      data-yawn={yawning && formed && !reducedMotion ? '' : undefined}
+      data-yawn={yawning && formed && !reducedMotion && (act === 'yawn' || act === 'preview') ? '' : undefined}
       data-hungry={hungry && formed ? '' : undefined}
       data-swallow={formed && swallowPhase ? swallowPhase : undefined}
       data-weather={fx ?? undefined}
@@ -776,7 +889,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-trash={trash && formed ? '' : undefined}
       data-wince={wince && fx === 'rain' ? '' : undefined}
       data-grabbed={grabbed ? '' : undefined}
-      data-shoved={shoved ? '' : undefined}
+
       data-pop={pop && formed ? '' : undefined}
       data-farewell={farewell && formed ? '' : undefined}
       data-turning={turning && sleeping ? '' : undefined}
@@ -813,7 +926,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         <ellipse ref={shadowRef} cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx={24 * scale} ry="3" fill="#000" opacity="0" />
         {/* Avvio: il tubo vuoto che si riempie */}
         {booting && <path className="boot-tube" d={tubeOutline()} fill="none" stroke={color} strokeWidth="1.2" />}
-        <g className="grab">
+        <g className="grab" ref={grabRef}>
         <g className={`pose ${formed ? `pose-${mood}` : ''} ${sleeping && sleepSide === -1 ? 'side-left' : ''}`}>
           <g
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
@@ -854,7 +967,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                   <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
                     <g className={`lids ${formed && mood === 'normal' && tired !== 'none' ? `lids-${tired}` : ''}`}>
                       <g className={`eyes ${blink ? 'blink' : ''}`}>
-                        <Eyes mood={formed ? (grabbed || shoved ? 'alert' : swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
+                        <Eyes mood={formed ? (grabbed ? 'alert' : swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
                       </g>
                     </g>
                   </g>
@@ -898,20 +1011,24 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
           </g>
         </g>
         </g>
-        {/* Sole e caldo: un raggio di luce che entra da destra, dal bordo dello schermo, e illumina Pix */}
-        {(fx === 'sun' || fx === 'hot') && (
-          <g className="sky-sun" pointerEvents="none">
-            <defs>
-              <linearGradient id={`${fillId}-beam`} x1="1" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor={fx === 'hot' ? '#ff9a3d' : '#ffd84d'} stopOpacity="0.6" />
-                <stop offset="1" stopColor={fx === 'hot' ? '#ff9a3d' : '#ffd84d'} stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path
-              className="sun-beam"
-              d={`M${PIX_ANCHOR.x + 46 * scale} ${PIX_ANCHOR.y - 122 * scale} L${PIX_ANCHOR.x + 70 * scale} ${PIX_ANCHOR.y - 104 * scale} L${PIX_ANCHOR.x + 16 * scale} ${PIX_ANCHOR.y - 30 * scale} L${PIX_ANCHOR.x - 20 * scale} ${PIX_ANCHOR.y - 50 * scale} Z`}
-              fill={`url(#${fillId}-beam)`}
-            />
+        {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
+        {(fx === 'sun' || fx === 'hot') && <SunBeam id={fillId} scale={scale} hot={fx === 'hot'} />}
+        {/* Caldo: mentre si scioglie perde gocce di sé dai fianchi, che cadono nella pozza */}
+        {fx === 'hot' && melting && (
+          <g className="melt-drips" fill={`url(#${fillId})`} pointerEvents="none">
+            {[
+              [-27, 0.25, 1],
+              [24, 0.55, 0.85],
+              [-14, 0.9, 0.75]
+            ].map(([dx, delay, size]) => (
+              <g key={dx} transform={`translate(${PIX_ANCHOR.x + dx! * scale} ${PIX_ANCHOR.y - 34 * scale}) scale(${size! * scale})`}>
+                <path
+                  className="melt-drop"
+                  style={{ ['--drip-delay' as string]: `${delay}s` }}
+                  d="M0 -5 C2.6 -1.5 3.6 0.5 3.6 2.2 A3.6 3.6 0 0 1 -3.6 2.2 C-3.6 0.5 -2.6 -1.5 0 -5 Z"
+                />
+              </g>
+            ))}
           </g>
         )}
         {/* Caldo: ondine di calore che salgono */}
@@ -927,15 +1044,15 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
           </g>
         )}
         {/* Freddo: fiocchi di neve che scendono */}
-        {fx === 'cold' && (
+        {fx === 'cold' && shivering && (
           <g className="snow" fill="#fff" stroke="#b9dcff" strokeWidth="0.6" pointerEvents="none">
             {[
               [-30, 0, 1],
-              [-12, 1.1, 0.8],
-              [6, 0.5, 1.1],
-              [22, 1.6, 0.9],
-              [-22, 2.2, 0.75],
-              [14, 2.8, 0.85]
+              [-12, 0.5, 0.8],
+              [6, 0.2, 1.1],
+              [22, 0.75, 0.9],
+              [-22, 0.95, 0.75],
+              [14, 0.35, 0.85]
             ].map(([dx, delay, size]) => (
               <g key={dx} transform={`translate(${PIX_ANCHOR.x + dx! * scale} ${PIX_ANCHOR.y - 110 * scale})`}>
                 <path
