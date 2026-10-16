@@ -793,21 +793,6 @@
   z-index: 2;
 }
 
-/* ---------- Sole: grandi occhiali morbidi che colano giù sugli occhi ---------- */
-.shades {
-  opacity: 0;
-  transform: translateY(-42px) scale(0.8, 1.6);
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-  transition: transform 0.35s ease-in, opacity 0.25s;
-}
-
-[data-shades] .shades {
-  opacity: 1;
-  transform: none;
-  transition: transform 0.75s cubic-bezier(0.25, 1.7, 0.45, 1), opacity 0.15s;
-}
-
 /* ---------- Freddo: brividi (il corpo vibra come un liquido) e denti che battono ---------- */
 .chatter {
   opacity: 0;
@@ -923,39 +908,6 @@
   }
 }
 
-.sun {
-  transform-box: fill-box;
-}
-
-.sun-rays {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pix-sun-rays 6s linear 2;
-}
-
-.sun-beam {
-  animation: pix-beam 2.1s ease-in-out infinite;
-}
-
-@keyframes pix-sun-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes pix-sun-rays {
-  to {
-    transform: rotate(90deg);
-  }
-}
-
-@keyframes pix-beam {
-  50% {
-    opacity: 0.55;
-  }
-}
-
 /* Caldo: ondine di calore che salgono e svaniscono */
 .heat path {
   opacity: 0;
@@ -1025,8 +977,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .flake,
-  .heat path,
-  .sun-rays {
+  .heat path {
     animation: none;
   }
 }
@@ -1047,29 +998,6 @@
     transform: rotate(1deg);
   }
 }
-
-
-/* Raggio di sole: si accende piano, l'alone respira, i granelli brillano */
-
-.sun-mote {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pix-mote 1.8s ease-in-out var(--mote-delay, 0s) infinite;
-}
-
-@keyframes pix-mote {
-  0%,
-  100% {
-    opacity: 0;
-    transform: scale(0.3) rotate(0deg);
-  }
-  50% {
-    opacity: 0.9;
-    transform: scale(1) rotate(45deg);
-  }
-}
-
 
 
 /* ---------- Caldo: afflosciato, suda, ansima e fuma ---------- */
@@ -1147,7 +1075,7 @@
   }
   100% {
     opacity: 0;
-    transform: translateY(-12px) scale(1.1);
+    transform: translateY(-24px) scale(1.15);
   }
 }
 
@@ -1161,14 +1089,9 @@
   opacity: 0;
 }
 
-/* ---------- Sole, quattro versioni (vedi SunFx.tsx) ---------- */
-.sun-tint,
-.sun-blush {
+/* ---------- Sole: luce da destra, bordo dorato, occhi socchiusi (vedi SunFx.tsx) ---------- */
+.sun-tint {
   animation: pix-sun-tint 4.2s ease-in-out 1 both;
-}
-
-.sun-halo {
-  animation-name: pix-sun-halo;
 }
 
 @keyframes pix-sun-tint {
@@ -1184,38 +1107,36 @@
   }
 }
 
-@keyframes pix-sun-halo {
-  0% {
-    opacity: 0;
+/* Gli occhi si socchiudono piano; il viso si gira appena verso la luce */
+.sun-face {
+  transform-box: fill-box;
+  transform-origin: 50% 40%;
+  animation: pix-sun-face 0.35s ease-out 1 both;
+}
+
+@keyframes pix-sun-face {
+  from {
+    transform: scaleY(1.8);
+    opacity: 0.4;
   }
-  25% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  80% {
-    opacity: 0.6;
-  }
+}
+
+[data-weather='sun'] .face-fx {
+  animation: pix-sun-tilt 4.2s ease-in-out 1 both;
+}
+
+@keyframes pix-sun-tilt {
+  0%,
   100% {
-    opacity: 0;
+    transform: none;
+  }
+  20%,
+  80% {
+    transform: translateX(1.5px) rotate(4deg);
   }
 }
 
-.sun-blush {
-  opacity: 0;
-}
-
-.sun-blush ellipse {
-  opacity: 0.55;
-}
-
-/* D: sul corpo dorato gli occhi diventano scuri, caldi */
-[data-sun='sun'] .eyes {
-  color: #6b3a00;
-}
-
-/* C: il fascio respira piano, il pulviscolo galleggia nella luce */
+/* Il fascio respira piano, il pulviscolo galleggia nella luce */
 .sun-shaft {
   animation: pix-shaft 2.6s ease-in-out infinite;
 }
@@ -1245,91 +1166,4 @@
     opacity: 0;
     transform: translate(-7px, 9px);
   }
-}
-
-/* B: gli occhiali sono due gocce di Pix che scendono dalla testa e si scuriscono */
-.fs-lens {
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-  animation: pix-fs-drop 4.2s ease-in-out 1 both;
-}
-
-.fs-lens:nth-of-type(2) {
-  animation-delay: 0.12s;
-}
-
-@keyframes pix-fs-drop {
-  0% {
-    opacity: 0;
-    transform: translateY(-26px) scale(0.25);
-  }
-  6% {
-    opacity: 1;
-    transform: translateY(-26px) scale(0.42, 0.5);
-  }
-  16% {
-    transform: translateY(-13px) scale(0.55, 0.95);
-  }
-  24% {
-    transform: translateY(2px) scale(1.12, 0.82);
-  }
-  30% {
-    transform: translateY(0) scale(0.96, 1.05);
-  }
-  35%,
-  84% {
-    opacity: 1;
-    transform: none;
-  }
-  92% {
-    opacity: 1;
-    transform: translateY(-12px) scale(0.6, 0.9);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-26px) scale(0.25);
-  }
-}
-
-.fs-dark {
-  animation: pix-fs-dark 4.2s linear 1 both;
-}
-
-@keyframes pix-fs-dark {
-  0%,
-  28% {
-    opacity: 0;
-  }
-  40%,
-  84% {
-    opacity: 1;
-  }
-  90%,
-  100% {
-    opacity: 0;
-  }
-}
-
-.fs-glint,
-.fs-bridge {
-  animation: pix-fs-detail 4.2s linear 1 both;
-}
-
-@keyframes pix-fs-detail {
-  0%,
-  38% {
-    opacity: 0;
-  }
-  45%,
-  82% {
-    opacity: 1;
-  }
-  87%,
-  100% {
-    opacity: 0;
-  }
-}
-
-.fs-glint {
-  stroke-opacity: 0.45;
 }

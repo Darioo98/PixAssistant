@@ -217,14 +217,7 @@
     "barPosition": "Posizione della barra",
     "barReset": "Riporta in basso",
     "barDefault": "In basso (predefinita)",
-    "barHint": "Trascina la barra su o giù lungo il bordo dello schermo per spostarla. Un clic senza trascinare apre Pix.",
-    "sunStyle": "Sole (prova e scegli)",
-    "sunStyles": {
-      "bask": "A · Prende il sole",
-      "shades": "B · Occhiali di fluido",
-      "beam": "C · Luce da destra",
-      "sun": "D · Diventa il sole"
-    }
+    "barHint": "Trascina la barra su o giù lungo il bordo dello schermo per spostarla. Un clic senza trascinare apre Pix."
   },
   "mascot": {
     "preview": {

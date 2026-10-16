@@ -5,10 +5,6 @@ import { HEX_COLOR, PIX_EYES, PIX_FINISHES, PIX_SHAPES } from './mascot'
  * Impostazioni dell'app. Alcune valgono per tutti i PC e si sincronizzano,
  * altre dipendono dal singolo PC e restano solo in locale.
  */
-/** Versioni dell'animazione del sole (da provare e scegliere). */
-export const SUN_STYLES = ['bask', 'shades', 'beam', 'sun'] as const
-export type SunStyle = (typeof SUN_STYLES)[number]
-
 export const settingsSchema = z.object({
   // Condivise (sincronizzate su OneDrive)
   language: z.enum(['system', 'it', 'en']),
@@ -23,8 +19,6 @@ export const settingsSchema = z.object({
   pixFinish: z.enum(PIX_FINISHES),
   pixShine: z.boolean(),
   pixTransforms: z.boolean(),
-  /** Sole: A prende il sole, B solo occhiali, C luce da destra, D diventa il sole. */
-  sunStyle: z.enum(SUN_STYLES),
   eyesFollowCursor: z.boolean(),
   bubbleSeconds: z.number().int().min(3).max(120),
   /** Fumetto con il riepilogo della giornata la prima volta che usi il PC. */
@@ -104,7 +98,6 @@ export const DEFAULT_SETTINGS: Settings = {
   pixFinish: 'flat',
   pixShine: true,
   pixTransforms: true,
-  sunStyle: 'beam',
   eyesFollowCursor: true,
   bubbleSeconds: 12,
   morningSummary: true,

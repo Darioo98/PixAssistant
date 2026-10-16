@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PIX_TRANSFORMS, PIX_EYES, PIX_FINISHES, PIX_PALETTE, PIX_SHAPES, type Mood } from '@shared/mascot'
-import { DEFAULT_SETTINGS, SUN_STYLES, type Settings, type SettingsPatch } from '@shared/settings'
+import { DEFAULT_SETTINGS, type Settings, type SettingsPatch } from '@shared/settings'
 import { PixFigure } from '../pix/PixFigure'
 import { ColorPicker } from './ColorPicker'
 import { BOOT_EVENT, PEEK_EVENT, SWALLOW_EVENT, TRANSFORM_EVENT, WEATHER_FX_EVENT, YAWN_EVENT } from '../pix/Mascot'
@@ -97,24 +97,6 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
         <input type="checkbox" role="switch" checked={s.pixTransforms} onChange={(e) => void save({ pixTransforms: e.target.checked })} />
       </label>
       <p className="hint">{t('settings.transformsHint')}</p>
-      <div className="field">
-        <span className="label">{t('settings.sunStyle')}</span>
-        <div className="preview-buttons">
-          {SUN_STYLES.map((v) => (
-            <button
-              key={v}
-              className={`pill ${s.sunStyle === v ? 'primary' : ''}`}
-              aria-pressed={s.sunStyle === v}
-              onClick={() => {
-                // Sceglie la versione e la fa vedere subito.
-                void save({ sunStyle: v }).then(() => window.dispatchEvent(new CustomEvent(WEATHER_FX_EVENT, { detail: 'sun' })))
-              }}
-            >
-              {t(`settings.sunStyles.${v}`)}
-            </button>
-          ))}
-        </div>
-      </div>
       <div className="field">
         <span className="label">{t('settings.tryTransforms')}</span>
         <div className="preview-buttons">

@@ -1,17 +1,13 @@
 import { useEffect, useRef, type RefObject } from 'react'
-import type { SunStyle } from '@shared/settings'
 import { PIX_ANCHOR } from './geometry'
 
 /**
- * Sole, in quattro versioni da provare (Impostazioni → Aspetto):
- * A "bask"   Pix prende il sole: si allunga verso la luce, occhi beati, guance rosa, un riflesso dorato che gli scorre addosso.
- * B "shades" Solo occhiali: due gocce del suo fluido scendono dalla testa e diventano lenti scure.
- * C "beam"   Luce morbida da destra che accarezza Pix (bordo dorato), con gli occhiali.
- * D "sun"    Pix diventa il sole: disco con fiammelle morbide, dorato, con un alone caldo.
+ * Sole: una luce morbida entra da destra e accarezza Pix (il bordo verso la luce
+ * si fa dorato); lui socchiude gli occhi, beato, e si gode il calduccio.
  */
 
-/** Copia del contorno del corpo, aggiornata a ogni fotogramma (per velature e aloni). */
-export function BodyTint({ source, className, fill, filter }: { source: RefObject<SVGPathElement | null>; className: string; fill: string; filter?: string }) {
+/** Copia del contorno del corpo, aggiornata a ogni fotogramma (per la velatura dorata). */
+export function BodyTint({ source, className, fill }: { source: RefObject<SVGPathElement | null>; className: string; fill: string }) {
   const ref = useRef<SVGPathElement>(null)
   useEffect(() => {
     let raf = 0
@@ -23,37 +19,18 @@ export function BodyTint({ source, className, fill, filter }: { source: RefObjec
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
   }, [source])
-  return <path ref={ref} className={className} fill={fill} filter={filter} pointerEvents="none" />
+  return <path ref={ref} className={className} fill={fill} pointerEvents="none" />
 }
 
-/** Definizioni condivise (sfumature e sfocature) per le velature del sole. */
+/** Sfumatura del bordo illuminato e sfocatura del fascio di luce. */
 export function SunDefs({ id, scale: s }: { id: string; scale: number }) {
   return (
     <defs>
-      {/* A: riflesso dorato che scorre sul corpo */}
-      <linearGradient id={`${id}-sheen`} x1="0" y1="0" x2="1" y2="0.35">
-        <stop offset="0" stopColor="#ffe08a" stopOpacity="0" />
-        <stop offset="0.42" stopColor="#ffe08a" stopOpacity="0" />
-        <stop offset="0.5" stopColor="#fff2c2" stopOpacity="0.75" />
-        <stop offset="0.58" stopColor="#ffe08a" stopOpacity="0" />
-        <stop offset="1" stopColor="#ffe08a" stopOpacity="0" />
-        <animateTransform attributeName="gradientTransform" type="translate" from="-1 0" to="1 0" dur="2.1s" repeatCount="indefinite" />
-      </linearGradient>
-      {/* C: bordo illuminato dalla luce che arriva da destra */}
       <linearGradient id={`${id}-rim`} x1="1" y1="0.1" x2="0.35" y2="0.75">
         <stop offset="0" stopColor="#ffd25e" stopOpacity="0.85" />
         <stop offset="0.45" stopColor="#ffd25e" stopOpacity="0.25" />
         <stop offset="1" stopColor="#ffd25e" stopOpacity="0" />
       </linearGradient>
-      {/* D: il corpo diventa oro caldo */}
-      <radialGradient id={`${id}-gold`} cx="0.42" cy="0.38" r="0.7">
-        <stop offset="0" stopColor="#ffe680" />
-        <stop offset="0.65" stopColor="#ffc23d" />
-        <stop offset="1" stopColor="#ff9f1c" />
-      </radialGradient>
-      <filter id={`${id}-halo`} x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation={7 * s} />
-      </filter>
       <filter id={`${id}-light`} x="-50%" y="-50%" width="200%" height="200%">
         <feGaussianBlur stdDeviation={9 * s} />
       </filter>
@@ -61,7 +38,7 @@ export function SunDefs({ id, scale: s }: { id: string; scale: number }) {
   )
 }
 
-/** C: un fascio di luce largo e sfocato da destra, senza bordi visibili, e qualche pulviscolo. */
+/** Un fascio di luce largo e sfocato da destra, senza bordi visibili, e qualche pulviscolo. */
 export function SoftLight({ id, scale: s }: { id: string; scale: number }) {
   const ax = PIX_ANCHOR.x
   const ay = PIX_ANCHOR.y
@@ -73,7 +50,7 @@ export function SoftLight({ id, scale: s }: { id: string; scale: number }) {
     [8, -70, 0.4]
   ] as const
   return (
-    <g className="sky-sun sun-c" pointerEvents="none">
+    <g className="sky-sun" pointerEvents="none">
       <linearGradient id={`${id}-shaft`} gradientUnits="userSpaceOnUse" x1={ax + 64 * s} y1={ay - 130 * s} x2={ax - 10 * s} y2={ay - 30 * s}>
         <stop offset="0" stopColor="#ffd95a" stopOpacity="0.7" />
         <stop offset="1" stopColor="#ffd95a" stopOpacity="0" />
@@ -95,46 +72,18 @@ export function SoftLight({ id, scale: s }: { id: string; scale: number }) {
 }
 
 /**
- * B (e C): occhiali fatti del fluido di Pix. Due gocce del suo colore si staccano
- * dalla testa, scivolano giù sugli occhi, si schiacciano in lenti e diventano scure;
- * alla fine risalgono e rientrano nella testa. Coordinate del viso (100×100).
+ * Espressione col sole (coordinate del viso): occhi socchiusi beati, due archetti
+ * all'ingiù; quello dal lato della luce un po' più stretto. Un sorriso morbido
+ * con la bocca appena aperta e un filo di rossore caldo sulle guance.
  */
-export function FluidShades({ id, color }: { id: string; color: string }) {
+export function SunFace() {
   return (
-    <g className="fluid-shades" pointerEvents="none">
-      <defs>
-        <linearGradient id={`${id}-lens2`} x1="0" y1="0" x2="0.4" y2="1">
-          <stop offset="0" stopColor="#3a3b5c" />
-          <stop offset="1" stopColor="#14152a" />
-        </linearGradient>
-      </defs>
-      <path className="fs-bridge" d="M47 49q3-3 6 0" stroke="#14152a" strokeWidth="3.4" fill="none" strokeLinecap="round" />
-      {[23, 52].map((x) => (
-        <g key={x} className="fs-lens">
-          {/* la goccia del colore di Pix, che poi si scurisce */}
-          <rect x={x} y="42" width="25" height="20" rx="10" fill={color} stroke="#fff" strokeOpacity=".35" strokeWidth="1.2" />
-          <rect className="fs-dark" x={x} y="42" width="25" height="20" rx="10" fill={`url(#${id}-lens2)`} />
-          <path className="fs-glint" d={`M${x + 5} 48q3-3.5 8-3.5`} stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" />
-        </g>
-      ))}
+    <g className="sun-face">
+      <path d="M36.2 51 Q41 56.2 45.8 51" stroke="currentColor" strokeWidth="3.6" fill="none" strokeLinecap="round" />
+      <path d="M54.6 50.2 Q59 54.4 63.4 50.2" stroke="currentColor" strokeWidth="3.6" fill="none" strokeLinecap="round" />
+      <path d="M44.5 64.5 Q50 70.5 55.5 64.5 Q50 66.6 44.5 64.5 Z" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <ellipse cx="33.5" cy="60" rx="4.6" ry="2.6" fill="#ffb36b" opacity=".45" />
+      <ellipse cx="66.5" cy="60" rx="4.6" ry="2.6" fill="#ffb36b" opacity=".6" />
     </g>
   )
-}
-
-/** A: guance rosate (coordinate del viso). */
-export function Blush() {
-  return (
-    <g className="sun-blush" pointerEvents="none">
-      <ellipse cx="33" cy="61" rx="5" ry="3" fill="#ff8fa3" />
-      <ellipse cx="67" cy="61" rx="5" ry="3" fill="#ff8fa3" />
-    </g>
-  )
-}
-
-/** Quali pezzi usa ogni versione. */
-export const SUN_PARTS: Record<SunStyle, { body: boolean; bliss: boolean; shades: boolean; light: boolean }> = {
-  bask: { body: true, bliss: true, shades: false, light: false },
-  shades: { body: false, bliss: false, shades: true, light: false },
-  beam: { body: false, bliss: false, shades: true, light: true },
-  sun: { body: true, bliss: true, shades: false, light: false }
 }
