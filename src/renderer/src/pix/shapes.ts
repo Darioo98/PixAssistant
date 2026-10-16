@@ -257,19 +257,18 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
         dy += 0.03 * b.h * Math.sin(2 * t) * top * a
         break
       }
-      case 'melt':
-        // Le gocce si allungano piano, ognuna con la sua velocità.
-        ;[
-          [-0.45, 0.26, 0.9],
-          [0.08, 0.36, 0.6],
-          [0.55, 0.2, 1.2]
-        ].forEach(([u0, len, speed]) => {
-          const grow = clamp01(t * speed!) * (0.85 + 0.15 * Math.sin(2.5 * t + u0! * 5))
-          dy += len! * b.h * low * gauss(u - u0!, 0.11) * grow * a
-        })
+      case 'melt': {
+        // Colate che si allungano, si gonfiano in punta e lasciano cadere una goccia, poi si ritirano.
+        for (const d of MELT_DRIPS) {
+          const L = dripLength(d, t)
+          const neck = 0.13 - 0.025 * (L / d.len)
+          dy += L * b.h * low * gauss(u - d.u, neck) * a
+        }
+        // Il corpo cede un po' ai fianchi e in cima, con un'onda lenta.
         dx += nx * 0.05 * b.w * Math.max(0, ny) * a
-        dy += 0.04 * b.h * top * a
+        dy += (0.04 + 0.012 * Math.sin(3 * Math.PI * u - t * 2.5)) * b.h * top * a
         break
+      }
     }
     return [x + dx, y + dy] as Pt
   })
@@ -346,13 +345,13 @@ export function heatShape(b: Body, t: number): Pt[] {
   const env = ssmooth(sseg(t, 0, 0.9)) * (1 - ssmooth(sseg(t, HEAT_S - 0.9, HEAT_S)))
   const bottom = b.cy + b.h / 2
   const pant = Math.sin(t * Math.PI * 2 * 2.6) * 0.5 + 0.5
-  // Cede: più basso e più largo (la base resta sul pavimento); la parte alta dondola piano.
-  const sy = 1 - env * (0.17 + 0.02 * pant)
-  const sx = 1 + env * (0.13 + 0.01 * pant)
-  return b.pts.map(([x, y]) => {
-    const up = Math.max(0, (bottom - y) / b.h)
-    const sway = up * up * env * 0.1 * b.w * Math.sin(t * 1.6)
-    return [b.cx + (x - b.cx) * sx * (1 + 0.06 * env * (1 - up)) + sway, bottom + (y - bottom) * sy] as Pt
+  return b.pts.map(([x, y], i) => {
+    const top = b.top[i]!
+    const nx = b.nx[i]!
+    const sag = top * env * (0.22 * b.h + 0.015 * b.h * pant)
+    const sway = top * env * 0.12 * b.w * Math.sin(t * 1.6)
+    const bulge = (1 - top) * env * 0.09 * b.w
+    return [x + sway + nx * bulge, y + sag + (y - bottom) * 0.015 * env * pant] as Pt
   })
 }
 
@@ -393,5 +392,86 @@ export function trashShape(b: Body, t: number): Pt[] {
     const mx = x + (tx - x) * k
     const my = y + (ty - y) * k
     return [b.cx + (mx - b.cx) * (1 + 0.06 * slam), bottom + (my - bottom) * (1 - 0.08 * slam)] as Pt
+  })
+}
+
+// ======================= "Si scioglie": colate e gocce che si staccano =======================
+
+export interface MeltDrip {
+  /** Posizione orizzontale (-1 sinistra, 1 destra). */
+  u: number
+  /** Lunghezza massima della colata (in altezze del corpo). */
+  len: number
+  /** Durata di un ciclo (si allunga, si stacca la goccia, si ritira). */
+  period: number
+  /** Ritardo del primo ciclo. */
+  phase: number
+}
+
+export const MELT_DRIPS: MeltDrip[] = [
+  { u: -0.45, len: 0.26, period: 1.45, phase: 0.25 },
+  { u: 0.08, len: 0.34, period: 1.85, phase: 0 },
+  { u: 0.55, len: 0.22, period: 1.25, phase: 0.55 }
+]
+
+/** Parte del ciclo in cui la goccia si stacca. */
+const DETACH = 0.8
+/** Quanto resta della colata dopo che la goccia è caduta. */
+const REST = 0.4
+
+/** Lunghezza della colata all'istante `t` (in altezze del corpo). */
+export function dripLength(d: MeltDrip, t: number): number {
+  const local = t - d.phase
+  if (local <= 0) return 0
+  const n = Math.floor(local / d.period)
+  const k = (local - n * d.period) / d.period
+  const base = n === 0 ? 0 : REST
+  if (k < DETACH) {
+    const g = k / DETACH
+    return d.len * (base + (1 - base) * g * g)
+  }
+  // La goccia si è staccata: la colata si ritira di colpo con un piccolo rimbalzo.
+  const r = (k - DETACH) / (1 - DETACH)
+  const snap = 1 - (1 - r) ** 3
+  const bounce = 0.12 * Math.sin(r * Math.PI) * (1 - r)
+  return d.len * (1 - (1 - REST) * snap + bounce)
+}
+
+/** Istanti (s) in cui si stacca una goccia, entro `until`. */
+export function dripDetachTimes(d: MeltDrip, until: number): number[] {
+  const out: number[] = []
+  for (let n = 0; ; n++) {
+    const at = d.phase + (n + DETACH) * d.period
+    if (at > until) return out
+    out.push(at)
+  }
+}
+
+/**
+ * Pix afferrato dal puntatore: la cima viene pizzicata e tirata su in una
+ * piccola punta con delle grinze attorno; il resto pende sotto come una gelatina
+ * e trema. `env` 0–1 è quanto è "preso".
+ */
+export function grabShape(b: Body, t: number, env: number): Pt[] {
+  const bottom = b.cy + b.h / 2
+  return b.pts.map(([x, y], i) => {
+    const top = b.top[i]!
+    const low = b.low[i]!
+    const u = b.u[i]!
+    const nx = b.nx[i]!
+    const ny = b.ny[i]!
+    // Pizzico: la cima si alza a punta dove è tenuto, i lati si avvicinano.
+    const pinch = top * gauss(u, 0.32)
+    let px = x - (x - b.cx) * 0.12 * top * env
+    let py = y - pinch * 0.2 * b.h * env
+    // Grinze attorno al pizzico (pieghe fitte che tremano).
+    const fold = top * (1 - gauss(u, 0.12)) * gauss(u, 0.55)
+    const r = fold * env * b.h * (0.016 * Math.sin(u * 18 + t * 8) + 0.006 * Math.sin(t * 38))
+    px += nx * r
+    py += ny * r
+    // Il corpo pende: la parte bassa si allarga e scende un poco.
+    px += nx * low * 0.07 * b.w * env
+    py += (y - bottom) * -0.04 * env + low * 0.04 * b.h * env
+    return [px, py] as Pt
   })
 }

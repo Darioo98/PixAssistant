@@ -8,7 +8,7 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, heatShape, restBody, shiverShape, trashShape } from './shapes'
+import { HEAT_S, MELT_DRIPS, SHIVER_S, SWALLOW_S, TRASH_S, dripDetachTimes, grabShape, heatShape, restBody, shiverShape, trashShape } from './shapes'
 import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
@@ -48,13 +48,6 @@ const RAIN_DROPS: Array<[number, number, number]> = [
   [17, 0.55, 0.8],
   [1, 0.8, 1.05],
   [-11, 1.05, 0.9]
-]
-
-/** Colate di "Si scioglie" (come in shapes.ts): posizione, lunghezza, velocità. */
-const MELT_DRIPS: Array<[number, number, number]> = [
-  [-0.45, 0.26, 0.9],
-  [0.08, 0.36, 0.6],
-  [0.55, 0.2, 1.2]
 ]
 
 /** Da quanti gradi Pix sente caldo e si affloscia. */
@@ -754,7 +747,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
    * la barra si sposta a quell'altezza e Pix scivola di nuovo contro il bordo.
    */
   const grabRef = useRef<SVGGElement>(null)
-  const grabState = useRef({ x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, raf: 0, last: 0, released: false, token: null as number | null })
+  const grabState = useRef({ x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, raf: 0, last: 0, released: false, token: null as number | null, t0: 0, releaseAt: 0 })
   const runGrab = () => {
     const g = grabState.current
     if (g.raf) return
@@ -771,8 +764,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       const speed = Math.hypot(g.vx, g.vy)
       const stretch = Math.min(0.4, speed * 0.0011)
       const angle = (Math.atan2(g.vy, g.vx) * 180) / Math.PI
+      // Pende dal punto in cui è pizzicato (la cima).
       const cx = PIX_ANCHOR.x
-      const cy = PIX_ANCHOR.y - 33 * scale
+      const cy = PIX_ANCHOR.y - 72 * scale
       grabRef.current?.setAttribute(
         'transform',
         `translate(${g.x.toFixed(2)} ${g.y.toFixed(2)}) translate(${cx} ${cy}) rotate(${angle.toFixed(1)}) scale(${(1 + stretch).toFixed(3)} ${(1 / (1 + stretch)).toFixed(3)}) rotate(${(-angle).toFixed(1)}) translate(${-cx} ${-cy})`
@@ -821,6 +815,15 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         const g = grabState.current
         g.token = claim('grab', 10 * 60_000)
         g.released = false
+        g.t0 = performance.now()
+        g.releaseAt = 0
+        // Il corpo viene pizzicato in cima (con le grinze) e pende sotto; si allenta quando lo lasci.
+        morph.current?.perform((b, t) => {
+          const now = performance.now()
+          let env = Math.min(1, (now - g.t0) / 260)
+          if (g.releaseAt) env *= Math.max(0, 1 - (now - g.releaseAt) / 380)
+          return grabShape(b, t, env)
+        }, 600)
         setGrabbed(true)
       } else {
         setHovered(false)
@@ -833,8 +836,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       const g = grabState.current
       const minX = r ? -(r.left + PIX_ANCHOR.x - 30) : -400
       const minY = r ? -(r.top + PIX_ANCHOR.y - 70 * scale) : -400
+      // In giù fino al fondo della finestra (anche la barra scenderà a quell'altezza).
+      const maxY = r ? Math.max(30, window.innerHeight - (r.top + PIX_ANCHOR.y) - 6) : 30
       g.tx = Math.max(minX, Math.min(10, dx))
-      g.ty = Math.max(minY, Math.min(30, dy))
+      g.ty = Math.max(minY, Math.min(maxY, dy))
       runGrab()
       return
     }
@@ -863,6 +868,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     if (d.moved && d.pix) {
       // Lasciato andare: la barra va all'altezza dove l'hai lasciato, Pix scivola contro il bordo.
       const g = grabState.current
+      g.releaseAt = performance.now()
       const wanted = Math.max(0, d.startLift - g.y)
       void window.pix.moveBar(wanted, true).then((applied) => {
         // La finestra (o Pix al suo interno) si è spostata: lo si compensa per non vederlo saltare.
@@ -982,7 +988,11 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                   <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
                     <g className={`lids ${formed && mood === 'normal' && tired !== 'none' ? `lids-${tired}` : ''}`}>
                       <g className={`eyes ${blink ? 'blink' : ''}`}>
-                        <Eyes mood={formed ? (grabbed ? 'alert' : swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
+                        {grabbed ? (
+                          <ScaredFace />
+                        ) : (
+                          <Eyes mood={formed ? (swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
+                        )}
                       </g>
                     </g>
                   </g>
@@ -1040,20 +1050,23 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
         {(fx === 'sun' || fx === 'hot') && <SunBeam id={fillId} scale={scale} hot={fx === 'hot'} />}
-        {/* Si scioglie: gocce che si staccano dalle tre colate e cadono, con uno schizzo */}
+        {/* Si scioglie: le gocce si staccano dalla punta delle colate e cadono, con uno schizzo */}
         {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
           <g key={meltDrops} fill={`url(#${fillId})`} pointerEvents="none">
-            {MELT_DRIPS.map(([u0, len, speed], i) => {
+            {MELT_DRIPS.flatMap((d, i) => {
               const b = restBody(scale, shape)
-              return (
-                <g key={i} transform={`translate(${b.cx + u0 * (b.w / 2)} ${b.cy + b.h / 2 + len * b.h * 0.8})`}>
-                  <path
-                    className="melt-drop"
-                    style={{ ['--drip-delay' as string]: `${(0.6 + 1 / speed).toFixed(2)}s` }}
-                    d="M0 -3 C2 -0.5 2.8 1 2.8 2.3 A2.8 2.8 0 0 1 -2.8 2.3 C-2.8 1 -2 -0.5 0 -3 Z"
-                  />
-                </g>
-              )
+              const r = 0.045 * b.w
+              return dripDetachTimes(d, 4.0)
+                .filter((at) => at > 0.7)
+                .map((at) => (
+                  <g key={`${i}-${at}`} transform={`translate(${b.cx + d.u * (b.w / 2)} ${b.cy + b.h / 2 + d.len * b.h - r * 0.6})`}>
+                    <path
+                      className="melt-drop"
+                      style={{ ['--drip-delay' as string]: `${at.toFixed(2)}s` }}
+                      d={`M0 ${-r * 1.6} C${r * 0.8} ${-r * 0.5} ${r} ${-r * 0.1} ${r} ${r * 0.3} A${r} ${r} 0 0 1 ${-r} ${r * 0.3} C${-r} ${-r * 0.1} ${-r * 0.8} ${-r * 0.5} 0 ${-r * 1.6} Z`}
+                    />
+                  </g>
+                ))
             })}
           </g>
         )}
@@ -1143,10 +1156,24 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         )}
         {formed && (
           <g transform={face} pointerEvents="none">
-            <Badge mood={grabbed ? 'alert' : mood} />
+            <Badge mood={mood} />
           </g>
         )}
       </svg>
     </div>
+  )
+}
+
+/** Afferrato: occhioni tondi con un riflesso, bocca tremolante e una goccia di sudore. */
+function ScaredFace() {
+  return (
+    <g className="scared">
+      <circle cx="41" cy="51" r="6.2" fill="currentColor" />
+      <circle cx="59" cy="51" r="6.2" fill="currentColor" />
+      <circle cx="39.2" cy="48.8" r="1.9" fill="#fff" opacity=".55" />
+      <circle cx="57.2" cy="48.8" r="1.9" fill="#fff" opacity=".55" />
+      <path className="scared-mouth" d="M42 68 q2 -2.2 4 0 q2 2.2 4 0 q2 -2.2 4 0 q2 2.2 4 0" stroke="currentColor" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+      <path d="M78 30 C75.5 34.5 75 37 78 38.5 C81 37 80.5 34.5 78 30 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="1" />
+    </g>
   )
 }
