@@ -926,3 +926,226 @@
     transform: scaleY(0.15);
   }
 }
+
+/* ---------- Sole e caldo: il sole in alto e il raggio di luce ---------- */
+.sky-sun {
+  animation: pix-sun-in 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) 1 both;
+}
+
+.sun {
+  transform-box: fill-box;
+}
+
+.sun-rays {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pix-sun-rays 6s linear 2;
+}
+
+.sun-beam {
+  animation: pix-beam 3s ease-in-out 3;
+}
+
+@keyframes pix-sun-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pix-sun-rays {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+@keyframes pix-beam {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Caldo: ondine di calore che salgono e svaniscono */
+.heat path {
+  opacity: 0;
+  animation: pix-heat 1.6s ease-out var(--heat-delay, 0s) 4;
+}
+
+@keyframes pix-heat {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Caldo: sciolto nella pozza, gli occhi galleggiano, si separano e ondeggiano */
+[data-melt] .eyes > :nth-child(1),
+[data-melt] .eyes > :nth-child(2) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+[data-melt] .eyes > :nth-child(1) {
+  animation: pix-eye-float-left 4.9s ease-in-out 1;
+}
+
+[data-melt] .eyes > :nth-child(2) {
+  animation: pix-eye-float-right 4.9s ease-in-out 1;
+}
+
+@keyframes pix-eye-float-left {
+  0% {
+    transform: none;
+  }
+  26% {
+    transform: translate(-13px, 1px) rotate(-8deg) scale(1, 0.85);
+  }
+  38% {
+    transform: translate(-15px, -1.5px) rotate(4deg) scale(1, 0.85);
+  }
+  50% {
+    transform: translate(-13px, 1.5px) rotate(-6deg) scale(1, 0.85);
+  }
+  62% {
+    transform: translate(-16px, -1px) rotate(5deg) scale(1, 0.85);
+  }
+  72% {
+    transform: translate(-14px, 1px) rotate(-3deg) scale(1, 0.85);
+  }
+  88%,
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes pix-eye-float-right {
+  0% {
+    transform: none;
+  }
+  26% {
+    transform: translate(13px, -1px) rotate(7deg) scale(1, 0.85);
+  }
+  38% {
+    transform: translate(15px, 1.5px) rotate(-5deg) scale(1, 0.85);
+  }
+  50% {
+    transform: translate(13px, -1.5px) rotate(6deg) scale(1, 0.85);
+  }
+  62% {
+    transform: translate(16px, 1px) rotate(-4deg) scale(1, 0.85);
+  }
+  72% {
+    transform: translate(14px, -1px) rotate(3deg) scale(1, 0.85);
+  }
+  88%,
+  100% {
+    transform: none;
+  }
+}
+
+/* ---------- Pioggia: guarda in alto contrariato e strizza gli occhi alle gocce ---------- */
+[data-weather='rain'] .glance {
+  transform: translateY(-2px);
+  transition: transform 0.4s;
+}
+
+.frown {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in 0.3s ease-out;
+}
+
+[data-wince] .lids {
+  transform: scaleY(0.35);
+  transition: transform 0.08s;
+}
+
+/* ---------- Freddo: fiocchi di neve ---------- */
+.flake {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pix-flake 3.4s linear var(--flake-delay, 0s) infinite;
+}
+
+@keyframes pix-flake {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg) scale(var(--flake-size, 1));
+  }
+  15% {
+    opacity: 0.95;
+  }
+  50% {
+    transform: translate(4px, 60px) rotate(120deg) scale(var(--flake-size, 1));
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-3px, 120px) rotate(240deg) scale(var(--flake-size, 1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flake,
+  .heat path,
+  .sun-rays {
+    animation: none;
+  }
+}
+
+/* ---------- Pix afferrato dal puntatore: pende, si allunga, trema dalla paura ---------- */
+.grab {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+}
+
+[data-grabbed] .grab {
+  transform: translateY(calc(var(--grab, 0) * -0.2px)) scale(calc(1 - var(--grab, 0) * 0.006), calc(1 + var(--grab, 0) * 0.014));
+}
+
+[data-grabbed] .yawn-body {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: pix-grab-shake 0.13s linear infinite;
+}
+
+@keyframes pix-grab-shake {
+  0%,
+  100% {
+    transform: rotate(-2.5deg) scale(0.96, 1.04);
+  }
+  50% {
+    transform: rotate(2.5deg) scale(0.96, 1.04);
+  }
+}
+
+/* Lasciato andare: si carica e viene spinto di lato contro il bordo */
+[data-shoved] .grab {
+  transform-origin: 50% 100%;
+  animation: pix-shove 0.48s ease-out 1;
+}
+
+@keyframes pix-shove {
+  0% {
+    transform: none;
+  }
+  35% {
+    transform: translateX(-4px) scale(1.12, 0.9);
+  }
+  70% {
+    transform: translateX(12px) scale(0.82, 1.08);
+  }
+  100% {
+    transform: none;
+  }
+}

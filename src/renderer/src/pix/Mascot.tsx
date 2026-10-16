@@ -470,6 +470,16 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [])
   const fx = formed && mood === 'normal' && anim !== 'off' && !reducedMotion ? (weatherPreview ?? weatherFx) : null
   const [rainKey, setRainKey] = useState(0)
+  const [wince, setWince] = useState(false)
+  useEffect(() => {
+    if (!rainKey) return
+    const a = window.setTimeout(() => setWince(true), 650)
+    const b = window.setTimeout(() => setWince(false), 1300)
+    return () => {
+      window.clearTimeout(a)
+      window.clearTimeout(b)
+    }
+  }, [rainKey])
   /** Sole: occhiali che colano sugli occhi. Freddo: brividi. Caldo: si scioglie in una pozza. */
   const [shades, setShades] = useState(false)
   const [shivering, setShivering] = useState(false)
@@ -645,6 +655,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }
 
   // ---- Barra spostabile: trascinandola su e giù lungo il bordo dello schermo ----
+  /** Pix afferrato dal puntatore (ha paura) e spinto di lato contro il bordo quando lo lasci. */
+  const [grabbed, setGrabbed] = useState(false)
+  const [shoved, setShoved] = useState(false)
   /** Molla della barra trascinata: allungamento (px) e sua velocità. */
   const barSpring = useRef({ s: 0, v: 0, target: 0, raf: 0, last: 0, t0: 0, lastLift: 0, lastAt: 0 })
   const runBarSpring = () => {
@@ -659,7 +672,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       sp.v += ((sp.target - sp.s) * 160 - sp.v * 9) * dt
       sp.s += sp.v * dt
       const t = (now - sp.t0) / 1000
+      // Pix afferrato: si allunga sotto il puntatore quando lo tiri su, si schiaccia quando scende.
+      svgRef.current?.style.setProperty('--grab', sp.s.toFixed(2))
       if (!draggingBar.current && Math.abs(sp.s) < 0.15 && Math.abs(sp.v) < 0.5) {
+        svgRef.current?.style.setProperty('--grab', '0')
         morph.current?.setBar(null)
         sp.raf = 0
         sp.last = 0
@@ -686,8 +702,12 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     if (!d.moved) {
       d.moved = true
       draggingBar.current = true
-      setHovered(false)
-      morph.current?.go(0)
+      // Se è già Pix, viene afferrato (e si spaventa); se è la barra, si sposta la barra.
+      if (morph.current?.formed) setGrabbed(true)
+      else {
+        setHovered(false)
+        morph.current?.go(0)
+      }
     }
     d.lift = Math.max(0, d.startLift - dy)
     // Velocità della barra: il liquido resta indietro rispetto al movimento.
@@ -713,12 +733,25 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
     if (d.moved) {
       void window.pix.moveBar(d.lift, true)
-      // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
       const sp = barSpring.current
       sp.target = 0
-      sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
       sp.lastAt = 0
-      runBarSpring()
+      if (grabbed) {
+        // Lasciato andare: viene spinto di lato contro il bordo e torna barra, che poi tremola.
+        setGrabbed(false)
+        setShoved(true)
+        setHovered(false)
+        morph.current?.go(0)
+        window.setTimeout(() => setShoved(false), 480)
+        window.setTimeout(() => {
+          sp.v += -45
+          runBarSpring()
+        }, 820)
+      } else {
+        // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
+        sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
+        runBarSpring()
+      }
     }
     draggingBar.current = false
     // Il clic arriva subito dopo: lo si lascia passare solo se non c'è stato trascinamento.
@@ -741,6 +774,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-shiver={shivering && fx === 'cold' ? '' : undefined}
       data-melt={melting && fx === 'hot' ? '' : undefined}
       data-trash={trash && formed ? '' : undefined}
+      data-wince={wince && fx === 'rain' ? '' : undefined}
+      data-grabbed={grabbed ? '' : undefined}
+      data-shoved={shoved ? '' : undefined}
       data-pop={pop && formed ? '' : undefined}
       data-farewell={farewell && formed ? '' : undefined}
       data-turning={turning && sleeping ? '' : undefined}
@@ -777,6 +813,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         <ellipse ref={shadowRef} cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx={24 * scale} ry="3" fill="#000" opacity="0" />
         {/* Avvio: il tubo vuoto che si riempie */}
         {booting && <path className="boot-tube" d={tubeOutline()} fill="none" stroke={color} strokeWidth="1.2" />}
+        <g className="grab">
         <g className={`pose ${formed ? `pose-${mood}` : ''} ${sleeping && sleepSide === -1 ? 'side-left' : ''}`}>
           <g
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
@@ -817,7 +854,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                   <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
                     <g className={`lids ${formed && mood === 'normal' && tired !== 'none' ? `lids-${tired}` : ''}`}>
                       <g className={`eyes ${blink ? 'blink' : ''}`}>
-                        <Eyes mood={formed ? (swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
+                        <Eyes mood={formed ? (grabbed || shoved ? 'alert' : swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
                       </g>
                     </g>
                   </g>
@@ -849,6 +886,8 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                     <path d="M28 47q3-3.5 8-3.5M57 47q3-3.5 8-3.5" stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" opacity=".45" />
                   </g>
                 )}
+                {/* Pioggia: broncio */}
+                {fx === 'rain' && <path className="frown" d="M44 71.5q6-4.5 12 0" stroke="currentColor" strokeWidth="2.6" fill="none" strokeLinecap="round" />}
                 {/* Freddo: denti che battono */}
                 {fx === 'cold' && (
                   <path className="chatter" d="M41 70l3-2.5 3 2.5 3-2.5 3 2.5 3-2.5 3 2.5" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -858,6 +897,68 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
             </g>
           </g>
         </g>
+        </g>
+        {/* Sole e caldo: un sole in alto con un raggio di luce che scende su Pix */}
+        {(fx === 'sun' || fx === 'hot') && (
+          <g className={`sky-sun ${fx === 'hot' ? 'hot' : ''}`} pointerEvents="none">
+            <defs>
+              <linearGradient id={`${fillId}-beam`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor={fx === 'hot' ? '#ff9a3d' : '#ffd84d'} stopOpacity="0.55" />
+                <stop offset="1" stopColor={fx === 'hot' ? '#ff9a3d' : '#ffd84d'} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              className="sun-beam"
+              d={`M${PIX_ANCHOR.x - 38 * scale} ${PIX_ANCHOR.y - 100 * scale} L${PIX_ANCHOR.x + 16 * scale} ${PIX_ANCHOR.y - 60 * scale} L${PIX_ANCHOR.x - 6 * scale} ${PIX_ANCHOR.y - 40 * scale} Z`}
+              fill={`url(#${fillId}-beam)`}
+            />
+            <g className="sun" transform={`translate(${PIX_ANCHOR.x - 40 * scale} ${PIX_ANCHOR.y - 102 * scale}) scale(${scale * (fx === 'hot' ? 1.2 : 1)})`}>
+              <g className="sun-rays" stroke={fx === 'hot' ? '#ff7a2f' : '#ffc93c'} strokeWidth="2.2" strokeLinecap="round">
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+                  <path key={a} d="M0 -10.5v-3.5" transform={`rotate(${a})`} />
+                ))}
+              </g>
+              <circle r="7" fill={fx === 'hot' ? '#ff8a3d' : '#ffc93c'} />
+              <circle r="7" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="1.5" strokeDasharray="7 30" transform="rotate(-150)" />
+            </g>
+          </g>
+        )}
+        {/* Caldo: ondine di calore che salgono */}
+        {fx === 'hot' && (
+          <g className="heat" stroke={color} strokeOpacity="0.55" strokeWidth="1.8" fill="none" strokeLinecap="round" pointerEvents="none">
+            {[-16, 0, 16].map((dx, i) => (
+              <path
+                key={dx}
+                style={{ ['--heat-delay' as string]: `${i * 0.5}s` }}
+                d={`M${PIX_ANCHOR.x + dx * scale} ${PIX_ANCHOR.y - 72 * scale} q3 -4 0 -8 q-3 -4 0 -8`}
+              />
+            ))}
+          </g>
+        )}
+        {/* Freddo: fiocchi di neve che scendono */}
+        {fx === 'cold' && (
+          <g className="snow" fill="#fff" stroke="#b9dcff" strokeWidth="0.6" pointerEvents="none">
+            {[
+              [-30, 0, 1],
+              [-12, 1.1, 0.8],
+              [6, 0.5, 1.1],
+              [22, 1.6, 0.9],
+              [-22, 2.2, 0.75],
+              [14, 2.8, 0.85]
+            ].map(([dx, delay, size]) => (
+              <g key={dx} transform={`translate(${PIX_ANCHOR.x + dx! * scale} ${PIX_ANCHOR.y - 110 * scale})`}>
+                <path
+                  className="flake"
+                  style={{ ['--flake-delay' as string]: `${delay}s`, ['--flake-size' as string]: String(size) }}
+                  d="M0 -4v8M-3.5 -2l7 4M-3.5 2l7 -4"
+                  stroke="#fff"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              </g>
+            ))}
+          </g>
+        )}
         {/* Pioggia: gocce che cadono sulla testa e schizzano, ognuna col suo ritmo */}
         {fx === 'rain' && rainKey > 0 && (
           <g key={rainKey} pointerEvents="none">
@@ -908,7 +1009,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         )}
         {formed && (
           <g transform={face} pointerEvents="none">
-            <Badge mood={mood} />
+            <Badge mood={grabbed ? 'alert' : mood} />
           </g>
         )}
       </svg>
