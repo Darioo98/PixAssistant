@@ -31,4 +31,15 @@ describe('regista delle animazioni', () => {
     d.release(t)
     expect(d.active).toBeNull()
   })
+
+  it('il meteo provato dalle impostazioni parte subito e si può rilanciare', () => {
+    const interrupted: Act[] = []
+    const d = new Director(() => {}, (a) => interrupted.push(a))
+    d.claim('section', 4000)
+    expect(d.claim('weather', 4200)).toBeNull() // il meteo spontaneo aspetta
+    expect(d.claim('weatherTry', 4200)).not.toBeNull() // la prova no
+    expect(interrupted).toEqual(['section'])
+    expect(d.claim('weatherTry', 4200)).not.toBeNull() // un altro clic la fa ripartire
+    expect(d.claim('spontaneous', 4200)).toBeNull()
+  })
 })

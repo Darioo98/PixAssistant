@@ -491,6 +491,8 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   // ---- Meteo sul corpo: pioggia sulla testa, riflesso col sole, brividi col freddo ----
   const [weatherFx, setWeatherFx] = useState<WeatherFx>(null)
   const [weatherPreview, setWeatherPreview] = useState<WeatherFx>(null)
+  /** Ogni clic su "prova" fa ripartire l'episodio, anche se il meteo è lo stesso di prima. */
+  const [weatherTry, setWeatherTry] = useState(0)
   useEffect(() => {
     let alive = true
     const load = () =>
@@ -515,8 +517,12 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     let end: number | undefined
     const onTry = (e: Event) => {
       setWeatherPreview((e as CustomEvent<WeatherFx>).detail)
+      setWeatherTry((n) => n + 1)
       window.clearTimeout(end)
-      end = window.setTimeout(() => setWeatherPreview(null), 15_000)
+      end = window.setTimeout(() => {
+        setWeatherPreview(null)
+        setWeatherTry(0)
+      }, 15_000)
     }
     window.addEventListener(WEATHER_FX_EVENT, onTry)
     return () => {
@@ -526,7 +532,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [])
   const fxOn = formed && mood === 'normal' && anim !== 'off' && !reducedMotion ? (weatherPreview ?? weatherFx) : null
   /** Gli elementi del meteo (raggio, neve, broncio…) non si sovrappongono ad altre animazioni. */
-  const fx = act === null || act === 'weather' ? fxOn : null
+  const fx = act === null || act === 'weather' || act === 'weatherTry' ? fxOn : null
   const [rainKey, setRainKey] = useState(0)
   const [wince, setWince] = useState(false)
   useEffect(() => {
@@ -543,7 +549,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   /** Episodio di meteo in corso: solo durante questo si vedono raggio, neve, pioggia, vapore… */
   const [episode, setEpisode] = useState<WeatherFx>(null)
   /** Ciò che si vede del meteo: solo durante l'episodio (tutto con la stessa durata). */
-  const ep = act === 'weather' ? episode : null
+  const ep = act === 'weather' || act === 'weatherTry' ? episode : null
   const [shivering, setShivering] = useState(false)
   const [melting, setMelting] = useState(false)
   useEffect(() => {
@@ -555,33 +561,55 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     let id: number
     let end: number
     let episodeEnd: number
+    // Provato dalle impostazioni: parte subito e, se Pix è occupato, riprova a breve.
+    let trying = weatherTry > 0
+    let retries = 0
+    /** Episodio in corso (il suo gettone): se si riparte, va fermato subito. */
+    let playing: number | null = null
+    const retry = () => {
+      if (retries++ < 20) {
+        id = window.setTimeout(run, 250)
+        return true
+      }
+      return false
+    }
+    const run = () => {
+      const ms = ANIM_S * 1000
+      const token = claim(trying ? 'weatherTry' : 'weather', ms)
+      // Se c'è già un'altra animazione, il meteo aspetta il prossimo giro.
+      if (token === null) return trying && retry() ? undefined : schedule(false)
+      // Freddo e caldo muovono il corpo: se sta ancora finendo un altro movimento si riprova.
+      const body = fx === 'cold' ? morph.current?.perform(shiverShape, SHIVER_S) : fx === 'hot' ? morph.current?.perform(heatShape, HEAT_S) : true
+      if (!body) {
+        release(token)
+        return retry() ? undefined : schedule(false)
+      }
+      trying = false
+      retries = 0
+      // Un episodio: corpo, raggio, neve, pioggia… partono e finiscono insieme.
+      setEpisode(fx)
+      playing = token
+      episodeEnd = window.setTimeout(() => {
+        setEpisode(null)
+        playing = null
+      }, ms)
+      if (fx === 'rain') setRainKey((k) => k + 1)
+      else if (fx === 'cold') {
+        setShivering(true)
+        end = window.setTimeout(() => setShivering(false), SHIVER_S * 1000)
+      } else if (fx === 'hot') {
+        setMelting(true)
+        end = window.setTimeout(() => setMelting(false), HEAT_S * 1000)
+      } else {
+        setShades(true)
+        end = window.setTimeout(() => setShades(false), ms - 450)
+      }
+      schedule(false)
+    }
     const schedule = (first: boolean) => {
       id = window.setTimeout(
-        () => {
-          const ms = ANIM_S * 1000
-          // Se c'è già un'altra animazione, il meteo aspetta il prossimo giro.
-          if (claim('weather', ms) === null) return schedule(false)
-          // Un episodio: corpo, raggio, neve, pioggia… partono e finiscono insieme.
-          setEpisode(fx)
-          episodeEnd = window.setTimeout(() => setEpisode(null), ms)
-          if (fx === 'rain') setRainKey((k) => k + 1)
-          else if (fx === 'cold') {
-            if (morph.current?.perform(shiverShape, SHIVER_S)) {
-              setShivering(true)
-              end = window.setTimeout(() => setShivering(false), SHIVER_S * 1000)
-            }
-          } else if (fx === 'hot') {
-            if (morph.current?.perform(heatShape, HEAT_S)) {
-              setMelting(true)
-              end = window.setTimeout(() => setMelting(false), HEAT_S * 1000)
-            }
-          } else {
-            setShades(true)
-            end = window.setTimeout(() => setShades(false), ms - 450)
-          }
-          schedule(false)
-        },
-        first ? 900 : ANIM_S * 1000 + (fx === 'rain' ? 5000 + Math.random() * 5000 : fx === 'hot' ? 18_000 + Math.random() * 12_000 : 9000 + Math.random() * 8000)
+        run,
+        first ? (trying ? 120 : 900) : ANIM_S * 1000 + (fx === 'rain' ? 5000 + Math.random() * 5000 : fx === 'hot' ? 18_000 + Math.random() * 12_000 : 9000 + Math.random() * 8000)
       )
     }
     schedule(true)
@@ -589,11 +617,14 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       window.clearTimeout(id)
       window.clearTimeout(end)
       window.clearTimeout(episodeEnd)
+      // Un nuovo clic su "prova" (o il meteo che cambia) ferma l'episodio in corso, corpo compreso.
+      if (playing !== null && (fx === 'cold' || fx === 'hot')) morph.current?.interrupt()
+      release(playing)
       setShivering(false)
       setMelting(false)
       setEpisode(null)
     }
-  }, [fxOn])
+  }, [fxOn, weatherTry])
 
   // ---- Fumetto: nasce come una bolla dalla testa, e Pix fa un piccolo sussulto ----
   const [pop, setPop] = useState(false)
@@ -640,7 +671,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   interruptRef.current = (a: Act) => {
     morph.current?.interrupt()
     if (a === 'yawn' || a === 'preview') setYawning(false)
-    if (a === 'weather') {
+    if (a === 'weather' || a === 'weatherTry') {
       setEpisode(null)
       setShades(false)
       setShivering(false)

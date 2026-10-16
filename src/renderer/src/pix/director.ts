@@ -18,6 +18,8 @@ export type Act =
   | 'section'
   | 'pop'
   | 'weather'
+  /** Il meteo provato dalle impostazioni: parte subito, come le altre prove. */
+  | 'weatherTry'
   | 'yawn'
   | 'spontaneous'
   | 'turn'
@@ -32,6 +34,7 @@ const PRIORITY: Record<Act, number> = {
   section: 2,
   pop: 2,
   weather: 1,
+  weatherTry: 4,
   yawn: 1,
   spontaneous: 1,
   turn: 1
