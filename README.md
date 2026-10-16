@@ -1,15 +1,60 @@
 # Pix
 
+<p align="center">
+  <img src="docs/media/pix-barra.gif" height="220" alt="La barra sul bordo dello schermo diventa Pix">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/media/pix-trasformazioni.gif" height="220" alt="Pix è un fluido e cambia forma">
+</p>
+
 Barra multifunzione per Windows 10/11 con **Pix**, la mascotte a forma di piastrella.
 Vive sul bordo destro dello schermo: passa il mouse sulla barra e diventa Pix, cliccalo
 (o premi `Ctrl+Alt+Spazio`) e si apre il pannello con scadenze, password, chat con
 Claude, note e to-do, timer e promemoria, cronologia appunti, link rapidi, meteo e
 il turno in sede.
 
+**[Scarica l'installer](https://github.com/Darioo98/PixAssistant/releases/latest)** · Windows 10/11 a 64 bit
+
+## Funzionalità
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/scheda-home.png" width="250" alt="Home"><br><b>Home</b><br>meteo, turno in sede, domanda veloce a Claude, nota veloce, le cose di oggi e i prossimi 7 giorni</td>
+    <td align="center"><img src="docs/media/scheda-deadlines.png" width="250" alt="Scadenze"><br><b>Scadenze</b><br>bollo, affitto, documenti: anche ricorrenti, con preavviso, categorie e calendario</td>
+    <td align="center"><img src="docs/media/scheda-vault.png" width="250" alt="Password"><br><b>Password</b><br>cassaforte cifrata (AES-256) che si apre con Windows Hello</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/media/scheda-notes.png" width="250" alt="Note e to-do"><br><b>Note e to-do</b><br>note fissabili e cercabili, to-do con priorità e "oggi"</td>
+    <td align="center"><img src="docs/media/scheda-timers.png" width="250" alt="Timer e promemoria"><br><b>Timer e promemoria</b><br>Pomodoro (Pix dorme durante il lavoro), timer e promemoria ricorrenti</td>
+    <td align="center"><img src="docs/media/scheda-links.png" width="250" alt="Link e app"><br><b>Link e app</b><br>siti, programmi e cartelle a portata di clic, da riordinare trascinando</td>
+  </tr>
+</table>
+
+In più: **chat con Claude** (col tuo abbonamento), **cronologia degli appunti**,
+ricerca in tutto il pannello, e trascinare un file o un testo su Pix per salvarlo o farlo analizzare.
+
+## Pix, la mascotte
+
+Pix è un fluido: vive come una barra sul bordo destro, prende forma quando ti avvicini
+e reagisce a quello che succede.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/pix-meteo.gif" width="300" alt="Pix e il meteo"><br><b>Il meteo addosso</b><br>sole, pioggia, freddo e caldo della tua città</td>
+    <td align="center"><img src="docs/media/pix-clessidra.gif" width="220" alt="Pix diventa una clessidra"><br><b>La clessidra</b><br>gli occhi sono i chicchi e cadono davvero</td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/media/pix-aspetto.png" width="620" alt="Forme, colori, occhi ed espressioni di Pix">
+  <br><sub>Forma, colore e occhi si scelgono in <b>Impostazioni → Aspetto</b>; l'espressione cambia con quello che succede.</sub>
+</p>
+
+Si può anche afferrare e trascinare (si spaventa e scivola come un liquido), mangia i file
+che gli lanci, sbadiglia, sbircia dal bordo, si addormenta la sera e saluta a fine turno.
+
 ## Installazione
 
-**[Scarica l'installer (Pix Setup 0.1.0)](https://github.com/Darioo98/PixAssistant/releases/latest)**
-dalla pagina *Releases* del progetto.
+Scarica `Pix-Setup-0.1.0.exe` dalla pagina **[Releases](https://github.com/Darioo98/PixAssistant/releases/latest)**.
 
 1. Avvia `Pix-Setup-0.1.0.exe`. L'installer non è firmato: se Windows SmartScreen
    avvisa, scegli **Ulteriori informazioni → Esegui comunque**.
