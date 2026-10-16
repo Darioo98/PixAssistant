@@ -8,7 +8,7 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { PUDDLE_S, SHIVER_S, SWALLOW_S, TRASH_S, puddleShape, shiverShape, trashShape } from './shapes'
+import { HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, heatShape, restBody, shiverShape, trashShape } from './shapes'
 import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
@@ -50,7 +50,14 @@ const RAIN_DROPS: Array<[number, number, number]> = [
   [-11, 1.05, 0.9]
 ]
 
-/** Da quanti gradi Pix sente caldo e si scioglie. */
+/** Colate di "Si scioglie" (come in shapes.ts): posizione, lunghezza, velocità. */
+const MELT_DRIPS: Array<[number, number, number]> = [
+  [-0.45, 0.26, 0.9],
+  [0.08, 0.36, 0.6],
+  [0.55, 0.2, 1.2]
+]
+
+/** Da quanti gradi Pix sente caldo e si affloscia. */
 const HOT_FROM = 27
 
 type Tired = 'none' | 'evening' | 'late'
@@ -332,14 +339,22 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
 
   // ---- Animazioni del fluido: il corpo si deforma e si muove, poi torna com'era ----
   const PLAY_MS = 4800
+  /** "Si scioglie" in corso: dalle colate si staccano gocce che cadono. */
+  const [meltDrops, setMeltDrops] = useState(0)
   const play = (kind: PixTransform, loop = false, as: Act = 'spontaneous') => {
     if (reducedMotion) return null
     const token = claim(as, loop ? 10 * 60_000 : PLAY_MS)
     if (token === null) return null
     lastTransform.current = kind
     morph.current?.start(kind, loop)
+    setMeltDrops(kind === 'melt' ? performance.now() : 0)
     return token
   }
+  useEffect(() => {
+    if (!meltDrops) return
+    const id = window.setTimeout(() => setMeltDrops(0), PLAY_MS)
+    return () => window.clearTimeout(id)
+  }, [meltDrops])
 
   // Animazioni spontanee, ogni tanto, solo se Pix è visibile e sveglio.
   const [spontaneousTick, setSpontaneousTick] = useState(0)
@@ -526,7 +541,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     const schedule = (first: boolean) => {
       id = window.setTimeout(
         () => {
-          const ms = fx === 'rain' ? 2300 : fx === 'cold' ? SHIVER_S * 1000 : fx === 'hot' ? PUDDLE_S.total * 1000 : 4700
+          const ms = fx === 'rain' ? 2300 : fx === 'cold' ? SHIVER_S * 1000 : fx === 'hot' ? HEAT_S * 1000 : 4700
           // Se c'è già un'altra animazione, il meteo aspetta il prossimo giro.
           if (claim('weather', ms) === null) return schedule(false)
           if (fx === 'rain') setRainKey((k) => k + 1)
@@ -536,9 +551,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
               end = window.setTimeout(() => setShivering(false), SHIVER_S * 1000)
             }
           } else if (fx === 'hot') {
-            if (morph.current?.perform(puddleShape, PUDDLE_S.total)) {
+            if (morph.current?.perform(heatShape, HEAT_S)) {
               setMelting(true)
-              end = window.setTimeout(() => setMelting(false), PUDDLE_S.total * 1000)
+              end = window.setTimeout(() => setMelting(false), HEAT_S * 1000)
             }
           } else {
             setShades(true)
@@ -999,6 +1014,18 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                     <path d="M28 47q3-3.5 8-3.5M57 47q3-3.5 8-3.5" stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" opacity=".45" />
                   </g>
                 )}
+                {/* Caldo: gocce di sudore che scivolano e vapore che sale dalla testa */}
+                {fx === 'hot' && melting && (
+                  <g className="hot-face">
+                    <path className="sweat sweat-1" d="M24 40 C21.5 44.5 21 47 24 48.5 C27 47 26.5 44.5 24 40 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="1" />
+                    <path className="sweat sweat-2" d="M77 46 C74.5 50.5 74 53 77 54.5 C80 53 79.5 50.5 77 46 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="1" />
+                    <g className="steam" stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" opacity=".75">
+                      <path className="steam-1" d="M38 14q-4 -5 0 -10q4 -5 0 -10" />
+                      <path className="steam-2" d="M52 12q-4 -5 0 -10q4 -5 0 -10" />
+                      <path className="steam-3" d="M65 15q-4 -5 0 -10q4 -5 0 -10" />
+                    </g>
+                  </g>
+                )}
                 {/* Pioggia: broncio */}
                 {fx === 'rain' && <path className="frown" d="M44 71.5q6-4.5 12 0" stroke="currentColor" strokeWidth="2.6" fill="none" strokeLinecap="round" />}
                 {/* Freddo: denti che battono */}
@@ -1013,22 +1040,21 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
         {(fx === 'sun' || fx === 'hot') && <SunBeam id={fillId} scale={scale} hot={fx === 'hot'} />}
-        {/* Caldo: mentre si scioglie perde gocce di sé dai fianchi, che cadono nella pozza */}
-        {fx === 'hot' && melting && (
-          <g className="melt-drips" fill={`url(#${fillId})`} pointerEvents="none">
-            {[
-              [-27, 0.25, 1],
-              [24, 0.55, 0.85],
-              [-14, 0.9, 0.75]
-            ].map(([dx, delay, size]) => (
-              <g key={dx} transform={`translate(${PIX_ANCHOR.x + dx! * scale} ${PIX_ANCHOR.y - 34 * scale}) scale(${size! * scale})`}>
-                <path
-                  className="melt-drop"
-                  style={{ ['--drip-delay' as string]: `${delay}s` }}
-                  d="M0 -5 C2.6 -1.5 3.6 0.5 3.6 2.2 A3.6 3.6 0 0 1 -3.6 2.2 C-3.6 0.5 -2.6 -1.5 0 -5 Z"
-                />
-              </g>
-            ))}
+        {/* Si scioglie: gocce che si staccano dalle tre colate e cadono, con uno schizzo */}
+        {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
+          <g key={meltDrops} fill={`url(#${fillId})`} pointerEvents="none">
+            {MELT_DRIPS.map(([u0, len, speed], i) => {
+              const b = restBody(scale, shape)
+              return (
+                <g key={i} transform={`translate(${b.cx + u0 * (b.w / 2)} ${b.cy + b.h / 2 + len * b.h * 0.8})`}>
+                  <path
+                    className="melt-drop"
+                    style={{ ['--drip-delay' as string]: `${(0.6 + 1 / speed).toFixed(2)}s` }}
+                    d="M0 -3 C2 -0.5 2.8 1 2.8 2.3 A2.8 2.8 0 0 1 -2.8 2.3 C-2.8 1 -2 -0.5 0 -3 Z"
+                  />
+                </g>
+              )
+            })}
           </g>
         )}
         {/* Caldo: ondine di calore che salgono */}

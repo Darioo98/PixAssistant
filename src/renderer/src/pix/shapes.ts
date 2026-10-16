@@ -320,7 +320,8 @@ export function swallowShape(b: Body, t: number): Pt[] {
 
 /** Durate: brividi (freddo) e pozza (caldo). */
 export const SHIVER_S = 3.2
-export const PUDDLE_S = { melt: 1.4, hold: 3.6, total: 4.9 } as const
+/** Durata del caldo (si affloscia, ansima, si riprende). */
+export const HEAT_S = 4.2
 
 /**
  * Brividi da liquido: la superficie vibra a piccole onde fitte che corrono
@@ -338,31 +339,20 @@ export function shiverShape(b: Body, t: number): Pt[] {
 }
 
 /**
- * Caldo: Pix si scioglie in una pozza sul pavimento (si abbassa e si allarga,
- * di più alla base), la superficie ondeggia piano, poi si ricompone con un rimbalzo.
+ * Caldo: Pix si ammorbidisce e si affloscia come una gelatina al sole (la cima
+ * cede e ondeggia piano, i fianchi si allargano) e intanto ansima; poi si riprende.
  */
-export function puddleShape(b: Body, t: number): Pt[] {
-  const { melt, hold, total } = PUDDLE_S
-  let k: number
-  if (t < melt) k = ssmooth(sseg(t, 0, melt)) ** 1.3
-  else if (t < hold) k = 1
-  else {
-    const x = sseg(t, hold, total)
-    const c = 2.2
-    k = 1 - (1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2)
-  }
+export function heatShape(b: Body, t: number): Pt[] {
+  const env = ssmooth(sseg(t, 0, 0.9)) * (1 - ssmooth(sseg(t, HEAT_S - 0.9, HEAT_S)))
   const bottom = b.cy + b.h / 2
-  const flat = 0.26
-  const ripple = sbump(t, melt * 0.6, hold + 0.3)
-  return b.pts.map(([x, y], i) => {
-    const low = b.low[i]!
-    const top = b.top[i]!
-    const u = b.u[i]!
-    const spread = 1.7 + 0.45 * low
-    const px = b.cx + (x - b.cx) * (1 + (spread - 1) * k)
-    let py = bottom + (y - bottom) * (1 - (1 - flat) * k)
-    py += top * ripple * k * b.h * 0.025 * Math.sin(3 * Math.PI * u + t * 3.2)
-    return [px, py] as Pt
+  const pant = Math.sin(t * Math.PI * 2 * 2.6) * 0.5 + 0.5
+  // Cede: più basso e più largo (la base resta sul pavimento); la parte alta dondola piano.
+  const sy = 1 - env * (0.17 + 0.02 * pant)
+  const sx = 1 + env * (0.13 + 0.01 * pant)
+  return b.pts.map(([x, y]) => {
+    const up = Math.max(0, (bottom - y) / b.h)
+    const sway = up * up * env * 0.1 * b.w * Math.sin(t * 1.6)
+    return [b.cx + (x - b.cx) * sx * (1 + 0.06 * env * (1 - up)) + sway, bottom + (y - bottom) * sy] as Pt
   })
 }
 
