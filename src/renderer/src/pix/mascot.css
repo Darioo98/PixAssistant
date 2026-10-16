@@ -845,14 +845,25 @@
   }
   29%,
   72% {
-    transform: translateY(30px) scale(1.25, 0.72);
+    transform: translateY(27px);
   }
   86% {
-    transform: translateY(-3px) scale(0.97, 1.04);
+    transform: translateY(-2px);
   }
   100% {
     transform: none;
   }
+}
+
+/* Sciolto: il riflesso sparisce e gli occhi restano dentro la pozza */
+.shine {
+  transition: opacity 0.4s;
+}
+
+[data-melt] .shine,
+[data-melt] .tense,
+[data-melt] .frown {
+  opacity: 0;
 }
 
 /* ---------- Freddo: nuvoletta di vapore dal respiro ---------- */
@@ -1005,19 +1016,19 @@
     transform: none;
   }
   26% {
-    transform: translate(-13px, 1px) rotate(-8deg) scale(1, 0.85);
+    transform: translate(-13px, 1px) rotate(-8deg) scale(1, 0.78);
   }
   38% {
-    transform: translate(-15px, -1.5px) rotate(4deg) scale(1, 0.85);
+    transform: translate(-15px, -1.5px) rotate(4deg) scale(1, 0.78);
   }
   50% {
-    transform: translate(-13px, 1.5px) rotate(-6deg) scale(1, 0.85);
+    transform: translate(-13px, 1.5px) rotate(-6deg) scale(1, 0.78);
   }
   62% {
-    transform: translate(-16px, -1px) rotate(5deg) scale(1, 0.85);
+    transform: translate(-16px, -1px) rotate(5deg) scale(1, 0.78);
   }
   72% {
-    transform: translate(-14px, 1px) rotate(-3deg) scale(1, 0.85);
+    transform: translate(-14px, 1px) rotate(-3deg) scale(1, 0.78);
   }
   88%,
   100% {
@@ -1030,19 +1041,19 @@
     transform: none;
   }
   26% {
-    transform: translate(13px, -1px) rotate(7deg) scale(1, 0.85);
+    transform: translate(13px, -1px) rotate(7deg) scale(1, 0.78);
   }
   38% {
-    transform: translate(15px, 1.5px) rotate(-5deg) scale(1, 0.85);
+    transform: translate(15px, 1.5px) rotate(-5deg) scale(1, 0.78);
   }
   50% {
-    transform: translate(13px, -1.5px) rotate(6deg) scale(1, 0.85);
+    transform: translate(13px, -1.5px) rotate(6deg) scale(1, 0.78);
   }
   62% {
-    transform: translate(16px, 1px) rotate(-4deg) scale(1, 0.85);
+    transform: translate(16px, 1px) rotate(-4deg) scale(1, 0.78);
   }
   72% {
-    transform: translate(14px, -1px) rotate(3deg) scale(1, 0.85);
+    transform: translate(14px, -1px) rotate(3deg) scale(1, 0.78);
   }
   88%,
   100% {
