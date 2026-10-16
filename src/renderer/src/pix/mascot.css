@@ -1160,3 +1160,176 @@
 [data-hourglass] .shine {
   opacity: 0;
 }
+
+/* ---------- Sole, quattro versioni (vedi SunFx.tsx) ---------- */
+.sun-tint,
+.sun-blush {
+  animation: pix-sun-tint 4.2s ease-in-out 1 both;
+}
+
+.sun-halo {
+  animation-name: pix-sun-halo;
+}
+
+@keyframes pix-sun-tint {
+  0% {
+    opacity: 0;
+  }
+  22%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pix-sun-halo {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.sun-blush {
+  opacity: 0;
+}
+
+.sun-blush ellipse {
+  opacity: 0.55;
+}
+
+/* D: sul corpo dorato gli occhi diventano scuri, caldi */
+[data-sun='sun'] .eyes {
+  color: #6b3a00;
+}
+
+/* C: il fascio respira piano, il pulviscolo galleggia nella luce */
+.sun-shaft {
+  animation: pix-shaft 2.6s ease-in-out infinite;
+}
+
+@keyframes pix-shaft {
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.sun-dust {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pix-dust 2.4s ease-in-out var(--dust-delay, 0s) infinite;
+}
+
+@keyframes pix-dust {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-7px, 9px);
+  }
+}
+
+/* B: gli occhiali sono due gocce di Pix che scendono dalla testa e si scuriscono */
+.fs-lens {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: pix-fs-drop 4.2s ease-in-out 1 both;
+}
+
+.fs-lens:nth-of-type(2) {
+  animation-delay: 0.12s;
+}
+
+@keyframes pix-fs-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-26px) scale(0.25);
+  }
+  6% {
+    opacity: 1;
+    transform: translateY(-26px) scale(0.42, 0.5);
+  }
+  16% {
+    transform: translateY(-13px) scale(0.55, 0.95);
+  }
+  24% {
+    transform: translateY(2px) scale(1.12, 0.82);
+  }
+  30% {
+    transform: translateY(0) scale(0.96, 1.05);
+  }
+  35%,
+  84% {
+    opacity: 1;
+    transform: none;
+  }
+  92% {
+    opacity: 1;
+    transform: translateY(-12px) scale(0.6, 0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-26px) scale(0.25);
+  }
+}
+
+.fs-dark {
+  animation: pix-fs-dark 4.2s linear 1 both;
+}
+
+@keyframes pix-fs-dark {
+  0%,
+  28% {
+    opacity: 0;
+  }
+  40%,
+  84% {
+    opacity: 1;
+  }
+  90%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.fs-glint,
+.fs-bridge {
+  animation: pix-fs-detail 4.2s linear 1 both;
+}
+
+@keyframes pix-fs-detail {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  45%,
+  82% {
+    opacity: 1;
+  }
+  87%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.fs-glint {
+  stroke-opacity: 0.45;
+}

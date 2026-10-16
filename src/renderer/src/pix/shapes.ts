@@ -363,6 +363,41 @@ export function heatShape(b: Body, t: number): Pt[] {
 }
 
 /**
+ * Sole A, "prende il sole": Pix si allunga piano verso la luce (in alto a destra),
+ * resta appoggiato in basso e respira lento, rilassato.
+ */
+export function baskShape(b: Body, t: number): Pt[] {
+  const env = ssmooth(sseg(t, 0, 1)) * (1 - ssmooth(sseg(t, ANIM_S - 0.9, ANIM_S)))
+  const breath = 0.5 + 0.5 * Math.sin(t * 2.1 - Math.PI / 2)
+  const bottom = b.cy + b.h / 2
+  return b.pts.map(([x, y]) => {
+    // Si piega tutto insieme, di più verso l'alto: una inclinazione morbida, senza bozzi.
+    const up = Math.max(0, (bottom - y) / b.h)
+    const reach = up ** 1.6 * env
+    return [x + reach * 0.13 * b.w, y - up * env * (0.05 + 0.025 * breath) * b.h] as Pt
+  })
+}
+
+/**
+ * Sole D, "diventa il sole": il corpo si arrotonda in un disco e il bordo si
+ * increspa in fiammelle morbide che girano piano, poi torna Pix.
+ */
+export function sunBodyShape(b: Body, t: number): Pt[] {
+  const env = ssmooth(sseg(t, 0, 0.8)) * (1 - ssmooth(sseg(t, ANIM_S - 0.8, ANIM_S)))
+  const bottom = b.cy + b.h / 2
+  const R = Math.min(b.w, b.h) * 0.47
+  const cy = bottom - R * 1.12
+  return b.pts.map(([x, y]) => {
+    const a = Math.atan2(y - b.cy, x - b.cx)
+    const flame = 0.1 * Math.cos(9 * a - t * 1.7) + 0.03 * Math.cos(5 * a + t * 2.3)
+    const r = R * (1 + flame * ssmooth(sseg(t, 0.3, 1.2)))
+    const tx = b.cx + Math.cos(a) * r
+    const ty = cy + Math.sin(a) * r
+    return [x + (tx - x) * env, y + (ty - y) * env] as Pt
+  })
+}
+
+/**
  * Liquido nel bicchiere: mentre scorri, la superficie si inclina (un lato
  * sale, l'altro scende) e la parte alta resta un po' indietro; poi ondeggia.
  * `a` va da -1 a 1.

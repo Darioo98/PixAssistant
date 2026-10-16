@@ -8,12 +8,14 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { ANIM_S, HEAT_S, playSeconds, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, shiverShape, trashShape } from './shapes'
+import { ANIM_S, HEAT_S, playSeconds, baskShape, sunBodyShape, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, shiverShape, trashShape } from './shapes'
 import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
 import { useSlosh } from './useSlosh'
 import { SunBeam } from './SunBeam'
+import { Blush, BodyTint, FluidShades, SoftLight, SunDefs, SUN_PARTS } from './SunFx'
+import type { SunStyle } from '@shared/settings'
 import { MeltDrops } from './MeltDrops'
 import { runHourglassEyes } from './hourglassEyes'
 import { Director, type Act } from './director'
@@ -546,6 +548,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [rainKey])
   /** Sole: occhiali che colano sugli occhi. Freddo: brividi. Caldo: si scioglie in una pozza. */
   const [shades, setShades] = useState(false)
+  /** Versione del sole dell'episodio in corso (letta al via: cambiarla dopo non lo spezza). */
+  const [sunLook, setSunLook] = useState<SunStyle>(settings.sunStyle)
+  const sunStyleRef = useRef(settings.sunStyle)
+  sunStyleRef.current = settings.sunStyle
   /** Episodio di meteo in corso: solo durante questo si vedono raggio, neve, pioggia, vapore… */
   const [episode, setEpisode] = useState<WeatherFx>(null)
   /** Ciò che si vede del meteo: solo durante l'episodio (tutto con la stessa durata). */
@@ -579,7 +585,16 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       // Se c'è già un'altra animazione, il meteo aspetta il prossimo giro.
       if (token === null) return trying && retry() ? undefined : schedule(false)
       // Freddo e caldo muovono il corpo: se sta ancora finendo un altro movimento si riprova.
-      const body = fx === 'cold' ? morph.current?.perform(shiverShape, SHIVER_S) : fx === 'hot' ? morph.current?.perform(heatShape, HEAT_S) : true
+      const look = sunStyleRef.current
+      const sunBody = fx === 'sun' && SUN_PARTS[look].body ? (look === 'sun' ? sunBodyShape : baskShape) : null
+      const body =
+        fx === 'cold'
+          ? morph.current?.perform(shiverShape, SHIVER_S)
+          : fx === 'hot'
+            ? morph.current?.perform(heatShape, HEAT_S)
+            : sunBody
+              ? morph.current?.perform(sunBody, ANIM_S)
+              : true
       if (!body) {
         release(token)
         return retry() ? undefined : schedule(false)
@@ -587,6 +602,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       trying = false
       retries = 0
       // Un episodio: corpo, raggio, neve, pioggia… partono e finiscono insieme.
+      if (fx === 'sun') setSunLook(look)
       setEpisode(fx)
       playing = token
       episodeEnd = window.setTimeout(() => {
@@ -600,7 +616,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       } else if (fx === 'hot') {
         setMelting(true)
         end = window.setTimeout(() => setMelting(false), HEAT_S * 1000)
-      } else {
+      } else if (SUN_PARTS[look].shades) {
         setShades(true)
         end = window.setTimeout(() => setShades(false), ms - 450)
       }
@@ -618,7 +634,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       window.clearTimeout(end)
       window.clearTimeout(episodeEnd)
       // Un nuovo clic su "prova" (o il meteo che cambia) ferma l'episodio in corso, corpo compreso.
-      if (playing !== null && (fx === 'cold' || fx === 'hot')) morph.current?.interrupt()
+      if (playing !== null && (fx === 'cold' || fx === 'hot' || fx === 'sun')) morph.current?.interrupt()
       release(playing)
       setShivering(false)
       setMelting(false)
@@ -1014,6 +1030,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-swallow={formed && swallowPhase ? swallowPhase : undefined}
       data-weather={ep ?? undefined}
       data-shades={shades && ep === 'sun' ? '' : undefined}
+      data-sun={ep === 'sun' ? sunLook : undefined}
       data-shiver={shivering && ep === 'cold' ? '' : undefined}
       data-melt={melting && ep === 'hot' ? '' : undefined}
       data-trash={trash && formed ? '' : undefined}
@@ -1071,6 +1088,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 if (e.animationName === 'pix-yawn-body') setYawning(false)
               }}
             >
+              {ep === 'sun' && <SunDefs id={fillId} scale={scale} />}
+              {/* Sole D: alone caldo dietro al corpo */}
+              {ep === 'sun' && sunLook === 'sun' && <BodyTint source={bodyRef} className="sun-tint sun-halo" fill="#ffc23d" filter={`url(#${fillId}-halo)`} />}
               <path
                 ref={bodyRef}
                 className={`body ${breathing && collapsed ? 'breathe' : ''}`}
@@ -1086,6 +1106,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 onPointerCancel={onBarPointerUp}
                 onAnimationEnd={() => setBreathing(false)}
               />
+              {ep === 'sun' && sunLook === 'bask' && <BodyTint source={bodyRef} className="sun-tint" fill={`url(#${fillId}-sheen)`} />}
+              {ep === 'sun' && sunLook === 'beam' && <BodyTint source={bodyRef} className="sun-tint" fill={`url(#${fillId}-rim)`} />}
+              {ep === 'sun' && sunLook === 'sun' && <BodyTint source={bodyRef} className="sun-tint" fill={`url(#${fillId}-gold)`} />}
               {/* Si scioglie: palline che si gonfiano in punta alle colate, si staccano e cadono */}
               {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
                 <MeltDrops key={meltDrops} start={meltDrops} scale={scale} shape={shape} color={color} />
@@ -1107,7 +1130,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                         {grabbed ? (
                           <ScaredFace />
                         ) : (
-                          <Eyes mood={formed ? (swallowPhase === 'chew' ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
+                          <Eyes mood={formed ? (swallowPhase === 'chew' || (ep === 'sun' && SUN_PARTS[sunLook].bliss) ? 'happy' : mood) : 'normal'} style={settings.pixEyes} />
                         )}
                       </g>
                     </g>
@@ -1125,7 +1148,11 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 {/* Sole: un luccichio sul riflesso */}
                 {ep === 'sun' && settings.pixShine && <path className="sparkle" d="M27 20l1.4 3.6 3.6 1.4-3.6 1.4L27 30l-1.4-3.6-3.6-1.4 3.6-1.4z" fill="#fff" />}
                 {/* Sole: grandi occhiali morbidi che colano giù sugli occhi */}
-                {ep === 'sun' && (
+                {/* Sole A: guance rosate */}
+                {ep === 'sun' && sunLook === 'bask' && <Blush />}
+                {/* Sole B: occhiali fatti del fluido di Pix */}
+                {ep === 'sun' && sunLook === 'shades' && <FluidShades id={fillId} color={color} />}
+                {ep === 'sun' && sunLook === 'beam' && (
                   <g className="shades">
                     <defs>
                       <linearGradient id={`${fillId}-lens`} x1="0" y1="0" x2="0.4" y2="1">
@@ -1166,7 +1193,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         </g>
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
-        {(ep === 'sun' || ep === 'hot') && <SunBeam id={fillId} scale={scale} hot={ep === 'hot'} />}
+        {ep === 'hot' && <SunBeam id={fillId} scale={scale} hot />}
+        {/* Sole C: luce morbida da destra */}
+        {ep === 'sun' && sunLook === 'beam' && <SoftLight id={fillId} scale={scale} />}
         {/* Caldo: ondine di calore che salgono */}
         {ep === 'hot' && (
           <g className="heat" stroke={color} strokeOpacity="0.55" strokeWidth="1.8" fill="none" strokeLinecap="round" pointerEvents="none">
