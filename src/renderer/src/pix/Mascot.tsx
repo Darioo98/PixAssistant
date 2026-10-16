@@ -898,29 +898,20 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
           </g>
         </g>
         </g>
-        {/* Sole e caldo: un sole in alto con un raggio di luce che scende su Pix */}
+        {/* Sole e caldo: un raggio di luce che entra da destra, dal bordo dello schermo, e illumina Pix */}
         {(fx === 'sun' || fx === 'hot') && (
-          <g className={`sky-sun ${fx === 'hot' ? 'hot' : ''}`} pointerEvents="none">
+          <g className="sky-sun" pointerEvents="none">
             <defs>
-              <linearGradient id={`${fillId}-beam`} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor={fx === 'hot' ? '#ff9a3d' : '#ffd84d'} stopOpacity="0.55" />
+              <linearGradient id={`${fillId}-beam`} x1="1" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor={fx === 'hot' ? '#ff9a3d' : '#ffd84d'} stopOpacity="0.6" />
                 <stop offset="1" stopColor={fx === 'hot' ? '#ff9a3d' : '#ffd84d'} stopOpacity="0" />
               </linearGradient>
             </defs>
             <path
               className="sun-beam"
-              d={`M${PIX_ANCHOR.x - 38 * scale} ${PIX_ANCHOR.y - 100 * scale} L${PIX_ANCHOR.x + 16 * scale} ${PIX_ANCHOR.y - 60 * scale} L${PIX_ANCHOR.x - 6 * scale} ${PIX_ANCHOR.y - 40 * scale} Z`}
+              d={`M${PIX_ANCHOR.x + 46 * scale} ${PIX_ANCHOR.y - 122 * scale} L${PIX_ANCHOR.x + 70 * scale} ${PIX_ANCHOR.y - 104 * scale} L${PIX_ANCHOR.x + 16 * scale} ${PIX_ANCHOR.y - 30 * scale} L${PIX_ANCHOR.x - 20 * scale} ${PIX_ANCHOR.y - 50 * scale} Z`}
               fill={`url(#${fillId}-beam)`}
             />
-            <g className="sun" transform={`translate(${PIX_ANCHOR.x - 40 * scale} ${PIX_ANCHOR.y - 102 * scale}) scale(${scale * (fx === 'hot' ? 1.2 : 1)})`}>
-              <g className="sun-rays" stroke={fx === 'hot' ? '#ff7a2f' : '#ffc93c'} strokeWidth="2.2" strokeLinecap="round">
-                {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
-                  <path key={a} d="M0 -10.5v-3.5" transform={`rotate(${a})`} />
-                ))}
-              </g>
-              <circle r="7" fill={fx === 'hot' ? '#ff8a3d' : '#ffc93c'} />
-              <circle r="7" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="1.5" strokeDasharray="7 30" transform="rotate(-150)" />
-            </g>
           </g>
         )}
         {/* Caldo: ondine di calore che salgono */}
