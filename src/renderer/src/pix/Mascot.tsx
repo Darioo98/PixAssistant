@@ -8,7 +8,7 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { ANIM_S, HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, shiverShape, trashShape } from './shapes'
+import { ANIM_S, HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, hourglassFramePaths, restBody, shiverShape, trashShape } from './shapes'
 import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
@@ -341,6 +341,8 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   const PLAY_MS = ANIM_S * 1000 + 100
   /** "Si scioglie" in corso: dalle colate si staccano gocce che cadono. */
   const [meltDrops, setMeltDrops] = useState(0)
+  /** Clessidra in corso: si vedono il vetro e i piattini, e gli occhi scendono col fluido. */
+  const [hourglassAt, setHourglassAt] = useState(0)
   const play = (kind: PixTransform, loop = false, as: Act = 'spontaneous') => {
     if (reducedMotion) return null
     const token = claim(as, loop ? 10 * 60_000 : PLAY_MS)
@@ -348,8 +350,14 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     lastTransform.current = kind
     morph.current?.start(kind, loop)
     setMeltDrops(kind === 'melt' ? performance.now() : 0)
+    setHourglassAt(kind === 'hourglass' ? performance.now() : 0)
     return token
   }
+  useEffect(() => {
+    if (!hourglassAt) return
+    const id = window.setTimeout(() => setHourglassAt(0), PLAY_MS)
+    return () => window.clearTimeout(id)
+  }, [hourglassAt])
   useEffect(() => {
     if (!meltDrops) return
     const id = window.setTimeout(() => setMeltDrops(0), PLAY_MS)
@@ -966,6 +974,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-shiver={shivering && ep === 'cold' ? '' : undefined}
       data-melt={melting && ep === 'hot' ? '' : undefined}
       data-trash={trash && formed ? '' : undefined}
+      data-hourglass={hourglassAt && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') ? '' : undefined}
       data-wince={wince && ep === 'rain' ? '' : undefined}
       data-grabbed={grabbed ? '' : undefined}
 
@@ -1108,6 +1117,16 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
         {(ep === 'sun' || ep === 'hot') && <SunBeam id={fillId} scale={scale} hot={ep === 'hot'} />}
+        {/* Clessidra: vetro e piattini attorno al fluido */}
+        {hourglassAt > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (() => {
+          const hg = hourglassFramePaths(restBody(scale, shape))
+          return (
+            <g key={hourglassAt} className="hourglass-frame" pointerEvents="none">
+              <path d={hg.glass} fill="#fff" fillOpacity="0.14" stroke="#fff" strokeOpacity="0.75" strokeWidth={1.4 * scale} />
+              <path d={hg.caps} fill="#b98a55" />
+            </g>
+          )
+        })()}
         {/* Si scioglie: palline che si gonfiano in punta alle colate, si staccano e cadono */}
         {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
           <MeltDrops key={meltDrops} start={meltDrops} scale={scale} shape={shape} color={color} />

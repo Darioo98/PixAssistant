@@ -905,7 +905,8 @@
 /* ---------- Sole e caldo: il sole in alto e il raggio di luce ---------- */
 .sky-sun,
 .heat,
-.snow {
+.snow,
+.hourglass-frame {
   animation: pix-episode 4.2s linear 1 both;
 }
 
@@ -1148,5 +1149,32 @@
   100% {
     opacity: 0;
     transform: translateY(-12px) scale(1.1);
+  }
+}
+
+/* ---------- Clessidra: gli occhi scendono insieme al fluido ---------- */
+.face-fx {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+[data-hourglass] .face-fx {
+  animation: pix-hg-face 4.2s ease-in-out 1;
+}
+
+@keyframes pix-hg-face {
+  0% {
+    transform: none;
+  }
+  14%,
+  16% {
+    transform: translateY(-18px) scale(0.72);
+  }
+  76%,
+  83% {
+    transform: translateY(24px) scale(0.72);
+  }
+  100% {
+    transform: none;
   }
 }
