@@ -56,6 +56,9 @@ interface Props {
   look: SwallowLook
   from: { x: number; y: number }
   to: { x: number; y: number }
+  /** Secondi prima di partire e durata del volo (predefinita: quella dell'inghiottire). */
+  delay?: number
+  duration?: number
 }
 
 /**
@@ -63,13 +66,13 @@ interface Props {
  * piano, accelera, si allunga nel verso del moto (con una scia), si
  * rimpicciolisce e sparisce in bocca esattamente quando la bocca si chiude.
  */
-export function SwallowItem({ look, from, to }: Props) {
+export function SwallowItem({ look, from, to, delay = 0, duration = SWALLOW_S.bite }: Props) {
   const refs = [useRef<SVGGElement>(null), useRef<SVGGElement>(null), useRef<SVGGElement>(null)]
 
   useEffect(() => {
     let raf = 0
-    const start = performance.now()
-    const dur = SWALLOW_S.bite * 1000
+    const start = performance.now() + delay * 1000
+    const dur = duration * 1000
     // Curva: sale un po' prima di tuffarsi nella bocca.
     const ctrl = { x: (from.x + to.x) / 2 + 6, y: Math.min(from.y, to.y) - 26 }
     const at = (e: number) => {
@@ -95,6 +98,12 @@ export function SwallowItem({ look, from, to }: Props) {
     }
     const step = (now: number) => {
       const p = (now - start) / dur
+      if (p < 0) {
+        for (const r of refs) r.current?.setAttribute('visibility', 'hidden')
+        raf = requestAnimationFrame(step)
+        return
+      }
+      for (const r of refs) r.current?.removeAttribute('visibility')
       place(refs[0]!.current, p)
       place(refs[1]!.current, p - 0.06)
       place(refs[2]!.current, p - 0.12)

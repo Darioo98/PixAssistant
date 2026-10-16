@@ -209,7 +209,8 @@
     "tryWeather": {
       "rain": "Pioggia",
       "sun": "Sole",
-      "cold": "Freddo"
+      "cold": "Freddo",
+      "hot": "Caldo"
     },
     "barPosition": "Posizione della barra",
     "barReset": "Riporta in basso",

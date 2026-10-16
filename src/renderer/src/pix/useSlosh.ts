@@ -1,25 +1,24 @@
-import { useEffect, type RefObject } from 'react'
-import { PIX_ANCHOR } from './geometry'
+import { useEffect, useRef } from 'react'
 
-/** Inclinazione massima (gradi di "taglio") mentre scorri. */
-const MAX_TILT = 12
-/** Molla: rigidità e smorzamento (poco smorzata = oscilla un paio di volte). */
-const STIFF = 90
-const DAMP = 7
+/** Molla della superficie: poco smorzata, così dopo lo scorrimento ondeggia un paio di volte. */
+const STIFF = 70
+const DAMP = 5.5
 
 /**
  * Pix come un liquido in un bicchiere: mentre scorri una lista del pannello
- * il corpo si inclina nel verso dello scorrimento (la base resta ferma) e,
- * quando ti fermi, oscilla e torna dritto. Il ciclo di animazione gira solo
- * mentre si muove.
+ * la superficie si inclina e resta indietro rispetto al movimento; quando ti
+ * fermi ondeggia e si calma. `onFrame` riceve l'inclinazione (-1…1) e il tempo;
+ * con 0 il corpo torna a riposo. Il ciclo gira solo mentre si muove.
  */
-export function useSlosh(ref: RefObject<SVGGElement | null>, active: boolean, scale: number): void {
+export function useSlosh(active: boolean, onFrame: (a: number, t: number) => void): void {
+  const cb = useRef(onFrame)
+  cb.current = onFrame
+
   useEffect(() => {
-    const el = ref.current
-    if (!active || !el) return
+    if (!active) return
     let raf = 0
     let last = 0
-    let angle = 0
+    let a = 0
     let vel = 0
     let push = 0
     const tops = new WeakMap<EventTarget, number>()
@@ -28,19 +27,17 @@ export function useSlosh(ref: RefObject<SVGGElement | null>, active: boolean, sc
       const dt = last ? Math.min(0.033, (now - last) / 1000) : 1 / 60
       last = now
       // La spinta dello scorrimento si spegne in fretta: poi resta solo la molla.
-      push *= Math.exp(-dt * 10)
-      const target = Math.max(-MAX_TILT, Math.min(MAX_TILT, push))
-      vel += ((target - angle) * STIFF - vel * DAMP) * dt
-      angle += vel * dt
-      const x = PIX_ANCHOR.x
-      const y = PIX_ANCHOR.y
-      el.setAttribute('transform', `translate(${x} ${y}) skewX(${angle.toFixed(2)}) translate(${-x} ${-y})`)
-      if (Math.abs(angle) < 0.05 && Math.abs(vel) < 0.05 && Math.abs(push) < 0.05) {
-        el.removeAttribute('transform')
+      push *= Math.exp(-dt * 9)
+      const target = Math.max(-1, Math.min(1, push))
+      vel += ((target - a) * STIFF - vel * DAMP) * dt
+      a += vel * dt
+      if (Math.abs(a) < 0.004 && Math.abs(vel) < 0.01 && Math.abs(push) < 0.01) {
+        cb.current(0, now / 1000)
         raf = 0
         last = 0
         return
       }
+      cb.current(Math.max(-1.2, Math.min(1.2, a)), now / 1000)
       raf = requestAnimationFrame(step)
     }
 
@@ -50,16 +47,15 @@ export function useSlosh(ref: RefObject<SVGGElement | null>, active: boolean, sc
       const prev = tops.get(t)
       tops.set(t, t.scrollTop)
       if (prev === undefined) return
-      const dy = t.scrollTop - prev
-      // Scorrendo in giù il liquido "resta indietro" e si inclina all'insù (e viceversa).
-      push = Math.max(-MAX_TILT * 1.5, Math.min(MAX_TILT * 1.5, push - dy * 0.22 * scale))
+      // Scorrendo in giù il liquido "resta indietro" (e viceversa).
+      push = Math.max(-1.4, Math.min(1.4, push - (t.scrollTop - prev) * 0.018))
       if (!raf) raf = requestAnimationFrame(step)
     }
     document.addEventListener('scroll', onScroll, { capture: true, passive: true })
     return () => {
       document.removeEventListener('scroll', onScroll, { capture: true })
       if (raf) cancelAnimationFrame(raf)
-      el.removeAttribute('transform')
+      cb.current(0, 0)
     }
-  }, [active, scale])
+  }, [active])
 }

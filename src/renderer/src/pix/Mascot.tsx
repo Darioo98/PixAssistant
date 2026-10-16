@@ -8,7 +8,8 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { SWALLOW_S } from './shapes'
+import { PUDDLE_S, SHIVER_S, SWALLOW_S, TRASH_S, puddleShape, shiverShape, trashShape } from './shapes'
+import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
 import { useSlosh } from './useSlosh'
@@ -30,12 +31,25 @@ export const PEEK_EVENT = 'pix:peek'
 export const YAWN_EVENT = 'pix:yawn'
 /** Evento con cui le impostazioni chiedono di provare l'inghiottire (senza file vero). */
 export const SWALLOW_EVENT = 'pix:swallow'
-/** Prova del meteo sul corpo (dettaglio: 'rain' | 'sun' | 'cold'). */
+/** Prova del meteo sul corpo (dettaglio: 'rain' | 'sun' | 'cold' | 'hot'). */
 export const WEATHER_FX_EVENT = 'pix:weather-fx'
 /** Prova del riempimento della barra all'avvio (chiude il pannello). */
 export const BOOT_EVENT = 'pix:boot'
 
-type WeatherFx = 'rain' | 'sun' | 'cold' | null
+type WeatherFx = 'rain' | 'sun' | 'cold' | 'hot' | null
+
+/** Gocce di pioggia: spostamento orizzontale, ritardo (s) e dimensione. */
+const RAIN_DROPS: Array<[number, number, number]> = [
+  [-16, 0, 0.85],
+  [-5, 0.32, 1],
+  [7, 0.12, 0.9],
+  [17, 0.55, 0.8],
+  [1, 0.8, 1.05],
+  [-11, 1.05, 0.9]
+]
+
+/** Da quanti gradi Pix sente caldo e si scioglie. */
+const HOT_FROM = 27
 
 type Tired = 'none' | 'evening' | 'late'
 
@@ -390,8 +404,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [])
 
   // ---- Liquido nel bicchiere: mentre scorri una lista Pix si inclina e poi oscilla ----
-  const sloshRef = useRef<SVGGElement>(null)
-  useSlosh(sloshRef, formed && panelOpen && anim === 'normal' && !reducedMotion, scale)
+  useSlosh(formed && panelOpen && anim === 'normal' && !reducedMotion, (a, t) => morph.current?.slosh(a, t))
 
   // ---- Sonno più vivo: si affloscia, respira piano e ogni tanto si gira dall'altra parte ----
   const [sleepSide, setSleepSide] = useState<1 | -1>(1)
@@ -431,6 +444,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         const kind = weatherKind(w.weather.code)
         if (kind === 'rain' || kind === 'drizzle' || kind === 'showers' || kind === 'storm') setWeatherFx('rain')
         else if (kind === 'snow' || w.weather.temperature < 6) setWeatherFx('cold')
+        else if (w.weather.temperature >= HOT_FROM) setWeatherFx('hot')
         else if (kind === 'clear' && w.weather.isDay) setWeatherFx('sun')
         else setWeatherFx(null)
       })
@@ -456,9 +470,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [])
   const fx = formed && mood === 'normal' && anim !== 'off' && !reducedMotion ? (weatherPreview ?? weatherFx) : null
   const [rainKey, setRainKey] = useState(0)
-  /** Freddo: nuvolette di vapore dal respiro. Sole: occhiali da sole che scendono sugli occhi. */
-  const [puffKey, setPuffKey] = useState(0)
+  /** Sole: occhiali che colano sugli occhi. Freddo: brividi. Caldo: si scioglie in una pozza. */
   const [shades, setShades] = useState(false)
+  const [shivering, setShivering] = useState(false)
+  const [melting, setMelting] = useState(false)
   useEffect(() => {
     if (!fx) {
       setShades(false)
@@ -470,20 +485,31 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       id = window.setTimeout(
         () => {
           if (fx === 'rain') setRainKey((k) => k + 1)
-          else if (fx === 'cold') setPuffKey((k) => k + 1)
-          else {
+          else if (fx === 'cold') {
+            if (morph.current?.perform(shiverShape, SHIVER_S)) {
+              setShivering(true)
+              end = window.setTimeout(() => setShivering(false), SHIVER_S * 1000)
+            }
+          } else if (fx === 'hot') {
+            if (morph.current?.perform(puddleShape, PUDDLE_S.total)) {
+              setMelting(true)
+              end = window.setTimeout(() => setMelting(false), PUDDLE_S.total * 1000)
+            }
+          } else {
             setShades(true)
             end = window.setTimeout(() => setShades(false), 4500)
           }
           schedule(false)
         },
-        first ? 900 : fx === 'rain' ? 6000 + Math.random() * 6000 : fx === 'cold' ? 4500 + Math.random() * 3500 : 12_000 + Math.random() * 8000
+        first ? 900 : fx === 'rain' ? 1800 + Math.random() * 1600 : fx === 'cold' ? 8000 + Math.random() * 6000 : fx === 'hot' ? 22_000 + Math.random() * 14_000 : 12_000 + Math.random() * 8000
       )
     }
     schedule(true)
     return () => {
       window.clearTimeout(id)
       window.clearTimeout(end)
+      setShivering(false)
+      setMelting(false)
     }
   }, [fx])
 
@@ -506,17 +532,25 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     return () => window.clearTimeout(id)
   }, [gestureAt])
 
-  // ---- Eliminazione: Pix si mangia ciò che hai eliminato (come quando gli trascini un file) ----
+  // ---- Eliminazione: Pix si trasforma in un cestino, la cosa eliminata ci cade dentro e il coperchio sbatte ----
+  const [trash, setTrash] = useState<{ id: number; look: SwallowLook; from: { x: number; y: number } } | null>(null)
   useEffect(() => {
+    let end: number | undefined
     const onDeleted = (e: Event) => {
       const at = (e as CustomEvent<DeletedDetail | null>).detail
       const r = svgRef.current?.getBoundingClientRect()
       if (!at || !r || reducedMotion || anim === 'off') return
+      if (!morph.current?.perform(trashShape, TRASH_S.total)) return
       const from = { x: ((at.x - r.left) / r.width) * VIEW.width, y: ((at.y - r.top) / r.height) * VIEW.height }
-      setSwallow((cur) => cur ?? { id: performance.now(), look: { text: at.text || '…' }, from, payload: null })
+      setTrash({ id: performance.now(), look: { text: at.text || '…' }, from })
+      window.clearTimeout(end)
+      end = window.setTimeout(() => setTrash(null), TRASH_S.total * 1000 + 60)
     }
     window.addEventListener(DELETED_EVENT, onDeleted)
-    return () => window.removeEventListener(DELETED_EVENT, onDeleted)
+    return () => {
+      window.clearTimeout(end)
+      window.removeEventListener(DELETED_EVENT, onDeleted)
+    }
   }, [reducedMotion, anim])
 
   // ---- Avvio con Windows: la barra si riempie dal basso come un tubo, poi Pix si sveglia ----
@@ -611,6 +645,33 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }
 
   // ---- Barra spostabile: trascinandola su e giù lungo il bordo dello schermo ----
+  /** Molla della barra trascinata: allungamento (px) e sua velocità. */
+  const barSpring = useRef({ s: 0, v: 0, target: 0, raf: 0, last: 0, t0: 0, lastLift: 0, lastAt: 0 })
+  const runBarSpring = () => {
+    const sp = barSpring.current
+    if (sp.raf) return
+    const step = (now: number) => {
+      const dt = sp.last ? Math.min(0.033, (now - sp.last) / 1000) : 1 / 60
+      sp.last = now
+      if (!sp.t0) sp.t0 = now
+      // Il bersaglio si spegne da solo quando smetti di muovere.
+      sp.target *= Math.exp(-dt * 6)
+      sp.v += ((sp.target - sp.s) * 160 - sp.v * 9) * dt
+      sp.s += sp.v * dt
+      const t = (now - sp.t0) / 1000
+      if (!draggingBar.current && Math.abs(sp.s) < 0.15 && Math.abs(sp.v) < 0.5) {
+        morph.current?.setBar(null)
+        sp.raf = 0
+        sp.last = 0
+        sp.t0 = 0
+        return
+      }
+      morph.current?.setBar(stretchedBarPath(sp.s, t))
+      sp.raf = requestAnimationFrame(step)
+    }
+    sp.raf = requestAnimationFrame(step)
+  }
+
   const onBarPointerDown = (e: React.PointerEvent<SVGElement>) => {
     // Si sposta solo a pannello chiuso (barra o Pix appena formato al passaggio del mouse).
     if (e.button !== 0 || panelOpen) return
@@ -626,8 +687,19 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       d.moved = true
       draggingBar.current = true
       setHovered(false)
+      morph.current?.go(0)
     }
     d.lift = Math.max(0, d.startLift - dy)
+    // Velocità della barra: il liquido resta indietro rispetto al movimento.
+    const sp = barSpring.current
+    const now = performance.now()
+    if (sp.lastAt && now > sp.lastAt) {
+      const v = ((d.lift - sp.lastLift) / (now - sp.lastAt)) * 1000
+      sp.target = Math.max(-28, Math.min(28, v * 0.03))
+    }
+    sp.lastLift = d.lift
+    sp.lastAt = now
+    runBarSpring()
     if (!d.raf) {
       d.raf = requestAnimationFrame(() => {
         d.raf = 0
@@ -639,7 +711,15 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     const d = barDrag.current
     if (!d) return
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
-    if (d.moved) void window.pix.moveBar(d.lift, true)
+    if (d.moved) {
+      void window.pix.moveBar(d.lift, true)
+      // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
+      const sp = barSpring.current
+      sp.target = 0
+      sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
+      sp.lastAt = 0
+      runBarSpring()
+    }
     draggingBar.current = false
     // Il clic arriva subito dopo: lo si lascia passare solo se non c'è stato trascinamento.
     window.setTimeout(() => (barDrag.current = null), 0)
@@ -658,6 +738,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-swallow={formed && swallowPhase ? swallowPhase : undefined}
       data-weather={fx ?? undefined}
       data-shades={shades && fx === 'sun' ? '' : undefined}
+      data-shiver={shivering && fx === 'cold' ? '' : undefined}
+      data-melt={melting && fx === 'hot' ? '' : undefined}
+      data-trash={trash && formed ? '' : undefined}
       data-pop={pop && formed ? '' : undefined}
       data-farewell={farewell && formed ? '' : undefined}
       data-turning={turning && sleeping ? '' : undefined}
@@ -694,7 +777,6 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         <ellipse ref={shadowRef} cx={PIX_ANCHOR.x} cy={PIX_ANCHOR.y + 6} rx={24 * scale} ry="3" fill="#000" opacity="0" />
         {/* Avvio: il tubo vuoto che si riempie */}
         {booting && <path className="boot-tube" d={tubeOutline()} fill="none" stroke={color} strokeWidth="1.2" />}
-        <g ref={sloshRef}>
         <g className={`pose ${formed ? `pose-${mood}` : ''} ${sleeping && sleepSide === -1 ? 'side-left' : ''}`}>
           <g
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
@@ -722,6 +804,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 onAnimationEnd={() => setBreathing(false)}
               />
               <g ref={faceRef} transform={face} opacity="0" pointerEvents="none">
+                <g className="face-fx">
                 {settings.pixShine && <Shine />}
                 <g
                   ref={lookRef}
@@ -750,38 +833,62 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 <ellipse className="yawn-mouth" cx="50" cy="69" rx="5.5" ry="7" fill="#000" opacity="0" />
                 {/* Sole: un luccichio sul riflesso */}
                 {fx === 'sun' && settings.pixShine && <path className="sparkle" d="M27 20l1.4 3.6 3.6 1.4-3.6 1.4L27 30l-1.4-3.6-3.6-1.4 3.6-1.4z" fill="#fff" />}
-                {/* Sole: occhiali scuri che ogni tanto scendono sugli occhi */}
+                {/* Sole: grandi occhiali morbidi che colano giù sugli occhi */}
                 {fx === 'sun' && (
                   <g className="shades">
-                    <path d="M31 45h15a3 3 0 0 1 3 3v2.5a7.5 7.5 0 0 1-7.5 7.5h-3A7.5 7.5 0 0 1 31 50.5V48a3 3 0 0 1 3-3z" fill="#1f2033" />
-                    <path d="M54 45h15a3 3 0 0 1 3 3v2.5a7.5 7.5 0 0 1-7.5 7.5h-3A7.5 7.5 0 0 1 54 50.5V48a3 3 0 0 1 3-3z" transform="translate(-3 0)" fill="#1f2033" />
-                    <path d="M49 48.5q2.5-2 5 0" stroke="#1f2033" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-                    <path d="M35 48.5l4-0.5M58 48.5l4-0.5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" opacity=".55" />
+                    <defs>
+                      <linearGradient id={`${fillId}-lens`} x1="0" y1="0" x2="0.4" y2="1">
+                        <stop offset="0" stopColor="#3a3b5c" />
+                        <stop offset="1" stopColor="#14152a" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M21 47.5q-1-3 3-3.5M79 47.5q1-3-3-3.5" stroke="#14152a" strokeWidth="3" fill="none" strokeLinecap="round" />
+                    <rect x="23" y="41" width="25" height="21" rx="10.5" fill={`url(#${fillId}-lens)`} />
+                    <rect x="52" y="41" width="25" height="21" rx="10.5" fill={`url(#${fillId}-lens)`} />
+                    <path d="M47 47.5q3-3 6 0" stroke="#14152a" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+                    <path d="M28 47q3-3.5 8-3.5M57 47q3-3.5 8-3.5" stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" opacity=".45" />
                   </g>
                 )}
-                {/* Freddo: nuvoletta di vapore dal respiro */}
-                {fx === 'cold' && puffKey > 0 && (
-                  <g key={puffKey} className="puff" fill="#fff">
-                    <circle cx="47" cy="70" r="2.4" />
-                    <circle cx="42" cy="68.5" r="3.2" />
-                    <circle cx="37" cy="69.5" r="2.7" />
-                  </g>
+                {/* Freddo: denti che battono */}
+                {fx === 'cold' && (
+                  <path className="chatter" d="M41 70l3-2.5 3 2.5 3-2.5 3 2.5 3-2.5 3 2.5" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                 )}
+                </g>
               </g>
             </g>
           </g>
         </g>
-        </g>
-        {/* Pioggia: una goccia cade sulla testa e schizza */}
+        {/* Pioggia: gocce che cadono sulla testa e schizzano, ognuna col suo ritmo */}
         {fx === 'rain' && rainKey > 0 && (
-          <g key={rainKey} className="rain" transform={`translate(${PIX_ANCHOR.x + 9 * scale} ${PIX_ANCHOR.y - 64 * scale})`} pointerEvents="none">
-            <path className="rain-drop" d="M0 -9 C2.4 -5 3.4 -3 3.4 -1.4 A3.4 3.4 0 0 1 -3.4 -1.4 C-3.4 -3 -2.4 -5 0 -9 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="0.8" />
-            <g className="rain-splash" fill="#8fd3ff">
-              <circle cx="-5" cy="-2" r="1.3" />
-              <circle cx="5" cy="-2.5" r="1.1" />
-              <circle cx="0" cy="-4" r="0.9" />
-            </g>
+          <g key={rainKey} pointerEvents="none">
+            {RAIN_DROPS.map(([dx, delay, size], i) => (
+              <g
+                key={i}
+                className="rain"
+                style={{ ['--rain-delay' as string]: `${delay}s` }}
+                transform={`translate(${PIX_ANCHOR.x + dx * scale} ${PIX_ANCHOR.y - (64 - Math.abs(dx) * 0.12) * scale}) scale(${size})`}
+              >
+                <path className="rain-drop" d="M0 -9 C2.4 -5 3.4 -3 3.4 -1.4 A3.4 3.4 0 0 1 -3.4 -1.4 C-3.4 -3 -2.4 -5 0 -9 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="0.8" />
+                <g className="rain-splash" fill="#8fd3ff">
+                  <circle cx="-5" cy="-2" r="1.3" />
+                  <circle cx="5" cy="-2.5" r="1.1" />
+                  <circle cx="0" cy="-4" r="0.9" />
+                </g>
+              </g>
+            ))}
           </g>
+        )}
+        {/* Eliminazione: il coperchio del cestino e la cosa eliminata che ci cade dentro */}
+        {trash && formed && (
+          <>
+            <g transform={`translate(${PIX_ANCHOR.x} ${PIX_ANCHOR.y}) scale(${scale}) translate(${-PIX_ANCHOR.x} ${-PIX_ANCHOR.y})`} pointerEvents="none">
+              <g className="trash-lid">
+                <rect x="19" y="163" width="64" height="7.5" rx="3.75" fill={`url(#${fillId})`} />
+                <rect x="43" y="158.5" width="16" height="6" rx="3" fill={`url(#${fillId})`} />
+              </g>
+            </g>
+            <SwallowItem key={trash.id} look={trash.look} from={trash.from} to={{ x: PIX_ANCHOR.x + 4 * scale, y: PIX_ANCHOR.y - 58 * scale }} delay={0.38} duration={0.55} />
+          </>
         )}
 
         {/* Ciò che hai trascinato vola nella bocca di Pix */}

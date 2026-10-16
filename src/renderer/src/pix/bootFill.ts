@@ -46,3 +46,34 @@ export function tubeOutline(): string {
   const mid = BAR.left + rad
   return `M${mid} ${BAR.top} A${rad} ${rad} 0 0 1 ${BAR.right} ${BAR.top + rad} L${BAR.right} ${BAR.bottom - rad} A${rad} ${rad} 0 0 1 ${BAR.left} ${BAR.bottom - rad} L${BAR.left} ${BAR.top + rad} A${rad} ${rad} 0 0 1 ${mid} ${BAR.top} Z`
 }
+
+/**
+ * Barra trascinata: `s` > 0 quando sale (il fondo resta indietro e si allunga),
+ * < 0 quando scende (resta indietro la cima). Si assottiglia a volume costante
+ * e il bordo ondeggia appena.
+ */
+export function stretchedBarPath(s: number, t: number): string {
+  const len = BAR.bottom - BAR.top
+  const stretch = Math.abs(s)
+  const thin = len / (len + stretch)
+  const width = (BAR.right - BAR.left) * thin
+  const left = BAR.right - width
+  const top = BAR.top - (s < 0 ? stretch * 0.75 : -stretch * 0.25)
+  const bottom = BAR.bottom + (s > 0 ? stretch * 0.75 : -stretch * 0.25)
+  const rad = width / 2
+  const mid = left + rad
+  const k = rad * 0.5523
+  const wobble = Math.min(0.9, stretch * 0.04)
+  const edge: string[] = []
+  for (let y = bottom - rad; y > top + rad; y -= 6) edge.push(`L${r(left - wobble * Math.sin(y * 0.05 + t * 12))} ${r(y)}`)
+  return [
+    `M${r(mid)} ${r(top)}`,
+    `C${r(mid + k)} ${r(top)} ${BAR.right} ${r(top + rad - k)} ${BAR.right} ${r(top + rad)}`,
+    `L${BAR.right} ${r(bottom - rad)}`,
+    `C${BAR.right} ${r(bottom - rad + k)} ${r(mid + k)} ${r(bottom)} ${r(mid)} ${r(bottom)}`,
+    `C${r(mid - k)} ${r(bottom)} ${r(left)} ${r(bottom - rad + k)} ${r(left)} ${r(bottom - rad)}`,
+    ...edge,
+    `L${r(left)} ${r(top + rad)}`,
+    `C${r(left)} ${r(top + rad - k)} ${r(mid - k)} ${r(top)} ${r(mid)} ${r(top)} Z`
+  ].join(' ')
+}

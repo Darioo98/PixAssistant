@@ -82,6 +82,8 @@ export interface Body {
   heart: Pt[]
   shield: Pt[]
   bubble: Pt[]
+  /** Cestino (senza coperchio: il coperchio è un pezzo a parte che si apre). */
+  trash: Pt[]
 }
 
 function prepare(pts: Pt[]): Body {
@@ -125,7 +127,8 @@ function prepare(pts: Pt[]): Body {
     theta: pts.map(([x, y]) => Math.atan2(y - cy, x - cx)),
     heart: alignTo(pts, samplePath(heartPath(cx, maxY, w), n)),
     shield: alignTo(pts, samplePath(scaledPath(SHIELD, cx, maxY, w), n)),
-    bubble: alignTo(pts, samplePath(scaledPath(BUBBLE, cx, maxY, w), n))
+    bubble: alignTo(pts, samplePath(scaledPath(BUBBLE, cx, maxY, w), n)),
+    trash: alignTo(pts, samplePath(scaledPath(TRASH, cx, maxY, w), n))
   }
 }
 
@@ -134,6 +137,10 @@ const SHIELD =
   'M51 160 C62 160 74 163 84 168 L84 190 C84 208 71 220 51 228 C31 220 18 208 18 190 L18 168 C28 163 40 160 51 160 Z'
 const BUBBLE =
   'M30 162 L72 162 C80 162 84 166 84 174 L84 200 C84 208 80 212 72 212 L46 212 L31 227 L34 212 L30 212 C22 212 18 208 18 200 L18 174 C18 166 22 162 30 162 Z'
+
+/** Cestino: vaschetta a tronco di cono con il bordo, stessa base del corpo. */
+const TRASH =
+  'M24 171 L78 171 C80 171 81 172.5 80.8 174.5 L76 222 C75.6 224.4 74 226 71.5 226 L30.5 226 C28 226 26.4 224.4 26 222 L21.2 174.5 C21 172.5 22 171 24 171 Z'
 
 /** Riporta un tracciato disegnato in quel riferimento alla misura del corpo attuale. */
 function scaledPath(d: string, cx: number, bottom: number, w: number): string {
@@ -306,5 +313,95 @@ export function swallowShape(b: Body, t: number): Pt[] {
     px += nx * belly * b.low[i]!
     py += ny * belly * b.low[i]!
     return [px, py] as Pt
+  })
+}
+
+// ======================= Meteo e movimento come un liquido =======================
+
+/** Durate: brividi (freddo) e pozza (caldo). */
+export const SHIVER_S = 1.7
+export const PUDDLE_S = { melt: 1.4, hold: 3.6, total: 4.9 } as const
+
+/**
+ * Brividi da liquido: la superficie vibra a piccole onde fitte che corrono
+ * attorno al corpo, che intanto si stringe un po' su sé stesso.
+ */
+export function shiverShape(b: Body, t: number): Pt[] {
+  const env = Math.sin(Math.PI * Math.min(1, Math.max(0, t / SHIVER_S))) ** 0.6
+  const bottom = b.cy + b.h / 2
+  const hug = 1 - 0.035 * env
+  return b.pts.map(([x, y], i) => {
+    const th = b.theta[i]!
+    const r = env * b.h * (0.009 * Math.sin(12 * th + 55 * t) + 0.006 * Math.sin(7 * th - 38 * t))
+    return [b.cx + (x - b.cx) * hug + b.nx[i]! * r, bottom + (y - bottom) * (1 + 0.02 * env) + b.ny[i]! * r] as Pt
+  })
+}
+
+/**
+ * Caldo: Pix si scioglie in una pozza sul pavimento (si abbassa e si allarga,
+ * di più alla base), la superficie ondeggia piano, poi si ricompone con un rimbalzo.
+ */
+export function puddleShape(b: Body, t: number): Pt[] {
+  const { melt, hold, total } = PUDDLE_S
+  let k: number
+  if (t < melt) k = ssmooth(sseg(t, 0, melt)) ** 1.3
+  else if (t < hold) k = 1
+  else {
+    const x = sseg(t, hold, total)
+    const c = 2.2
+    k = 1 - (1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2)
+  }
+  const bottom = b.cy + b.h / 2
+  const flat = 0.26
+  const ripple = sbump(t, melt * 0.6, hold + 0.3)
+  return b.pts.map(([x, y], i) => {
+    const low = b.low[i]!
+    const top = b.top[i]!
+    const u = b.u[i]!
+    const spread = 1.7 + 0.45 * low
+    const px = b.cx + (x - b.cx) * (1 + (spread - 1) * k)
+    let py = bottom + (y - bottom) * (1 - (1 - flat) * k)
+    py += top * ripple * k * b.h * 0.025 * Math.sin(3 * Math.PI * u + t * 3.2)
+    return [px, py] as Pt
+  })
+}
+
+/**
+ * Liquido nel bicchiere: mentre scorri, la superficie si inclina (un lato
+ * sale, l'altro scende) e la parte alta resta un po' indietro; poi ondeggia.
+ * `a` va da -1 a 1.
+ */
+export function sloshShape(b: Body, a: number, t: number): Pt[] {
+  return b.pts.map(([x, y], i) => {
+    const top = b.top[i]!
+    const u = b.u[i]!
+    const wave = 0.015 * b.h * Math.abs(a) * Math.sin(2 * Math.PI * u - t * 8)
+    return [x + top * a * 0.06 * b.w, y + top * (-a * u * 0.2 * b.h + wave)] as Pt
+  })
+}
+
+/** Cestino: si trasforma (0–0.32 s), il coperchio si apre e la cosa eliminata ci cade dentro, poi torna Pix. */
+export const TRASH_S = { formed: 0.32, slam: 1.05, back: 1.45, total: 2.05 } as const
+
+export function trashShape(b: Body, t: number): Pt[] {
+  let k: number
+  if (t < TRASH_S.formed) {
+    const x = sseg(t, 0, TRASH_S.formed)
+    const c = 1.8
+    k = 1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2
+  } else if (t < TRASH_S.back) k = 1
+  else {
+    const x = sseg(t, TRASH_S.back, TRASH_S.total)
+    const c = 1.6
+    k = 1 - (1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2)
+  }
+  // Il coperchio sbatte: il cestino si schiaccia e rimbalza.
+  const slam = sbump(t, TRASH_S.slam - 0.02, TRASH_S.slam + 0.22)
+  const bottom = b.cy + b.h / 2
+  return b.pts.map(([x, y], i) => {
+    const [tx, ty] = b.trash[i]!
+    const mx = x + (tx - x) * k
+    const my = y + (ty - y) * k
+    return [b.cx + (mx - b.cx) * (1 + 0.06 * slam), bottom + (my - bottom) * (1 - 0.08 * slam)] as Pt
   })
 }

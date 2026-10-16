@@ -117,7 +117,7 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
           <button className="pill" onClick={(e) => notifyDeleted(e.currentTarget)}>
             {t('settings.trySweep')}
           </button>
-          {(['rain', 'sun', 'cold'] as const).map((w) => (
+          {(['rain', 'sun', 'cold', 'hot'] as const).map((w) => (
             <button key={w} className="pill" onClick={() => window.dispatchEvent(new CustomEvent(WEATHER_FX_EVENT, { detail: w }))}>
               {t(`settings.tryWeather.${w}`)}
             </button>

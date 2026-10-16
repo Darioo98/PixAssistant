@@ -665,7 +665,7 @@
 .rain-drop {
   transform-box: fill-box;
   transform-origin: 50% 100%;
-  animation: pix-rain-drop 0.9s cubic-bezier(0.5, 0, 0.9, 0.6) 1 both;
+  animation: pix-rain-drop 0.9s cubic-bezier(0.5, 0, 0.9, 0.6) var(--rain-delay, 0s) 1 both;
 }
 
 @keyframes pix-rain-drop {
@@ -693,7 +693,7 @@
 .rain-splash {
   transform-box: fill-box;
   transform-origin: 50% 100%;
-  animation: pix-rain-splash 0.9s ease-out 1 both;
+  animation: pix-rain-splash 0.9s ease-out var(--rain-delay, 0s) 1 both;
 }
 
 @keyframes pix-rain-splash {
@@ -793,18 +793,66 @@
   z-index: 2;
 }
 
-/* ---------- Sole: occhiali scuri che scendono sugli occhi ---------- */
+/* ---------- Sole: grandi occhiali morbidi che colano giù sugli occhi ---------- */
 .shades {
   opacity: 0;
-  transform: translateY(-34px) rotate(-8deg);
+  transform: translateY(-42px) scale(0.8, 1.6);
   transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.2s;
+  transform-origin: 50% 0%;
+  transition: transform 0.35s ease-in, opacity 0.25s;
 }
 
 [data-shades] .shades {
   opacity: 1;
   transform: none;
+  transition: transform 0.75s cubic-bezier(0.25, 1.7, 0.45, 1), opacity 0.15s;
+}
+
+/* ---------- Freddo: brividi (il corpo vibra come un liquido) e denti che battono ---------- */
+.chatter {
+  opacity: 0;
+}
+
+[data-shiver] .chatter {
+  opacity: 1;
+  animation: pix-chatter 0.12s linear infinite;
+}
+
+@keyframes pix-chatter {
+  50% {
+    transform: translateY(1.2px);
+  }
+}
+
+[data-shiver] .lids {
+  transform: scaleY(0.55);
+  transition: transform 0.15s;
+}
+
+/* ---------- Caldo: si scioglie in una pozza e gli occhi scendono con lui ---------- */
+.face-fx {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+[data-melt] .face-fx {
+  animation: pix-melt-face 4.9s ease-in-out 1;
+}
+
+@keyframes pix-melt-face {
+  0% {
+    transform: none;
+  }
+  29%,
+  72% {
+    transform: translateY(30px) scale(1.25, 0.72);
+  }
+  86% {
+    transform: translateY(-3px) scale(0.97, 1.04);
+  }
+  100% {
+    transform: none;
+  }
 }
 
 /* ---------- Freddo: nuvoletta di vapore dal respiro ---------- */
@@ -826,5 +874,55 @@
   100% {
     opacity: 0;
     transform: translate(-38px, -8px) scale(1.7);
+  }
+}
+
+/* ---------- Eliminazione: coperchio del cestino che si apre e sbatte ---------- */
+.trash-lid {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 3% 100%;
+  animation: pix-trash-lid 2.05s ease-in-out 1 both;
+}
+
+@keyframes pix-trash-lid {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  14% {
+    opacity: 1;
+    transform: none;
+  }
+  21%,
+  45% {
+    transform: rotate(-38deg);
+  }
+  51% {
+    transform: none;
+  }
+  55% {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+  60%,
+  70% {
+    opacity: 1;
+    transform: none;
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.8, 1);
+  }
+}
+
+[data-trash] .lids {
+  animation: pix-trash-eyes 2.05s ease-in-out 1;
+}
+
+@keyframes pix-trash-eyes {
+  48%,
+  60% {
+    transform: scaleY(0.15);
   }
 }

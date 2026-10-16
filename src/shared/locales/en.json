@@ -209,7 +209,8 @@
     "tryWeather": {
       "rain": "Rain",
       "sun": "Sun",
-      "cold": "Cold"
+      "cold": "Cold",
+      "hot": "Heat"
     },
     "barPosition": "Bar position",
     "barReset": "Move back down",

@@ -1,6 +1,6 @@
 import type { PixShape, PixTransform } from '@shared/mascot'
 import { SHAPES, bodyAt, faceOpacity, morphFor, remapOnReverse, shadowOpacity, type MorphInterpolators } from './geometry'
-import { SWALLOW_S, liveShape, restBody, swallowShape, toPath, type Body } from './shapes'
+import { SWALLOW_S, liveShape, restBody, sloshShape, swallowShape, toPath, type Body, type Pt } from './shapes'
 
 export interface MorphElements {
   body: SVGPathElement
@@ -56,6 +56,8 @@ export class MorphController {
   private pending: { kind: PixTransform; loop: boolean } | null = null
   private swallowRaf = 0
   private swallowStart = 0
+  /** Animazione a tempo in corso (inghiottire, brividi, pozza): forma e durata. */
+  private act: { shape: (b: Body, t: number) => Pt[]; duration: number } | null = null
 
   constructor(
     private readonly els: MorphElements,
@@ -86,12 +88,30 @@ export class MorphController {
 
   /** Pix inghiotte un boccone (vedi swallowShape). Solo se è formato e fermo. */
   swallow(): boolean {
-    if (!this.formed || this.raf) return false
+    return this.perform(swallowShape, SWALLOW_S.total)
+  }
+
+  /**
+   * Animazione a tempo del corpo con una funzione di forma (brividi, pozza…).
+   * Solo con Pix formato e fermo; prende il posto di un gioco in corso.
+   */
+  perform(shape: (b: Body, t: number) => Pt[], duration: number): boolean {
+    if (!this.formed || this.raf || this.swallowRaf) return false
     this.cancelPlay()
-    this.cancelSwallow()
+    this.act = { shape, duration }
     this.swallowStart = 0
     this.swallowRaf = requestAnimationFrame(this.swallowFrame)
     return true
+  }
+
+  /**
+   * Liquido nel bicchiere mentre scorri (`a` da -1 a 1, 0 = fermo). Solo con
+   * Pix formato e senza altre animazioni del corpo in corso.
+   */
+  slosh(a: number, t: number): void {
+    if (!this.formed || this.raf || this.play || this.swallowRaf) return
+    if (Math.abs(a) < 0.002) this.render()
+    else this.els.body.setAttribute('d', toPath(sloshShape(this.body, a, t)))
   }
 
   private cancelSwallow(): void {
@@ -102,8 +122,10 @@ export class MorphController {
   private swallowFrame = (ts: number): void => {
     if (!this.swallowStart) this.swallowStart = ts
     const t = (ts - this.swallowStart) / 1000
-    if (t >= SWALLOW_S.total) {
+    const act = this.act
+    if (!act || t >= act.duration) {
       this.swallowRaf = 0
+      this.act = null
       this.render()
       // Un'animazione arrivata nel frattempo (es. festeggia) parte adesso.
       const next = this.pending
@@ -111,7 +133,7 @@ export class MorphController {
       if (next) this.start(next.kind, next.loop)
       return
     }
-    this.els.body.setAttribute('d', toPath(swallowShape(this.body, t)))
+    this.els.body.setAttribute('d', toPath(act.shape(this.body, t)))
     this.swallowRaf = requestAnimationFrame(this.swallowFrame)
   }
 
