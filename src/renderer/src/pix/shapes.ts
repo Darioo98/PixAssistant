@@ -420,9 +420,9 @@ export interface MeltDrip {
 }
 
 export const MELT_DRIPS: MeltDrip[] = [
-  { u: -0.45, len: 0.26, period: 1.45, phase: 0.25 },
-  { u: 0.08, len: 0.34, period: 1.85, phase: 0 },
-  { u: 0.55, len: 0.22, period: 1.25, phase: 0.55 }
+  { u: -0.45, len: 0.26, period: 2.4, phase: 0.3 },
+  { u: 0.08, len: 0.34, period: 2.6, phase: 0 },
+  { u: 0.55, len: 0.22, period: 2.2, phase: 0.9 }
 ]
 
 /** Parte del ciclo in cui la goccia si stacca. */

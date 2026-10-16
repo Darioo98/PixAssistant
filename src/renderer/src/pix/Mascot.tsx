@@ -744,7 +744,8 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       if (!sp.t0) sp.t0 = now
       // Il bersaglio si spegne da solo quando smetti di muovere.
       sp.target *= Math.exp(-dt * 6)
-      sp.v += ((sp.target - sp.s) * 160 - sp.v * 9) * dt
+      // Smorzamento critico: la barra si allunga e torna senza rimbalzare, come un liquido.
+      sp.v += ((sp.target - sp.s) * 160 - sp.v * 25) * dt
       sp.s += sp.v * dt
       const t = (now - sp.t0) / 1000
       if (!draggingBar.current && Math.abs(sp.s) < 0.15 && Math.abs(sp.v) < 0.5) {
@@ -786,7 +787,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     released: false,
     token: null as number | null,
     t0: 0,
-    releaseAt: 0
+    releaseAt: 0,
+    /** Istante in cui ha toccato la parete e si schiaccia fino a diventare barra. */
+    squashAt: 0
   })
   const runGrab = () => {
     const g = grabState.current
@@ -794,26 +797,47 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     const step = (now: number) => {
       const dt = g.last ? Math.min(0.033, (now - g.last) / 1000) : 1 / 60
       g.last = now
-      // Molle morbide: segue con un po' di ritardo e supera un poco il punto, come un liquido.
-      g.vx += ((g.tx - g.x) * 110 - g.vx * 10) * dt
+      // Come un liquido: segue con un leggero ritardo e si ferma morbido, senza rimbalzi (smorzamento critico).
+      g.vx += ((g.tx - g.x) * 90 - g.vx * 19) * dt
       g.x += g.vx * dt
-      g.vly += ((g.lift - g.ly) * 120 - g.vly * 11) * dt
+      g.vly += ((g.lift - g.ly) * 100 - g.vly * 20) * dt
       g.ly += g.vly * dt
       const lagY = g.lift - g.ly // > 0: la finestra è salita e Pix resta indietro (più in basso)
-      // Pendolo appeso alla cima: si inclina contro il movimento e poi dondola.
-      const swingTarget = Math.max(-28, Math.min(28, -g.vx * 0.045))
-      g.vswing += ((swingTarget - g.swing) * 45 - g.vswing * 3.2) * dt
-      g.swing += g.vswing * dt
+      // Si inclina appena contro il movimento e torna dritto senza dondolare.
+      const swingTarget = Math.max(-18, Math.min(18, -g.vx * 0.03))
+      g.swing += (swingTarget - g.swing) * (1 - Math.exp(-dt * 9))
       const stretch = Math.min(0.22, Math.abs(g.vly) * 0.0009 + Math.abs(lagY) * 0.004)
       const px = PIX_ANCHOR.x
       const py = PIX_ANCHOR.y - 70 * scale
-      grabRef.current?.setAttribute(
-        'transform',
-        `translate(${g.x.toFixed(2)} ${lagY.toFixed(2)}) rotate(${g.swing.toFixed(2)} ${px} ${py}) translate(${px} ${py}) scale(${(1 / (1 + stretch * 0.6)).toFixed(3)} ${(1 + stretch).toFixed(3)}) translate(${-px} ${-py})`
-      )
-      const still = Math.abs(g.x) < 0.6 && Math.abs(g.vx) < 6 && Math.abs(lagY) < 0.6 && Math.abs(g.swing) < 0.6 && Math.abs(g.vswing) < 4
-      if (g.released && still) {
-        // Tornato al bordo: diventa barra, che tremola come una gelatina.
+      // Lasciato andare: scivola contro la parete e ci si schiaccia fino a diventare la barra.
+      const wallX = VIEW.width - PIX_ANCHOR.x - 30 * scale
+      if (g.released && !g.squashAt && g.x > wallX - 1.5) g.squashAt = now
+      if (g.squashAt) {
+        const k = Math.min(1, (now - g.squashAt) / 300)
+        const e = k * k * (3 - 2 * k)
+        // Da Pix (60×66) alla barra (8×180), appoggiato alla parete.
+        const sx = 1 + (8 / (60 * scale) - 1) * e
+        const sy = 1 + (180 / (66 * scale) - 1) * e * e
+        const cy = PIX_ANCHOR.y - 33 * scale
+        const ty = (140 - cy) * e
+        grabRef.current?.setAttribute(
+          'transform',
+          `translate(${VIEW.width} ${(cy + ty).toFixed(2)}) scale(${sx.toFixed(3)} ${sy.toFixed(3)}) translate(${-(PIX_ANCHOR.x + 30 * scale)} ${-cy})`
+        )
+        if (k < 1) {
+          g.raf = requestAnimationFrame(step)
+          return
+        }
+      } else {
+        grabRef.current?.setAttribute(
+          'transform',
+          `translate(${g.x.toFixed(2)} ${lagY.toFixed(2)}) rotate(${g.swing.toFixed(2)} ${px} ${py}) translate(${px} ${py}) scale(${(1 / (1 + stretch * 0.6)).toFixed(3)} ${(1 + stretch).toFixed(3)}) translate(${-px} ${-py})`
+        )
+      }
+      if (g.released && g.squashAt) {
+        // Schiacciato contro la parete: ora è di nuovo la barra.
+        g.squashAt = 0
+        morph.current?.go(0, true)
         grabRef.current?.removeAttribute('transform')
         g.raf = 0
         g.last = 0
@@ -823,11 +847,6 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         morph.current?.go(0)
         release(g.token)
         g.token = null
-        window.setTimeout(() => {
-          const sp = barSpring.current
-          sp.v += -45
-          runBarSpring()
-        }, 750)
         return
       }
       g.raf = requestAnimationFrame(step)
@@ -914,15 +933,15 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         // Lasciato andare: scivola di nuovo contro il bordo, dondolando, e torna barra.
         const g = grabState.current
         g.releaseAt = performance.now()
-        g.tx = 0
+        g.squashAt = 0
+        g.tx = VIEW.width - PIX_ANCHOR.x - 30 * scale + 4
         g.released = true
         runGrab()
       } else {
-        // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
+        // Rilasciata: l'allungamento rientra piano, senza rimbalzi.
         const sp = barSpring.current
         sp.target = 0
         sp.lastAt = 0
-        sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
         runBarSpring()
       }
     }
