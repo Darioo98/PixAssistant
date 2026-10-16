@@ -8,7 +8,10 @@ il turno in sede.
 
 ## Installazione
 
-1. Avvia `Pix Setup 0.1.0.exe`. L'installer non è firmato: se Windows SmartScreen
+**[Scarica l'installer (Pix Setup 0.1.0)](https://github.com/Darioo98/PixAssistant/releases/latest)**
+dalla pagina *Releases* del progetto.
+
+1. Avvia `Pix-Setup-0.1.0.exe`. L'installer non è firmato: se Windows SmartScreen
    avvisa, scegli **Ulteriori informazioni → Esegui comunque**.
 2. Scegli la cartella (predefinita: solo per il tuo utente, senza diritti di amministratore).
 3. Pix parte da solo a fine installazione e, d'ora in poi, all'accesso a Windows
