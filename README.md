@@ -1,11 +1,5 @@
 # Pix
 
-<p align="center">
-  <img src="docs/media/pix-barra.gif" height="220" alt="La barra sul bordo dello schermo diventa Pix">
-  &nbsp;&nbsp;&nbsp;
-  <img src="docs/media/pix-trasformazioni.gif" height="220" alt="Pix è un fluido e cambia forma">
-</p>
-
 Barra multifunzione per Windows 10/11 con **Pix**, la mascotte a forma di piastrella.
 Vive sul bordo destro dello schermo: passa il mouse sulla barra e diventa Pix, cliccalo
 (o premi `Ctrl+Alt+Spazio`) e si apre il pannello con scadenze, password, chat con
@@ -31,26 +25,6 @@ il turno in sede.
 
 In più: **chat con Claude** (col tuo abbonamento), **cronologia degli appunti**,
 ricerca in tutto il pannello, e trascinare un file o un testo su Pix per salvarlo o farlo analizzare.
-
-## Pix, la mascotte
-
-Pix è un fluido: vive come una barra sul bordo destro, prende forma quando ti avvicini
-e reagisce a quello che succede.
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/media/pix-meteo.gif" width="300" alt="Pix e il meteo"><br><b>Il meteo addosso</b><br>sole, pioggia, freddo e caldo della tua città</td>
-    <td align="center"><img src="docs/media/pix-clessidra.gif" width="220" alt="Pix diventa una clessidra"><br><b>La clessidra</b><br>gli occhi sono i chicchi e cadono davvero</td>
-  </tr>
-</table>
-
-<p align="center">
-  <img src="docs/media/pix-aspetto.png" width="620" alt="Forme, colori, occhi ed espressioni di Pix">
-  <br><sub>Forma, colore e occhi si scelgono in <b>Impostazioni → Aspetto</b>; l'espressione cambia con quello che succede.</sub>
-</p>
-
-Si può anche afferrare e trascinare (si spaventa e scivola come un liquido), mangia i file
-che gli lanci, sbadiglia, sbircia dal bordo, si addormenta la sera e saluta a fine turno.
 
 ## Installazione
 
