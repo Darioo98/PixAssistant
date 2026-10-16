@@ -72,7 +72,8 @@ export function MeltDrops({ start, scale, shape, color }: Props) {
         const x = tipX
         const { n, growing } = dripCycle(d, t)
         const el = bulbsRef.current[i]
-        if (growing && t < 3.5) {
+        // Una sola goccia per colata: dopo il distacco non se ne forma un'altra.
+        if (growing && n === 0 && t < 3.5) {
           // La pallina si gonfia in punta alla colata, insieme a lei.
           const r = R * Math.min(1, L / d.len) * a
           el?.setAttribute('cx', x.toFixed(2))
@@ -81,7 +82,7 @@ export function MeltDrops({ start, scale, shape, color }: Props) {
         } else {
           el?.setAttribute('r', '0')
           // Appena staccata: diventa una goccia che cade.
-          if (n !== lastCycle[i] && t < 3.7 && t > 0.7) {
+          if (n === 0 && lastCycle[i]! < 0 && t < 3.7 && t > 0.7) {
             lastCycle[i] = n
             falling.push({ x, y: tip, vy: 30, r: R * a, floor: bottom + d.len * b.h + 26 * scale, splash: 0 })
           }

@@ -215,7 +215,12 @@
     "barPosition": "Bar position",
     "barReset": "Move back down",
     "barDefault": "Bottom (default)",
-    "barHint": "Drag the bar up or down along the screen edge to move it. A click without dragging opens Pix."
+    "barHint": "Drag the bar up or down along the screen edge to move it. A click without dragging opens Pix.",
+    "hourglassStyle": "Hourglass (try and choose)",
+    "hourglassStyles": {
+      "glass": "A · See-through, with fluid inside",
+      "grains": "B · The eyes are the grains"
+    }
   },
   "mascot": {
     "preview": {

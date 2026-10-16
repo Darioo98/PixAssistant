@@ -215,7 +215,12 @@
     "barPosition": "Posizione della barra",
     "barReset": "Riporta in basso",
     "barDefault": "In basso (predefinita)",
-    "barHint": "Trascina la barra su o giù lungo il bordo dello schermo per spostarla. Un clic senza trascinare apre Pix."
+    "barHint": "Trascina la barra su o giù lungo il bordo dello schermo per spostarla. Un clic senza trascinare apre Pix.",
+    "hourglassStyle": "Clessidra (prova e scegli)",
+    "hourglassStyles": {
+      "glass": "A · Trasparente, col fluido dentro",
+      "grains": "B · Gli occhi sono i chicchi"
+    }
   },
   "mascot": {
     "preview": {

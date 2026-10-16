@@ -207,11 +207,13 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
     })
   }
   if (kind === 'hourglass') {
-    // Clessidra: il fluido scende dall'ampolla di sopra a quella di sotto.
-    const target = hourglassTarget(b, hourglassFlow(t))
+    // Clessidra: Pix prende la forma della clessidra (due ampolle e un collo stretto).
+    const target = hourglassSilhouetteTarget(b)
     return b.pts.map(([x, y], i) => {
       const [hx, hy] = target[i]!
-      return [x + (hx - x) * a, y + (hy - y) * a] as Pt
+      // Resta un fluido: la superficie ondeggia appena.
+      const r = 0.01 * b.h * Math.sin(3 * b.theta[i]! - t * 4) * a
+      return [x + (hx - x) * a + b.nx[i]! * r, y + (hy - y) * a + b.ny[i]! * r] as Pt
     })
   }
   if (kind === 'heart') {
@@ -425,8 +427,10 @@ export function dripLength(d: MeltDrip, t: number): number {
   const local = t - d.phase
   if (local <= 0) return 0
   const n = Math.floor(local / d.period)
+  // Una sola goccia per colata: dopo il primo distacco la colata resta ritirata.
+  if (n >= 1) return d.len * REST
   const k = (local - n * d.period) / d.period
-  const base = n === 0 ? 0 : REST
+  const base = 0
   if (k < DETACH) {
     const g = k / DETACH
     return d.len * (base + (1 - base) * g * g)
@@ -505,7 +509,7 @@ function chamber(g: ReturnType<typeof hourglassGeometry>, p: number): number {
 }
 
 /** Contorno del fluido dentro la clessidra con `f` (0 tutto sopra, 1 tutto sotto). */
-function hourglassPath(b: Body, f: number): string {
+export function hourglassPath(b: Body, f: number): string {
   const g = hourglassGeometry(b)
   const top = Math.max(0.02, (1 - f) ** 0.85 * 0.96)
   const pile = Math.max(0.05, f ** 0.85 * 0.96)
@@ -547,6 +551,32 @@ function hourglassPath(b: Body, f: number): string {
   const surfaceTop = 9
   const out: Pt[] = [...right, ...mirror(surfaceTop, right.length)]
   return `M${out.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(' L')} Z`
+}
+
+/** Sagoma della clessidra (ampolla sopra, collo, ampolla sotto) disegnata col corpo di Pix. */
+export function hourglassSilhouette(b: Pick<Body, 'cx' | 'cy' | 'w' | 'h'>): string {
+  const g = hourglassGeometry(b)
+  const neck = 3.2 * g.s
+  const half = (p: number) => neck + (g.Wc + 2 * g.s - neck) * (1 - (1 - Math.min(1, p)) ** 2.2)
+  const right: Pt[] = []
+  for (let i = 16; i >= 0; i--) right.push([g.cx + half(i / 16), g.neckY - (i / 16) * g.Hc - 2 * g.s])
+  for (let i = 1; i <= 16; i++) right.push([g.cx + half(i / 16), g.neckY + (i / 16) * (g.bottom - g.neckY)])
+  const left = right.map(([x, y]) => [2 * g.cx - x, y] as Pt).reverse()
+  // Cima e fondo arrotondati: un po' di "pancia" al posto degli angoli vivi.
+  const pts = [...right, ...left]
+  return `M${pts.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(' L')} Z`
+}
+
+const silhouetteCache = new Map<string, Pt[]>()
+
+export function hourglassSilhouetteTarget(b: Body): Pt[] {
+  const key = `${b.cx}:${b.w}:${b.h}`
+  let pts = silhouetteCache.get(key)
+  if (!pts) {
+    pts = alignTo(b.pts, samplePath(hourglassSilhouette(b), b.pts.length))
+    silhouetteCache.set(key, pts)
+  }
+  return pts
 }
 
 const hourglassCache = new Map<string, Pt[]>()

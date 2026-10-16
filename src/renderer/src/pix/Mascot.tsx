@@ -8,13 +8,14 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { ANIM_S, HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, hourglassFramePaths, restBody, shiverShape, trashShape } from './shapes'
+import { ANIM_S, HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, shiverShape, trashShape } from './shapes'
 import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
 import { useSlosh } from './useSlosh'
 import { SunBeam } from './SunBeam'
 import { MeltDrops } from './MeltDrops'
+import { HourglassFluid } from './HourglassFluid'
 import { Director, type Act } from './director'
 import { weatherKind } from '@shared/extras'
 import type { DropPayload } from '@shared/extras'
@@ -974,7 +975,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-shiver={shivering && ep === 'cold' ? '' : undefined}
       data-melt={melting && ep === 'hot' ? '' : undefined}
       data-trash={trash && formed ? '' : undefined}
-      data-hourglass={hourglassAt && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') ? '' : undefined}
+      data-hourglass={hourglassAt && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') ? settings.hourglassStyle : undefined}
       data-wince={wince && ep === 'rain' ? '' : undefined}
       data-grabbed={grabbed ? '' : undefined}
 
@@ -1041,6 +1042,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 onPointerCancel={onBarPointerUp}
                 onAnimationEnd={() => setBreathing(false)}
               />
+              {/* Clessidra trasparente: il fluido di Pix dentro il suo corpo-vetro */}
+              {hourglassAt > 0 && formed && settings.hourglassStyle === 'glass' && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
+                <HourglassFluid key={hourglassAt} start={hourglassAt} scale={scale} shape={shape} color={color} />
+              )}
               <g ref={faceRef} transform={face} opacity="0" pointerEvents="none">
                 <g className="face-fx">
                 {settings.pixShine && <Shine />}
@@ -1117,16 +1122,6 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
         {(ep === 'sun' || ep === 'hot') && <SunBeam id={fillId} scale={scale} hot={ep === 'hot'} />}
-        {/* Clessidra: vetro e piattini attorno al fluido */}
-        {hourglassAt > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (() => {
-          const hg = hourglassFramePaths(restBody(scale, shape))
-          return (
-            <g key={hourglassAt} className="hourglass-frame" pointerEvents="none">
-              <path d={hg.glass} fill="#fff" fillOpacity="0.14" stroke="#fff" strokeOpacity="0.75" strokeWidth={1.4 * scale} />
-              <path d={hg.caps} fill="#b98a55" />
-            </g>
-          )
-        })()}
         {/* Si scioglie: palline che si gonfiano in punta alle colate, si staccano e cadono */}
         {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
           <MeltDrops key={meltDrops} start={meltDrops} scale={scale} shape={shape} color={color} />
