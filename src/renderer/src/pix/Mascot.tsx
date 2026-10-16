@@ -392,7 +392,8 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   // ---- Sbirciata: a pannello chiuso ogni tanto un piccolo Pix sbuca da dietro la barra ----
   const [peek, setPeek] = useState<{ y: number } | null>(null)
   const [peekSoon, setPeekSoon] = useState(false)
-  const canPeek = collapsed && !wantPix && anim === 'normal' && settings.pixTransforms && !reducedMotion && mood !== 'sleep'
+  // La sbirciata dipende solo dal livello delle animazioni (non dall'interruttore delle trasformazioni del corpo).
+  const canPeek = collapsed && !wantPix && anim === 'normal' && !reducedMotion && mood !== 'sleep'
   peekActive.current = peek !== null && canPeek
   useEffect(() => {
     if (!canPeek) {

@@ -249,12 +249,21 @@ export function liveShape(b: Body, kind: PixTransform, t: number, a: number): Pt
         })
         break
       case 'hourglass': {
-        // Clessidra: il corpo si stringe in vita e pulsa, la sabbia "scende".
-        // Strozzatura sotto gli occhi, così il viso resta libero.
-        const v = (y - b.cy) / (b.h / 2) - 0.3
-        const pinch = Math.exp(-((v / 0.32) ** 2)) * (0.85 + 0.15 * Math.sin(3 * t))
-        dx -= Math.sign(x - b.cx) * Math.abs(nx) * 0.22 * b.w * pinch * a
-        dy += 0.03 * b.h * Math.sin(2 * t) * top * a
+        // Clessidra di liquido: il corpo si stringe in vita (sotto gli occhi) in due ampolle;
+        // il fluido scende piano dall'alta alla bassa, poi si "capovolge" e ricomincia.
+        const cycle = 3.2
+        const k = (t % cycle) / cycle
+        const flow = k < 0.85 ? k / 0.85 : 1 - ssmooth((k - 0.85) / 0.15)
+        const v = (y - b.cy) / (b.h / 2) - 0.2
+        const waist = Math.exp(-((v / 0.28) ** 2))
+        const side = Math.sign(x - b.cx) * Math.abs(nx)
+        // Vita stretta, che "pulsa" appena mentre il fluido passa.
+        dx -= side * 0.26 * b.w * waist * (0.92 + 0.08 * Math.sin(t * 14)) * a
+        // L'ampolla di sopra si svuota (si stringe e si abbassa), quella di sotto si gonfia.
+        const upper = v < 0 ? Math.min(1, -v) : 0
+        const lower = v > 0 ? Math.min(1, v) : 0
+        dx -= side * b.w * (0.12 * upper - 0.1 * lower) * flow * a
+        dy += top * 0.06 * b.h * flow * a
         break
       }
       case 'melt': {
