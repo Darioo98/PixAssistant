@@ -1042,6 +1042,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 onPointerCancel={onBarPointerUp}
                 onAnimationEnd={() => setBreathing(false)}
               />
+              {/* Si scioglie: palline che si gonfiano in punta alle colate, si staccano e cadono */}
+              {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
+                <MeltDrops key={meltDrops} start={meltDrops} scale={scale} shape={shape} color={color} />
+              )}
               {/* Clessidra trasparente: il fluido di Pix dentro il suo corpo-vetro */}
               {hourglassAt > 0 && formed && settings.hourglassStyle === 'glass' && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
                 <HourglassFluid key={hourglassAt} start={hourglassAt} scale={scale} shape={shape} color={color} />
@@ -1122,10 +1126,6 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
         {(ep === 'sun' || ep === 'hot') && <SunBeam id={fillId} scale={scale} hot={ep === 'hot'} />}
-        {/* Si scioglie: palline che si gonfiano in punta alle colate, si staccano e cadono */}
-        {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
-          <MeltDrops key={meltDrops} start={meltDrops} scale={scale} shape={shape} color={color} />
-        )}
         {/* Caldo: ondine di calore che salgono */}
         {ep === 'hot' && (
           <g className="heat" stroke={color} strokeOpacity="0.55" strokeWidth="1.8" fill="none" strokeLinecap="round" pointerEvents="none">

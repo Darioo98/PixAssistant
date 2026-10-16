@@ -41,6 +41,7 @@ const SPLASH_S = 0.18
  */
 export function MeltDrops({ start, scale, shape, color }: Props) {
   const bulbsRef = useRef<Array<SVGCircleElement | null>>([])
+  const necksRef = useRef<Array<SVGLineElement | null>>([])
   const dropsRef = useRef<SVGGElement>(null)
 
   useEffect(() => {
@@ -51,6 +52,8 @@ export function MeltDrops({ start, scale, shape, color }: Props) {
     const R = 0.055 * b.w
     const falling: Falling[] = []
     const lastCycle = MELT_DRIPS.map(() => -1)
+    /** Dove si trovava la pallina appena prima di staccarsi (la goccia parte da lì). */
+    const bulbAt: Array<{ x: number; y: number; r: number } | null> = MELT_DRIPS.map(() => null)
 
     const step = (now: number) => {
       const t = (now - start) / 1000
@@ -70,21 +73,36 @@ export function MeltDrops({ start, scale, shape, color }: Props) {
           }
         })
         const x = tipX
-        const { n, growing } = dripCycle(d, t)
+        const { n, k, growing } = dripCycle(d, t)
         const el = bulbsRef.current[i]
+        const neck = necksRef.current[i]
         // Una sola goccia per colata: dopo il distacco non se ne forma un'altra.
         if (growing && n === 0 && t < 3.5) {
-          // La pallina si gonfia in punta alla colata, insieme a lei.
+          // La pallina si gonfia in punta alla colata, insieme a lei; poco prima di staccarsi
+          // scende e resta appesa a un collo sempre più sottile, che alla fine si rompe.
           const r = R * Math.min(1, L / d.len) * a
+          const pull = Math.min(1, Math.max(0, (k - 0.6) / 0.2))
+          const sag = pull * pull * (3 - 2 * pull)
+          const cy = tip - r * 0.45 + sag * r * 1.6
           el?.setAttribute('cx', x.toFixed(2))
-          el?.setAttribute('cy', (tip - r * 0.45).toFixed(2))
+          el?.setAttribute('cy', cy.toFixed(2))
           el?.setAttribute('r', Math.max(0, r).toFixed(2))
+          if (neck) {
+            neck.setAttribute('x1', x.toFixed(2))
+            neck.setAttribute('x2', x.toFixed(2))
+            neck.setAttribute('y1', (tip - r * 0.3).toFixed(2))
+            neck.setAttribute('y2', cy.toFixed(2))
+            neck.setAttribute('stroke-width', (sag > 0 ? r * 0.9 * (1 - sag) + 0.4 : 0).toFixed(2))
+          }
+          bulbAt[i] = { x, y: cy, r }
         } else {
           el?.setAttribute('r', '0')
-          // Appena staccata: diventa una goccia che cade.
-          if (n === 0 && lastCycle[i]! < 0 && t < 3.7 && t > 0.7) {
+          neck?.setAttribute('stroke-width', '0')
+          // Appena staccata: la stessa pallina diventa una goccia che cade.
+          const from = bulbAt[i]
+          if (n === 0 && lastCycle[i]! < 0 && t < 3.7 && t > 0.7 && from) {
             lastCycle[i] = n
-            falling.push({ x, y: tip, vy: 30, r: R * a, floor: bottom + d.len * b.h + 26 * scale, splash: 0 })
+            falling.push({ x: from.x, y: from.y + from.r, vy: 40, r: from.r, floor: bottom + d.len * b.h + 26 * scale, splash: 0 })
           }
         }
       })
@@ -127,6 +145,9 @@ export function MeltDrops({ start, scale, shape, color }: Props) {
 
   return (
     <g fill={color} pointerEvents="none" aria-hidden="true">
+      {MELT_DRIPS.map((_, i) => (
+        <line key={`n${i}`} ref={(el) => void (necksRef.current[i] = el)} stroke={color} strokeLinecap="round" strokeWidth="0" />
+      ))}
       {MELT_DRIPS.map((_, i) => (
         <circle key={i} ref={(el) => void (bulbsRef.current[i] = el)} r="0" />
       ))}
