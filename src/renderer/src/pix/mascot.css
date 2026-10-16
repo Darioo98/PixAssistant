@@ -1115,13 +1115,8 @@
 }
 
 /* ---------- Pix afferrato dal puntatore: pende, si allunga, trema dalla paura ---------- */
-.grab {
   transform-box: fill-box;
   transform-origin: 50% 0%;
-}
-
-[data-grabbed] .grab {
-  transform: translateY(calc(var(--grab, 0) * -0.2px)) scale(calc(1 - var(--grab, 0) * 0.006), calc(1 + var(--grab, 0) * 0.014));
 }
 
 [data-grabbed] .yawn-body {
@@ -1140,26 +1135,6 @@
   }
 }
 
-/* Lasciato andare: si carica e viene spinto di lato contro il bordo */
-[data-shoved] .grab {
-  transform-origin: 50% 100%;
-  animation: pix-shove 0.48s ease-out 1;
-}
-
-@keyframes pix-shove {
-  0% {
-    transform: none;
-  }
-  35% {
-    transform: translateX(-4px) scale(1.12, 0.9);
-  }
-  70% {
-    transform: translateX(12px) scale(0.82, 1.08);
-  }
-  100% {
-    transform: none;
-  }
-}
 
 /* Raggio di sole: si accende piano, l'alone respira, i granelli brillano */
 .sun-glow {
