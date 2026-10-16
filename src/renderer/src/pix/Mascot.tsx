@@ -611,12 +611,13 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }
 
   // ---- Barra spostabile: trascinandola su e giù lungo il bordo dello schermo ----
-  const onBarPointerDown = (e: React.PointerEvent<SVGRectElement>) => {
-    if (e.button !== 0) return
+  const onBarPointerDown = (e: React.PointerEvent<SVGElement>) => {
+    // Si sposta solo a pannello chiuso (barra o Pix appena formato al passaggio del mouse).
+    if (e.button !== 0 || panelOpen) return
     e.currentTarget.setPointerCapture(e.pointerId)
     barDrag.current = { startY: e.screenY, startLift: settings.barLift, lift: settings.barLift, moved: false, raf: 0 }
   }
-  const onBarPointerMove = (e: React.PointerEvent<SVGRectElement>) => {
+  const onBarPointerMove = (e: React.PointerEvent<SVGElement>) => {
     const d = barDrag.current
     if (!d) return
     const dy = e.screenY - d.startY
@@ -634,10 +635,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       })
     }
   }
-  const onBarPointerUp = (e: React.PointerEvent<SVGRectElement>) => {
+  const onBarPointerUp = (e: React.PointerEvent<SVGElement>) => {
     const d = barDrag.current
     if (!d) return
-    e.currentTarget.releasePointerCapture(e.pointerId)
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
     if (d.moved) void window.pix.moveBar(d.lift, true)
     draggingBar.current = false
     // Il clic arriva subito dopo: lo si lascia passare solo se non c'è stato trascinamento.
@@ -714,6 +715,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 role="button"
                 aria-label={t('pix.label')}
                 onClick={toggle}
+                onPointerDown={onBarPointerDown}
+                onPointerMove={onBarPointerMove}
+                onPointerUp={onBarPointerUp}
+                onPointerCancel={onBarPointerUp}
                 onAnimationEnd={() => setBreathing(false)}
               />
               <g ref={faceRef} transform={face} opacity="0" pointerEvents="none">
