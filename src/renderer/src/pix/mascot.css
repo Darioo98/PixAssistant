@@ -646,7 +646,7 @@
 .sparkle {
   transform-box: fill-box;
   transform-origin: center;
-  animation: pix-sparkle 1.6s ease-in-out 3;
+  animation: pix-sparkle 1.4s ease-in-out infinite;
 }
 
 @keyframes pix-sparkle {
@@ -903,8 +903,24 @@
 }
 
 /* ---------- Sole e caldo: il sole in alto e il raggio di luce ---------- */
-.sky-sun {
-  animation: pix-sun-in 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) 1 both;
+.sky-sun,
+.heat,
+.snow {
+  animation: pix-episode 4.2s linear 1 both;
+}
+
+/* Gli elementi del meteo durano quanto l'animazione del corpo: entrano e escono insieme. */
+@keyframes pix-episode {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .sun {
@@ -918,7 +934,7 @@
 }
 
 .sun-beam {
-  animation: pix-beam 3s ease-in-out 3;
+  animation: pix-beam 2.1s ease-in-out infinite;
 }
 
 @keyframes pix-sun-in {
@@ -943,7 +959,7 @@
 /* Caldo: ondine di calore che salgono e svaniscono */
 .heat path {
   opacity: 0;
-  animation: pix-heat 1.6s ease-out var(--heat-delay, 0s) 4;
+  animation: pix-heat 1.4s ease-out var(--heat-delay, 0s) infinite;
 }
 
 @keyframes pix-heat {
@@ -984,7 +1000,7 @@
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
-  animation: pix-flake 2.2s linear var(--flake-delay, 0s) 1 both;
+  animation: pix-flake 2.2s linear var(--flake-delay, 0s) infinite both;
 }
 
 @keyframes pix-flake {
@@ -1019,30 +1035,27 @@
 [data-grabbed] .yawn-body {
   transform-box: fill-box;
   transform-origin: 50% 0%;
-  animation: pix-grab-shake 0.13s linear infinite;
+  animation: pix-grab-shake 0.22s ease-in-out infinite;
 }
 
 @keyframes pix-grab-shake {
   0%,
   100% {
-    transform: rotate(-2.5deg) scale(0.96, 1.04);
+    transform: rotate(-1deg);
   }
   50% {
-    transform: rotate(2.5deg) scale(0.96, 1.04);
+    transform: rotate(1deg);
   }
 }
 
 
 /* Raggio di sole: si accende piano, l'alone respira, i granelli brillano */
-.sun-glow {
-  animation: pix-beam 3s ease-in-out 3;
-}
 
 .sun-mote {
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
-  animation: pix-mote 1.8s ease-in-out var(--mote-delay, 0s) 3;
+  animation: pix-mote 1.8s ease-in-out var(--mote-delay, 0s) infinite;
 }
 
 @keyframes pix-mote {
@@ -1113,7 +1126,7 @@
 
 .steam path {
   opacity: 0;
-  animation: pix-steam 1.8s ease-out 2 both;
+  animation: pix-steam 1.6s ease-out infinite both;
 }
 
 .steam-2 {
@@ -1135,52 +1148,5 @@
   100% {
     opacity: 0;
     transform: translateY(-12px) scale(1.1);
-  }
-}
-
-/* ---------- Si scioglie: la goccia si stacca dalla punta della colata, cade e schizza ---------- */
-.melt-drop {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-  animation: pix-melt-fall 0.95s cubic-bezier(0.5, 0, 0.9, 0.5) var(--drip-delay, 0s) 1 both;
-}
-
-@keyframes pix-melt-fall {
-  0% {
-    opacity: 1;
-    transform: scale(1, 1.25);
-  }
-  12% {
-    opacity: 1;
-    transform: translateY(1px) scale(0.85, 1.45);
-  }
-  30% {
-    transform: translateY(4px) scale(1, 1.1);
-  }
-  80% {
-    opacity: 1;
-    transform: translateY(20px) scale(0.92, 1.15);
-  }
-  90% {
-    opacity: 0.85;
-    transform: translateY(23px) scale(1.9, 0.3);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(23px) scale(2.4, 0.08);
-  }
-}
-
-/* Afferrato: la bocca trema */
-.scared-mouth {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pix-scared-mouth 0.18s linear infinite;
-}
-
-@keyframes pix-scared-mouth {
-  50% {
-    transform: translateY(0.8px) scaleX(1.06);
   }
 }

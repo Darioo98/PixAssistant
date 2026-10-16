@@ -8,12 +8,13 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { HEAT_S, MELT_DRIPS, SHIVER_S, SWALLOW_S, TRASH_S, dripDetachTimes, grabShape, heatShape, restBody, shiverShape, trashShape } from './shapes'
+import { ANIM_S, HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, shiverShape, trashShape } from './shapes'
 import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
 import { useSlosh } from './useSlosh'
 import { SunBeam } from './SunBeam'
+import { MeltDrops } from './MeltDrops'
 import { Director, type Act } from './director'
 import { weatherKind } from '@shared/extras'
 import type { DropPayload } from '@shared/extras'
@@ -43,11 +44,17 @@ type WeatherFx = 'rain' | 'sun' | 'cold' | 'hot' | null
 /** Gocce di pioggia: spostamento orizzontale, ritardo (s) e dimensione. */
 const RAIN_DROPS: Array<[number, number, number]> = [
   [-16, 0, 0.85],
-  [-5, 0.32, 1],
+  [-5, 0.3, 1],
   [7, 0.12, 0.9],
   [17, 0.55, 0.8],
-  [1, 0.8, 1.05],
-  [-11, 1.05, 0.9]
+  [1, 0.85, 1.05],
+  [-11, 1.1, 0.9],
+  [12, 1.4, 0.95],
+  [-19, 1.7, 0.8],
+  [3, 2.0, 1],
+  [-8, 2.3, 0.85],
+  [15, 2.55, 0.9],
+  [-2, 2.85, 1]
 ]
 
 /** Da quanti gradi Pix sente caldo e si affloscia. */
@@ -331,7 +338,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [formed, anim, mood])
 
   // ---- Animazioni del fluido: il corpo si deforma e si muove, poi torna com'era ----
-  const PLAY_MS = 4800
+  const PLAY_MS = ANIM_S * 1000 + 100
   /** "Si scioglie" in corso: dalle colate si staccano gocce che cadono. */
   const [meltDrops, setMeltDrops] = useState(0)
   const play = (kind: PixTransform, loop = false, as: Act = 'spontaneous') => {
@@ -522,6 +529,10 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }, [rainKey])
   /** Sole: occhiali che colano sugli occhi. Freddo: brividi. Caldo: si scioglie in una pozza. */
   const [shades, setShades] = useState(false)
+  /** Episodio di meteo in corso: solo durante questo si vedono raggio, neve, pioggia, vapore… */
+  const [episode, setEpisode] = useState<WeatherFx>(null)
+  /** Ciò che si vede del meteo: solo durante l'episodio (tutto con la stessa durata). */
+  const ep = act === 'weather' ? episode : null
   const [shivering, setShivering] = useState(false)
   const [melting, setMelting] = useState(false)
   useEffect(() => {
@@ -532,12 +543,16 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     const fx = fxOn
     let id: number
     let end: number
+    let episodeEnd: number
     const schedule = (first: boolean) => {
       id = window.setTimeout(
         () => {
-          const ms = fx === 'rain' ? 2300 : fx === 'cold' ? SHIVER_S * 1000 : fx === 'hot' ? HEAT_S * 1000 : 4700
+          const ms = ANIM_S * 1000
           // Se c'è già un'altra animazione, il meteo aspetta il prossimo giro.
           if (claim('weather', ms) === null) return schedule(false)
+          // Un episodio: corpo, raggio, neve, pioggia… partono e finiscono insieme.
+          setEpisode(fx)
+          episodeEnd = window.setTimeout(() => setEpisode(null), ms)
           if (fx === 'rain') setRainKey((k) => k + 1)
           else if (fx === 'cold') {
             if (morph.current?.perform(shiverShape, SHIVER_S)) {
@@ -551,19 +566,21 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
             }
           } else {
             setShades(true)
-            end = window.setTimeout(() => setShades(false), 4500)
+            end = window.setTimeout(() => setShades(false), ms - 450)
           }
           schedule(false)
         },
-        first ? 900 : fx === 'rain' ? 1800 + Math.random() * 1600 : fx === 'cold' ? 8000 + Math.random() * 6000 : fx === 'hot' ? 22_000 + Math.random() * 14_000 : 12_000 + Math.random() * 8000
+        first ? 900 : ANIM_S * 1000 + (fx === 'rain' ? 5000 + Math.random() * 5000 : fx === 'hot' ? 18_000 + Math.random() * 12_000 : 9000 + Math.random() * 8000)
       )
     }
     schedule(true)
     return () => {
       window.clearTimeout(id)
       window.clearTimeout(end)
+      window.clearTimeout(episodeEnd)
       setShivering(false)
       setMelting(false)
+      setEpisode(null)
     }
   }, [fxOn])
 
@@ -613,6 +630,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     morph.current?.interrupt()
     if (a === 'yawn' || a === 'preview') setYawning(false)
     if (a === 'weather') {
+      setEpisode(null)
       setShades(false)
       setShivering(false)
       setMelting(false)
@@ -748,31 +766,53 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
    * la barra si sposta a quell'altezza e Pix scivola di nuovo contro il bordo.
    */
   const grabRef = useRef<SVGGElement>(null)
-  const grabState = useRef({ x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, raf: 0, last: 0, released: false, token: null as number | null, t0: 0, releaseAt: 0 })
+  /**
+   * Stato della presa. In verticale si muove la finestra (come la barra), così
+   * Pix arriva fino in fondo e fino in cima; dentro, Pix resta un po' indietro
+   * (`ly` insegue la posizione vera) e in orizzontale insegue il cursore (`x`).
+   * Il dondolio (`swing`) è un pendolo appeso alla cima.
+   */
+  const grabState = useRef({
+    x: 0,
+    vx: 0,
+    tx: 0,
+    ly: 0,
+    vly: 0,
+    lift: 0,
+    swing: 0,
+    vswing: 0,
+    raf: 0,
+    last: 0,
+    released: false,
+    token: null as number | null,
+    t0: 0,
+    releaseAt: 0
+  })
   const runGrab = () => {
     const g = grabState.current
     if (g.raf) return
     const step = (now: number) => {
       const dt = g.last ? Math.min(0.033, (now - g.last) / 1000) : 1 / 60
       g.last = now
-      // Molla: segue il bersaglio con un piccolo ritardo e oscilla quando si ferma.
-      const k = g.released ? 120 : 260
-      const damp = g.released ? 13 : 20
-      g.vx += ((g.tx - g.x) * k - g.vx * damp) * dt
-      g.vy += ((g.ty - g.y) * k - g.vy * damp) * dt
+      // Molle morbide: segue con un po' di ritardo e supera un poco il punto, come un liquido.
+      g.vx += ((g.tx - g.x) * 110 - g.vx * 10) * dt
       g.x += g.vx * dt
-      g.y += g.vy * dt
-      const speed = Math.hypot(g.vx, g.vy)
-      const stretch = Math.min(0.4, speed * 0.0011)
-      const angle = (Math.atan2(g.vy, g.vx) * 180) / Math.PI
-      // Pende dal punto in cui è pizzicato (la cima).
-      const cx = PIX_ANCHOR.x
-      const cy = PIX_ANCHOR.y - 72 * scale
+      g.vly += ((g.lift - g.ly) * 120 - g.vly * 11) * dt
+      g.ly += g.vly * dt
+      const lagY = g.lift - g.ly // > 0: la finestra è salita e Pix resta indietro (più in basso)
+      // Pendolo appeso alla cima: si inclina contro il movimento e poi dondola.
+      const swingTarget = Math.max(-28, Math.min(28, -g.vx * 0.045))
+      g.vswing += ((swingTarget - g.swing) * 45 - g.vswing * 3.2) * dt
+      g.swing += g.vswing * dt
+      const stretch = Math.min(0.22, Math.abs(g.vly) * 0.0009 + Math.abs(lagY) * 0.004)
+      const px = PIX_ANCHOR.x
+      const py = PIX_ANCHOR.y - 70 * scale
       grabRef.current?.setAttribute(
         'transform',
-        `translate(${g.x.toFixed(2)} ${g.y.toFixed(2)}) translate(${cx} ${cy}) rotate(${angle.toFixed(1)}) scale(${(1 + stretch).toFixed(3)} ${(1 / (1 + stretch)).toFixed(3)}) rotate(${(-angle).toFixed(1)}) translate(${-cx} ${-cy})`
+        `translate(${g.x.toFixed(2)} ${lagY.toFixed(2)}) rotate(${g.swing.toFixed(2)} ${px} ${py}) translate(${px} ${py}) scale(${(1 / (1 + stretch * 0.6)).toFixed(3)} ${(1 + stretch).toFixed(3)}) translate(${-px} ${-py})`
       )
-      if (g.released && Math.abs(g.x) < 0.6 && Math.abs(g.y) < 0.6 && speed < 8) {
+      const still = Math.abs(g.x) < 0.6 && Math.abs(g.vx) < 6 && Math.abs(lagY) < 0.6 && Math.abs(g.swing) < 0.6 && Math.abs(g.vswing) < 4
+      if (g.released && still) {
         // Tornato al bordo: diventa barra, che tremola come una gelatina.
         grabRef.current?.removeAttribute('transform')
         g.raf = 0
@@ -818,11 +858,13 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         g.released = false
         g.t0 = performance.now()
         g.releaseAt = 0
-        // Il corpo viene pizzicato in cima (con le grinze) e pende sotto; si allenta quando lo lasci.
+        g.lift = d.startLift
+        g.ly = d.startLift
+        // Tenuto per la cima: si allunga in una punta morbida e pende sotto; si allenta quando lo lasci.
         morph.current?.perform((b, t) => {
           const now = performance.now()
           let env = Math.min(1, (now - g.t0) / 260)
-          if (g.releaseAt) env *= Math.max(0, 1 - (now - g.releaseAt) / 380)
+          if (g.releaseAt) env *= Math.max(0, 1 - (now - g.releaseAt) / 420)
           return grabShape(b, t, env)
         }, 600)
         setGrabbed(true)
@@ -831,34 +873,34 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         morph.current?.go(0)
       }
     }
+    d.lift = Math.max(0, d.startLift - dy)
     if (d.pix) {
-      // Pix segue il cursore dentro la sua finestra (che resta ferma finché non lo lasci).
+      // Orizzontale: Pix insegue il cursore dentro la sua finestra.
       const r = svgRef.current?.getBoundingClientRect()
       const g = grabState.current
       const minX = r ? -(r.left + PIX_ANCHOR.x - 30) : -400
-      const minY = r ? -(r.top + PIX_ANCHOR.y - 70 * scale) : -400
-      // In giù fino al fondo della finestra (anche la barra scenderà a quell'altezza).
-      const maxY = r ? Math.max(30, window.innerHeight - (r.top + PIX_ANCHOR.y) - 6) : 30
       g.tx = Math.max(minX, Math.min(10, dx))
-      g.ty = Math.max(minY, Math.min(maxY, dy))
+      g.lift = d.lift
       runGrab()
-      return
+    } else {
+      // Velocità della barra: il liquido resta indietro rispetto al movimento.
+      const sp = barSpring.current
+      const now = performance.now()
+      if (sp.lastAt && now > sp.lastAt) {
+        const v = ((d.lift - sp.lastLift) / (now - sp.lastAt)) * 1000
+        sp.target = Math.max(-28, Math.min(28, v * 0.03))
+      }
+      sp.lastLift = d.lift
+      sp.lastAt = now
+      runBarSpring()
     }
-    d.lift = Math.max(0, d.startLift - dy)
-    // Velocità della barra: il liquido resta indietro rispetto al movimento.
-    const sp = barSpring.current
-    const now = performance.now()
-    if (sp.lastAt && now > sp.lastAt) {
-      const v = ((d.lift - sp.lastLift) / (now - sp.lastAt)) * 1000
-      sp.target = Math.max(-28, Math.min(28, v * 0.03))
-    }
-    sp.lastLift = d.lift
-    sp.lastAt = now
-    runBarSpring()
+    // Verticale: la finestra (barra e Pix) segue il cursore, dal fondo fino in cima.
     if (!d.raf) {
       d.raf = requestAnimationFrame(() => {
         d.raf = 0
-        void window.pix.moveBar(d.lift, false)
+        void window.pix.moveBar(d.lift, false).then((applied) => {
+          if (d.pix) grabState.current.lift = applied
+        })
       })
     }
   }
@@ -866,27 +908,23 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     const d = barDrag.current
     if (!d) return
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
-    if (d.moved && d.pix) {
-      // Lasciato andare: la barra va all'altezza dove l'hai lasciato, Pix scivola contro il bordo.
-      const g = grabState.current
-      g.releaseAt = performance.now()
-      const wanted = Math.max(0, d.startLift - g.y)
-      void window.pix.moveBar(wanted, true).then((applied) => {
-        // La finestra (o Pix al suo interno) si è spostata: lo si compensa per non vederlo saltare.
-        g.y += applied - d.startLift
+    if (d.moved) {
+      void window.pix.moveBar(d.lift, true)
+      if (d.pix) {
+        // Lasciato andare: scivola di nuovo contro il bordo, dondolando, e torna barra.
+        const g = grabState.current
+        g.releaseAt = performance.now()
         g.tx = 0
-        g.ty = 0
         g.released = true
         runGrab()
-      })
-    } else if (d.moved) {
-      void window.pix.moveBar(d.lift, true)
-      // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
-      const sp = barSpring.current
-      sp.target = 0
-      sp.lastAt = 0
-      sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
-      runBarSpring()
+      } else {
+        // Rilasciata: un colpetto alla molla e la barra tremola come una gelatina.
+        const sp = barSpring.current
+        sp.target = 0
+        sp.lastAt = 0
+        sp.v += sp.s * -6 + (sp.s >= 0 ? -40 : 40)
+        runBarSpring()
+      }
     }
     draggingBar.current = false
     // Il clic arriva subito dopo: lo si lascia passare solo se non c'è stato trascinamento.
@@ -904,12 +942,12 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-yawn={yawning && formed && !reducedMotion && (act === 'yawn' || act === 'preview') ? '' : undefined}
       data-hungry={hungry && formed ? '' : undefined}
       data-swallow={formed && swallowPhase ? swallowPhase : undefined}
-      data-weather={fx ?? undefined}
-      data-shades={shades && fx === 'sun' ? '' : undefined}
-      data-shiver={shivering && fx === 'cold' ? '' : undefined}
-      data-melt={melting && fx === 'hot' ? '' : undefined}
+      data-weather={ep ?? undefined}
+      data-shades={shades && ep === 'sun' ? '' : undefined}
+      data-shiver={shivering && ep === 'cold' ? '' : undefined}
+      data-melt={melting && ep === 'hot' ? '' : undefined}
       data-trash={trash && formed ? '' : undefined}
-      data-wince={wince && fx === 'rain' ? '' : undefined}
+      data-wince={wince && ep === 'rain' ? '' : undefined}
       data-grabbed={grabbed ? '' : undefined}
 
       data-pop={pop && formed ? '' : undefined}
@@ -1008,9 +1046,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 )}
                 <ellipse className="yawn-mouth" cx="50" cy="69" rx="5.5" ry="7" fill="#000" opacity="0" />
                 {/* Sole: un luccichio sul riflesso */}
-                {fx === 'sun' && settings.pixShine && <path className="sparkle" d="M27 20l1.4 3.6 3.6 1.4-3.6 1.4L27 30l-1.4-3.6-3.6-1.4 3.6-1.4z" fill="#fff" />}
+                {ep === 'sun' && settings.pixShine && <path className="sparkle" d="M27 20l1.4 3.6 3.6 1.4-3.6 1.4L27 30l-1.4-3.6-3.6-1.4 3.6-1.4z" fill="#fff" />}
                 {/* Sole: grandi occhiali morbidi che colano giù sugli occhi */}
-                {fx === 'sun' && (
+                {ep === 'sun' && (
                   <g className="shades">
                     <defs>
                       <linearGradient id={`${fillId}-lens`} x1="0" y1="0" x2="0.4" y2="1">
@@ -1026,7 +1064,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                   </g>
                 )}
                 {/* Caldo: gocce di sudore che scivolano e vapore che sale dalla testa */}
-                {fx === 'hot' && melting && (
+                {ep === 'hot' && melting && (
                   <g className="hot-face">
                     <path className="sweat sweat-1" d="M24 40 C21.5 44.5 21 47 24 48.5 C27 47 26.5 44.5 24 40 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="1" />
                     <path className="sweat sweat-2" d="M77 46 C74.5 50.5 74 53 77 54.5 C80 53 79.5 50.5 77 46 Z" fill="#8fd3ff" stroke="#fff" strokeWidth="1" />
@@ -1038,9 +1076,9 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                   </g>
                 )}
                 {/* Pioggia: broncio */}
-                {fx === 'rain' && <path className="frown" d="M44 71.5q6-4.5 12 0" stroke="currentColor" strokeWidth="2.6" fill="none" strokeLinecap="round" />}
+                {ep === 'rain' && <path className="frown" d="M44 71.5q6-4.5 12 0" stroke="currentColor" strokeWidth="2.6" fill="none" strokeLinecap="round" />}
                 {/* Freddo: denti che battono */}
-                {fx === 'cold' && (
+                {ep === 'cold' && (
                   <path className="chatter" d="M41 70l3-2.5 3 2.5 3-2.5 3 2.5 3-2.5 3 2.5" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                 )}
                 </g>
@@ -1050,29 +1088,13 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         </g>
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}
-        {(fx === 'sun' || fx === 'hot') && <SunBeam id={fillId} scale={scale} hot={fx === 'hot'} />}
-        {/* Si scioglie: le gocce si staccano dalla punta delle colate e cadono, con uno schizzo */}
+        {(ep === 'sun' || ep === 'hot') && <SunBeam id={fillId} scale={scale} hot={ep === 'hot'} />}
+        {/* Si scioglie: palline che si gonfiano in punta alle colate, si staccano e cadono */}
         {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
-          <g key={meltDrops} fill={`url(#${fillId})`} pointerEvents="none">
-            {MELT_DRIPS.flatMap((d, i) => {
-              const b = restBody(scale, shape)
-              const r = 0.045 * b.w
-              return dripDetachTimes(d, 4.0)
-                .filter((at) => at > 0.7)
-                .map((at) => (
-                  <g key={`${i}-${at}`} transform={`translate(${b.cx + d.u * (b.w / 2)} ${b.cy + b.h / 2 + d.len * b.h - r * 0.6})`}>
-                    <path
-                      className="melt-drop"
-                      style={{ ['--drip-delay' as string]: `${at.toFixed(2)}s` }}
-                      d={`M0 ${-r * 1.6} C${r * 0.8} ${-r * 0.5} ${r} ${-r * 0.1} ${r} ${r * 0.3} A${r} ${r} 0 0 1 ${-r} ${r * 0.3} C${-r} ${-r * 0.1} ${-r * 0.8} ${-r * 0.5} 0 ${-r * 1.6} Z`}
-                    />
-                  </g>
-                ))
-            })}
-          </g>
+          <MeltDrops key={meltDrops} start={meltDrops} scale={scale} shape={shape} color={color} />
         )}
         {/* Caldo: ondine di calore che salgono */}
-        {fx === 'hot' && (
+        {ep === 'hot' && (
           <g className="heat" stroke={color} strokeOpacity="0.55" strokeWidth="1.8" fill="none" strokeLinecap="round" pointerEvents="none">
             {[-16, 0, 16].map((dx, i) => (
               <path
@@ -1084,7 +1106,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
           </g>
         )}
         {/* Freddo: fiocchi di neve che scendono */}
-        {fx === 'cold' && shivering && (
+        {ep === 'cold' && shivering && (
           <g className="snow" fill="#fff" stroke="#b9dcff" strokeWidth="0.6" pointerEvents="none">
             {[
               [-30, 0, 1],
@@ -1108,7 +1130,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
           </g>
         )}
         {/* Pioggia: gocce che cadono sulla testa e schizzano, ognuna col suo ritmo */}
-        {fx === 'rain' && rainKey > 0 && (
+        {ep === 'rain' && rainKey > 0 && (
           <g key={rainKey} pointerEvents="none">
             {RAIN_DROPS.map(([dx, delay, size], i) => (
               <g

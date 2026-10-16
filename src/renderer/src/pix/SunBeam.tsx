@@ -51,10 +51,6 @@ export function SunBeam({ id, scale: s, hot }: Props) {
           <stop offset="0.7" stopColor={color} stopOpacity="0.35" />
           <stop offset="1" stopColor={color} stopOpacity="0" />
         </linearGradient>
-        <radialGradient id={`${id}-glow`}>
-          <stop offset="0" stopColor={color} stopOpacity="0.55" />
-          <stop offset="1" stopColor={color} stopOpacity="0" />
-        </radialGradient>
         <filter id={`${id}-soft`} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation={1.6 * s} />
         </filter>
@@ -64,8 +60,6 @@ export function SunBeam({ id, scale: s, hot }: Props) {
           <path key={i} d={ray(o, r.t, 1.2 * s, r.w)} fill={`url(#${id}-beam)`} opacity={r.o} />
         ))}
       </g>
-      {/* Alone dove la luce tocca la testa */}
-      <ellipse className="sun-glow" cx={head.x} cy={head.y} rx={20 * s} ry={11 * s} fill={`url(#${id}-glow)`} />
       {/* Granelli di luce nel raggio */}
       {motes.map((m, i) => (
         <path

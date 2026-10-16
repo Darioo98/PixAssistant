@@ -327,9 +327,11 @@ export function swallowShape(b: Body, t: number): Pt[] {
 // ======================= Meteo e movimento come un liquido =======================
 
 /** Durate: brividi (freddo) e pozza (caldo). */
-export const SHIVER_S = 3.2
+/** Durata unica delle animazioni a tema (corpo, meteo, sezioni): tutto parte e finisce insieme. */
+export const ANIM_S = 4.2
+export const SHIVER_S = ANIM_S
 /** Durata del caldo (si affloscia, ansima, si riprende). */
-export const HEAT_S = 4.2
+export const HEAT_S = ANIM_S
 
 /**
  * Brividi da liquido: la superficie vibra a piccole onde fitte che corrono
@@ -446,6 +448,15 @@ export function dripLength(d: MeltDrip, t: number): number {
   return d.len * (1 - (1 - REST) * snap + bounce)
 }
 
+/** A che punto è il ciclo della colata: numero del ciclo, avanzamento 0–1 e se la goccia sta ancora crescendo. */
+export function dripCycle(d: MeltDrip, t: number): { n: number; k: number; growing: boolean } {
+  const local = t - d.phase
+  if (local <= 0) return { n: -1, k: 0, growing: false }
+  const n = Math.floor(local / d.period)
+  const k = (local - n * d.period) / d.period
+  return { n, k, growing: k < DETACH }
+}
+
 /** Istanti (s) in cui si stacca una goccia, entro `until`. */
 export function dripDetachTimes(d: MeltDrip, until: number): number[] {
   const out: number[] = []
@@ -457,9 +468,9 @@ export function dripDetachTimes(d: MeltDrip, until: number): number[] {
 }
 
 /**
- * Pix afferrato dal puntatore: la cima viene pizzicata e tirata su in una
- * piccola punta con delle grinze attorno; il resto pende sotto come una gelatina
- * e trema. `env` 0–1 è quanto è "preso".
+ * Pix afferrato dal puntatore: è tenuto per la cima, che si tira su in una
+ * punta liscia e arrotondata (come una goccia appesa); il resto pende sotto,
+ * più tondo, e ondeggia appena. `env` 0–1 è quanto è "preso".
  */
 export function grabShape(b: Body, t: number, env: number): Pt[] {
   const bottom = b.cy + b.h / 2
@@ -468,19 +479,15 @@ export function grabShape(b: Body, t: number, env: number): Pt[] {
     const low = b.low[i]!
     const u = b.u[i]!
     const nx = b.nx[i]!
-    const ny = b.ny[i]!
-    // Pizzico: la cima si alza a punta dove è tenuto, i lati si avvicinano.
-    const pinch = top * gauss(u, 0.32)
-    let px = x - (x - b.cx) * 0.12 * top * env
-    let py = y - pinch * 0.2 * b.h * env
-    // Grinze attorno al pizzico (pieghe fitte che tremano).
-    const fold = top * (1 - gauss(u, 0.12)) * gauss(u, 0.55)
-    const r = fold * env * b.h * (0.016 * Math.sin(u * 18 + t * 8) + 0.006 * Math.sin(t * 38))
-    px += nx * r
-    py += ny * r
-    // Il corpo pende: la parte bassa si allarga e scende un poco.
-    px += nx * low * 0.07 * b.w * env
-    py += (y - bottom) * -0.04 * env + low * 0.04 * b.h * env
+    const up = Math.max(0, (bottom - y) / b.h)
+    // La cima si allunga verso l'alto in una punta morbida; i fianchi in alto si stringono.
+    const lift = top * gauss(u, 0.45) * 0.16 * b.h
+    let px = x - (x - b.cx) * 0.16 * up * up * env
+    let py = y - lift * env
+    // Sotto pende: la parte bassa si arrotonda e si allarga un poco, con un'onda lenta.
+    const wobble = 0.012 * b.w * Math.sin(t * 5 + u * 3)
+    px += nx * low * (0.07 * b.w + wobble) * env
+    py += low * 0.03 * b.h * env
     return [px, py] as Pt
   })
 }

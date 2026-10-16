@@ -12,7 +12,8 @@ const FORWARD_MS = 1100
 const BACKWARD_MS = 700
 /** Animazioni del corpo: entrata elastica, movimento, rientro morbido. */
 const PLAY_IN_S = 0.6
-const PLAY_HOLD_S = 3.4
+/** Entrata + tenuta + uscita = ANIM_S (4,2 s), come tutte le altre animazioni a tema. */
+const PLAY_HOLD_S = 2.9
 const PLAY_OUT_S = 0.7
 /** Rientro veloce (es. prima di tornare barra). */
 const QUICK_OUT_S = 0.25
