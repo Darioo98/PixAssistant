@@ -321,6 +321,10 @@ export function swallowShape(b: Body, t: number): Pt[] {
 /** Durate: brividi (freddo) e pozza (caldo). */
 /** Durata unica delle animazioni a tema (corpo, meteo, sezioni): tutto parte e finisce insieme. */
 export const ANIM_S = 4.2
+/** La clessidra ha bisogno di più tempo: gli occhi scendono con calma, due volte. */
+export const HOURGLASS_S = 6.8
+/** Durata di un'animazione a tema del corpo. */
+export const playSeconds = (kind: string): number => (kind === 'hourglass' ? HOURGLASS_S : ANIM_S)
 export const SHIVER_S = ANIM_S
 /** Durata del caldo (si affloscia, ansima, si riprende). */
 export const HEAT_S = ANIM_S
@@ -488,69 +492,12 @@ export function grabShape(b: Body, t: number, env: number): Pt[] {
 
 // ======================= Clessidra =======================
 
-/** Quanto fluido è sceso nell'ampolla di sotto (0–1) all'istante `t` dell'animazione. */
-export function hourglassFlow(t: number): number {
-  const x = clamp01((t - 0.6) / 2.6)
-  return x * x * (3 - 2 * x)
-}
-
 /** Misure della clessidra attorno al corpo (in proporzione alla sua larghezza). */
 export function hourglassGeometry(b: Pick<Body, 'cx' | 'cy' | 'w' | 'h'>) {
   const s = b.w / 60
   const bottom = b.cy + b.h / 2
   const Hc = 34 * s
   return { s, cx: b.cx, bottom, neckY: bottom - Hc - 2 * s, Hc, Wc: 24 * s, neck: 2 * s }
-}
-
-/** Mezza larghezza dell'ampolla a una distanza p (0 al collo, 1 al fondo/cima). */
-function chamber(g: ReturnType<typeof hourglassGeometry>, p: number): number {
-  const q = clamp01(p)
-  return g.neck + (g.Wc - g.neck) * (1 - (1 - q) ** 2.2)
-}
-
-/** Contorno del fluido dentro la clessidra con `f` (0 tutto sopra, 1 tutto sotto). */
-export function hourglassPath(b: Body, f: number): string {
-  const g = hourglassGeometry(b)
-  const top = Math.max(0.02, (1 - f) ** 0.85 * 0.96)
-  const pile = Math.max(0.05, f ** 0.85 * 0.96)
-  const ys = g.neckY - top * g.Hc
-  const pileY = g.neckY + (1 - pile) * g.Hc
-  // Il filo si assottiglia fino a sparire quando sopra non resta più nulla.
-  const stream = 0.9 * g.s * Math.min(1, (1 - f) * 10)
-  const dome = 5 * g.s * pile
-  const pts: Pt[] = []
-  // superficie in alto, da sinistra a destra (appena incurvata)
-  const wTop = chamber(g, top)
-  for (let i = 0; i <= 8; i++) {
-    const x = -wTop + (2 * wTop * i) / 8
-    pts.push([g.cx + x, ys + 1.2 * g.s * (1 - (x / wTop) ** 2)])
-  }
-  // fianco destro dell'ampolla di sopra fino al collo
-  for (let i = 1; i <= 14; i++) {
-    const p = top * (1 - i / 14)
-    pts.push([g.cx + chamber(g, p), g.neckY - p * g.Hc])
-  }
-  // filo che scende fino alla montagnola
-  pts.push([g.cx + stream, g.neckY + 1])
-  pts.push([g.cx + stream, pileY - dome + 0.5])
-  // montagnola, metà destra
-  const qs = 1 - pile
-  const wSurf = chamber(g, qs)
-  for (let i = 1; i <= 8; i++) {
-    const x = stream + ((wSurf - stream) * i) / 8
-    pts.push([g.cx + x, pileY - dome * (1 - (x / wSurf) ** 2)])
-  }
-  // fianco destro dell'ampolla di sotto fino al fondo
-  for (let i = 1; i <= 10; i++) {
-    const q = qs + ((1 - qs) * i) / 10
-    pts.push([g.cx + chamber(g, q), g.neckY + q * g.Hc])
-  }
-  // fondo, poi tutto a specchio sul lato sinistro
-  const right = [...pts]
-  const mirror = (start: number, end: number) => right.slice(start, end).reverse().map(([x, y]) => [2 * g.cx - x, y] as Pt)
-  const surfaceTop = 9
-  const out: Pt[] = [...right, ...mirror(surfaceTop, right.length)]
-  return `M${out.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(' L')} Z`
 }
 
 /** Sagoma della clessidra (ampolla sopra, collo, ampolla sotto) disegnata col corpo di Pix. */
@@ -577,44 +524,4 @@ export function hourglassSilhouetteTarget(b: Body): Pt[] {
     silhouetteCache.set(key, pts)
   }
   return pts
-}
-
-const hourglassCache = new Map<string, Pt[]>()
-
-/** Forma d'arrivo della clessidra, allineata punto per punto al corpo (a scatti di 1/40). */
-export function hourglassTarget(b: Body, f: number): Pt[] {
-  const step = Math.round(clamp01(f) * 40)
-  const key = `${b.cx}:${b.w}:${b.h}:${step}`
-  let pts = hourglassCache.get(key)
-  if (!pts) {
-    pts = alignTo(b.pts, samplePath(hourglassPath(b, step / 40), b.pts.length))
-    hourglassCache.set(key, pts)
-  }
-  return pts
-}
-
-/** Vetro e piattini della clessidra (disegnati sopra al corpo durante l'animazione). */
-export function hourglassFramePaths(b: Pick<Body, 'cx' | 'cy' | 'w' | 'h'>): { glass: string; caps: string } {
-  const g = hourglassGeometry(b)
-  const pad = 2.2 * g.s
-  const side: Pt[] = []
-  for (let i = 0; i <= 16; i++) {
-    const p = i / 16
-    side.push([g.cx + chamber(g, p) + pad, g.neckY - p * g.Hc])
-  }
-  const lower: Pt[] = []
-  for (let i = 0; i <= 16; i++) {
-    const p = i / 16
-    lower.push([g.cx + chamber(g, p) + pad, g.neckY + p * g.Hc])
-  }
-  const rightSide = [...side.reverse(), ...lower.slice(1)]
-  const leftSide = rightSide.map(([x, y]) => [2 * g.cx - x, y] as Pt).reverse()
-  const glass = `M${[...rightSide, ...leftSide].map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join(' L')} Z`
-  const capW = g.Wc + 6 * g.s
-  const capH = 4 * g.s
-  const topY = g.neckY - g.Hc - capH
-  const botY = g.bottom
-  const cap = (y: number) =>
-    `M${(g.cx - capW).toFixed(2)} ${(y + capH / 2).toFixed(2)} a${capH / 2} ${capH / 2} 0 0 1 ${capH / 2} ${-capH / 2} h${(2 * capW - capH).toFixed(2)} a${capH / 2} ${capH / 2} 0 0 1 0 ${capH} h${-(2 * capW - capH).toFixed(2)} a${capH / 2} ${capH / 2} 0 0 1 ${-capH / 2} ${-capH / 2} Z`
-  return { glass, caps: `${cap(topY)} ${cap(botY)}` }
 }

@@ -19,8 +19,6 @@ export const settingsSchema = z.object({
   pixFinish: z.enum(PIX_FINISHES),
   pixShine: z.boolean(),
   pixTransforms: z.boolean(),
-  /** Clessidra: corpo trasparente col fluido dentro, oppure piena con gli occhi come chicchi. */
-  hourglassStyle: z.enum(['glass', 'grains']),
   eyesFollowCursor: z.boolean(),
   bubbleSeconds: z.number().int().min(3).max(120),
   /** Fumetto con il riepilogo della giornata la prima volta che usi il PC. */
@@ -100,7 +98,6 @@ export const DEFAULT_SETTINGS: Settings = {
   pixFinish: 'flat',
   pixShine: true,
   pixTransforms: true,
-  hourglassStyle: 'glass',
   eyesFollowCursor: true,
   bubbleSeconds: 12,
   morningSummary: true,

@@ -8,14 +8,14 @@ import { Badge, Eyes, PixFill, Shine } from './Faces'
 import { BubbleCard } from './BubbleCard'
 import { Peek } from './Peek'
 import { SwallowItem, type SwallowLook } from './SwallowItem'
-import { ANIM_S, HEAT_S, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, shiverShape, trashShape } from './shapes'
+import { ANIM_S, HEAT_S, playSeconds, SHIVER_S, SWALLOW_S, TRASH_S, grabShape, heatShape, shiverShape, trashShape } from './shapes'
 import { stretchedBarPath } from './bootFill'
 import { DELETED_EVENT, type DeletedDetail } from './SweepDrop'
 import { BOOT_FILL_S, bootBarPath, tubeOutline } from './bootFill'
 import { useSlosh } from './useSlosh'
 import { SunBeam } from './SunBeam'
 import { MeltDrops } from './MeltDrops'
-import { HourglassFluid } from './HourglassFluid'
+import { runHourglassEyes } from './hourglassEyes'
 import { Director, type Act } from './director'
 import { weatherKind } from '@shared/extras'
 import type { DropPayload } from '@shared/extras'
@@ -342,11 +342,11 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   const PLAY_MS = ANIM_S * 1000 + 100
   /** "Si scioglie" in corso: dalle colate si staccano gocce che cadono. */
   const [meltDrops, setMeltDrops] = useState(0)
-  /** Clessidra in corso: si vedono il vetro e i piattini, e gli occhi scendono col fluido. */
+  /** Clessidra in corso: Pix è la clessidra e i suoi occhi sono i chicchi che scendono. */
   const [hourglassAt, setHourglassAt] = useState(0)
   const play = (kind: PixTransform, loop = false, as: Act = 'spontaneous') => {
     if (reducedMotion) return null
-    const token = claim(as, loop ? 10 * 60_000 : PLAY_MS)
+    const token = claim(as, loop ? 10 * 60_000 : playSeconds(kind) * 1000 + 100)
     if (token === null) return null
     lastTransform.current = kind
     morph.current?.start(kind, loop)
@@ -356,9 +356,11 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
   }
   useEffect(() => {
     if (!hourglassAt) return
-    const id = window.setTimeout(() => setHourglassAt(0), PLAY_MS)
+    const id = window.setTimeout(() => setHourglassAt(0), playSeconds('hourglass') * 1000 + 100)
     return () => window.clearTimeout(id)
   }, [hourglassAt])
+  const eyesRef = useRef<SVGGElement>(null)
+  const flipRef = useRef<SVGGElement>(null)
   useEffect(() => {
     if (!meltDrops) return
     const id = window.setTimeout(() => setMeltDrops(0), PLAY_MS)
@@ -711,8 +713,17 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
     return () => window.clearInterval(id)
   }, [collapsed, anim, reducedMotion])
 
+  // ---- Clessidra: gli occhi cadono davvero, con la gravità, e la clessidra si capovolge ----
+  const hourglassOn = hourglassAt > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview')
+  useEffect(() => {
+    const eyes = eyesRef.current
+    const flip = flipRef.current
+    if (!hourglassOn || !eyes || !flip) return
+    return runHourglassEyes({ start: hourglassAt, eyes, flip, scale, shape })
+  }, [hourglassOn, hourglassAt, scale, shape])
+
   // ---- Occhi che seguono il cursore quando è vicino (dentro la finestra) ----
-  const follow = formed && settings.eyesFollowCursor && anim !== 'off' && (mood === 'normal' || mood === 'greet')
+  const follow = formed && !hourglassOn && settings.eyesFollowCursor && anim !== 'off' && (mood === 'normal' || mood === 'greet')
   useEffect(() => {
     const look = lookRef.current
     if (!follow || !look) return
@@ -975,7 +986,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
       data-shiver={shivering && ep === 'cold' ? '' : undefined}
       data-melt={melting && ep === 'hot' ? '' : undefined}
       data-trash={trash && formed ? '' : undefined}
-      data-hourglass={hourglassAt && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') ? settings.hourglassStyle : undefined}
+      data-hourglass={hourglassOn ? '' : undefined}
       data-wince={wince && ep === 'rain' ? '' : undefined}
       data-grabbed={grabbed ? '' : undefined}
 
@@ -1016,6 +1027,8 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
         {/* Avvio: il tubo vuoto che si riempie */}
         {booting && <path className="boot-tube" d={tubeOutline()} fill="none" stroke={color} strokeWidth="1.2" />}
         <g className="grab" ref={grabRef}>
+        {/* Clessidra: si capovolge attorno al collo */}
+        <g ref={flipRef}>
         <g className={`pose ${formed ? `pose-${mood}` : ''} ${sleeping && sleepSide === -1 ? 'side-left' : ''}`}>
           <g
             className={`motion ${formed ? `motion-${mood}` : ''} ${pixBreath ? 'breath' : ''}`}
@@ -1046,10 +1059,6 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
               {meltDrops > 0 && formed && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
                 <MeltDrops key={meltDrops} start={meltDrops} scale={scale} shape={shape} color={color} />
               )}
-              {/* Clessidra trasparente: il fluido di Pix dentro il suo corpo-vetro */}
-              {hourglassAt > 0 && formed && settings.hourglassStyle === 'glass' && (act === 'section' || act === 'spontaneous' || act === 'preview') && (
-                <HourglassFluid key={hourglassAt} start={hourglassAt} scale={scale} shape={shape} color={color} />
-              )}
               <g ref={faceRef} transform={face} opacity="0" pointerEvents="none">
                 <g className="face-fx">
                 {settings.pixShine && <Shine />}
@@ -1063,7 +1072,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
                 >
                   <g className={`glance ${lookAround ? 'look-around' : ''} ${formed && mood === 'think' ? 'thinking' : ''}`}>
                     <g className={`lids ${formed && mood === 'normal' && tired !== 'none' ? `lids-${tired}` : ''}`}>
-                      <g className={`eyes ${blink ? 'blink' : ''}`}>
+                      <g ref={eyesRef} className={`eyes ${blink && !hourglassOn ? 'blink' : ''}`}>
                         {grabbed ? (
                           <ScaredFace />
                         ) : (
@@ -1122,6 +1131,7 @@ export function Mascot({ mascot, panelOpen, tab, settings, boot = false }: Props
               </g>
             </g>
           </g>
+        </g>
         </g>
         </g>
         {/* Sole e caldo: raggi di luce che entrano da destra e illuminano Pix */}

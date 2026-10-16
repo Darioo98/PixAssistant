@@ -39,6 +39,27 @@ export function Eyes({ mood, style = 'pill' }: { mood: Mood; style?: PixEyes }) 
             <circle cx="59" cy="52" r="4.2" fill="currentColor" />
           </>
         )
+      if (style === 'round')
+        // Tondi e lucidi, con un riflesso: ogni occhio è un gruppo (la clessidra li muove uno per uno).
+        return (
+          <>
+            <g>
+              <circle cx="41" cy="52" r="5.4" fill="currentColor" />
+              <circle cx="39.2" cy="49.9" r="1.7" fill="#fff" opacity=".6" />
+            </g>
+            <g>
+              <circle cx="59" cy="52" r="5.4" fill="currentColor" />
+              <circle cx="57.2" cy="49.9" r="1.7" fill="#fff" opacity=".6" />
+            </g>
+          </>
+        )
+      if (style === 'oval')
+        return (
+          <>
+            <ellipse cx="41" cy="52.5" rx="4.6" ry="3.4" fill="currentColor" />
+            <ellipse cx="59" cy="52.5" rx="4.6" ry="3.4" fill="currentColor" />
+          </>
+        )
       if (style === 'wide')
         return (
           <>

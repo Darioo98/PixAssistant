@@ -98,24 +98,6 @@ export function AppearanceSection({ s, save }: { s: Settings; save: (p: Settings
       </label>
       <p className="hint">{t('settings.transformsHint')}</p>
       <div className="field">
-        <span className="label">{t('settings.hourglassStyle')}</span>
-        <div className="preview-buttons">
-          {(['glass', 'grains'] as const).map((v) => (
-            <button
-              key={v}
-              className={`pill ${s.hourglassStyle === v ? 'primary' : ''}`}
-              aria-pressed={s.hourglassStyle === v}
-              onClick={() => {
-                // Sceglie la versione e la fa vedere subito.
-                void save({ hourglassStyle: v }).then(() => window.dispatchEvent(new CustomEvent(TRANSFORM_EVENT, { detail: 'hourglass' })))
-              }}
-            >
-              {t(`settings.hourglassStyles.${v}`)}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="field">
         <span className="label">{t('settings.tryTransforms')}</span>
         <div className="preview-buttons">
           {PIX_TRANSFORMS.map((x) => (

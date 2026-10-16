@@ -132,7 +132,9 @@
     "eyesOptions": {
       "pill": "Pillole",
       "dot": "Punti",
-      "wide": "Grandi"
+      "wide": "Grandi",
+      "round": "Tondi",
+      "oval": "Ovali"
     },
     "finish": "Finitura",
     "finishOptions": {
@@ -215,12 +217,7 @@
     "barPosition": "Posizione della barra",
     "barReset": "Riporta in basso",
     "barDefault": "In basso (predefinita)",
-    "barHint": "Trascina la barra su o giù lungo il bordo dello schermo per spostarla. Un clic senza trascinare apre Pix.",
-    "hourglassStyle": "Clessidra (prova e scegli)",
-    "hourglassStyles": {
-      "glass": "A · Trasparente, col fluido dentro",
-      "grains": "B · Gli occhi sono i chicchi"
-    }
+    "barHint": "Trascina la barra su o giù lungo il bordo dello schermo per spostarla. Un clic senza trascinare apre Pix."
   },
   "mascot": {
     "preview": {

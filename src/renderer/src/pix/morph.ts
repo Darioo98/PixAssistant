@@ -1,6 +1,6 @@
 import type { PixShape, PixTransform } from '@shared/mascot'
 import { SHAPES, bodyAt, faceOpacity, morphFor, remapOnReverse, shadowOpacity, type MorphInterpolators } from './geometry'
-import { SWALLOW_S, liveShape, restBody, sloshShape, swallowShape, toPath, type Body, type Pt } from './shapes'
+import { SWALLOW_S, playSeconds, liveShape, restBody, sloshShape, swallowShape, toPath, type Body, type Pt } from './shapes'
 
 export interface MorphElements {
   body: SVGPathElement
@@ -261,7 +261,9 @@ export class MorphController {
     if (!pl) return
     if (!pl.start) pl.start = ts
     const t = (ts - pl.start) / 1000
-    if (!pl.loop && pl.outAt === null && t >= PLAY_IN_S + PLAY_HOLD_S) {
+    // La tenuta si allunga per le animazioni più lunghe (la clessidra), così tutto finisce insieme.
+    const hold = PLAY_HOLD_S + playSeconds(pl.kind) - (PLAY_IN_S + PLAY_HOLD_S + PLAY_OUT_S)
+    if (!pl.loop && pl.outAt === null && t >= PLAY_IN_S + hold) {
       pl.outFrom = 1
       pl.outAt = t
       pl.outDur = PLAY_OUT_S

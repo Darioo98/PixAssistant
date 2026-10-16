@@ -94,7 +94,7 @@ export const SLEEP_AFTER_IDLE_S = 15 * 60
 export const PIX_SHAPES = ['squircle', 'round', 'tile', 'egg', 'soft'] as const
 export type PixShape = (typeof PIX_SHAPES)[number]
 
-export const PIX_EYES = ['pill', 'dot', 'wide'] as const
+export const PIX_EYES = ['pill', 'dot', 'wide', 'round', 'oval'] as const
 export type PixEyes = (typeof PIX_EYES)[number]
 
 export const PIX_FINISHES = ['flat', 'gradient'] as const
